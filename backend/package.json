@@ -1,0 +1,31 @@
+{
+	"name": "backend",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev --port 8023",
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"db:new": "node scripts/new-migration.mjs",
+		"db:status": "wrangler d1 migrations list luminascent --local",
+		"db:status:remote": "wrangler d1 migrations list luminascent --remote",
+		"db:apply": "wrangler d1 migrations apply luminascent --local",
+		"db:apply:remote": "wrangler d1 migrations apply luminascent --remote",
+		"db:rollback": "node scripts/rollback.mjs",
+		"db:rollback:remote": "node scripts/rollback.mjs --remote",
+		"db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:apply"
+	},
+	"dependencies": {
+		"@hono/zod-validator": "^0.4.3",
+		"hono": "^4.7.5",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@types/node": "^25.9.1",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.98.0"
+	}
+}

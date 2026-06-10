@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS product_search;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS product_reminds_me_of;
+DROP TABLE IF EXISTS product_rating_summaries;
+DROP TABLE IF EXISTS product_vote_aggregates;
+DROP TABLE IF EXISTS vote_options;
+DROP TABLE IF EXISTS vote_dimensions;
+DROP TABLE IF EXISTS scent_profile_accords;
+DROP TABLE IF EXISTS accords;
+DROP TABLE IF EXISTS scent_profile_notes;
+DROP TABLE IF EXISTS notes;
+DROP TABLE IF EXISTS scent_profiles;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS brands;

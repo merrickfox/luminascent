@@ -1,0 +1,13 @@
+DELETE FROM product_search;
+DELETE FROM product_vote_aggregates;
+DELETE FROM product_rating_summaries;
+DELETE FROM scent_profile_accords;
+DELETE FROM scent_profile_notes;
+DELETE FROM scent_profiles;
+DELETE FROM products;
+DELETE FROM brands;
+DELETE FROM notes;
+DELETE FROM accords;
+DELETE FROM vote_options;
+DELETE FROM vote_dimensions;
+DELETE FROM categories;

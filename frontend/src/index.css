@@ -1,0 +1,136 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@font-face {
+  font-family: "Canela Deck";
+  src: url("/fonts/canela-deck-light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela Deck";
+  src: url("/fonts/canela-deck-light-italic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela Deck";
+  src: url("/fonts/canela-deck-regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canela Deck";
+  src: url("/fonts/canela-deck-medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-display: "Canela Deck", "Georgia", serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+
+  --color-bg: #f7f4ee;
+  --color-surface: #ffffff;
+  --color-text: #1d1d1d;
+  --color-text-secondary: #66625c;
+  --color-border: #e7e0d7;
+  --color-accent: #b4975a;
+  --color-success: #65745a;
+  --color-error: #8a4b43;
+  --color-stone: #d5cbbf;
+  --color-taupe: #a28e7d;
+  --color-deep-olive: #4a5444;
+  --color-oxblood: #5d2e2e;
+  --color-espresso: #352b26;
+
+  --radius-button: 8px;
+  --radius-card: 14px;
+
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  body {
+    @apply bg-bg font-sans text-text antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: clip;
+  }
+
+  @media (min-width: 768px) {
+    body {
+      font-size: 17px;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-text;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    @apply text-4xl font-medium sm:text-5xl md:text-6xl lg:text-7xl;
+  }
+
+  h2 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h3 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+
+  a {
+    @apply transition-colors duration-300 ease-out;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+}
+
+@layer utilities {
+  .animate-reveal {
+    animation: reveal 600ms var(--ease-luxury) forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 500ms var(--ease-luxury) forwards;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

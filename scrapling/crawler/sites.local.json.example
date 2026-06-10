@@ -1,0 +1,18 @@
+{
+  "acquadiparma.com": {
+    "follow_variant_pages": true,
+    "variant_swatch_selector": "a.js-swatch-attr.css-swatch-attr",
+    "variant_size_attr": "data-attr-value",
+    "variant_sku_attr": "kl-data-variant-sku",
+    "variant_available_attr": "data-available",
+    "variant_url_attr": "data-href"
+  },
+  "example-shop.com": {
+    "product_link_selector": "a.product-card",
+    "pagination_selectors": ["a.pagination-next", "a[rel=\"next\"]"],
+    "wait_selector": ".product-grid",
+    "infinite_scroll": false,
+    "scroll_rounds": 3,
+    "main_content_selectors": [".pdp-main", "main"]
+  }
+}
