@@ -4,10 +4,15 @@ Blueprint-driven visual scraper using Tampermonkey + a local Node server. Teach 
 
 ## Architecture
 
-- **Userscript** (`userscript/scraper.user.js`) — overlay UI in the browser, DOM blueprint authoring, extraction orchestration
-- **Local server** (`server/server.js`) — serves schema/config, writes scraped `data.json` and image files
+- **Userscript** (`userscript/scraper.user.js`) — overlay UI in the browser, DOM blueprint authoring, raw field extraction
+- **Local server** (`server/server.js`) — serves schema/config, writes scraped `data.json`, builds `llm_input.json`, and saves image files
 - **Schema** (`schema/candle.schema.json`) — portable field definitions mirroring backend `scrapedProductSchema`
 - **Site data** (`sites/<host_slug>/`) — generated at runtime per configured host
+
+Separation of concerns:
+
+- The userscript tags fields (including `also_contains` / `sometimes_contains` relationships) and extracts raw DOM text into `data.json`. Each field value is an **array of text chunks** — one entry per tagged element. A single tag produces a one-item array.
+- The server reads the host blueprint, schema, and raw `data.json`, then assembles `llm_input.json` — the intermediary artifact for a future LLM pass that will parse embedded values (e.g. size from product name, individual notes from a comma-separated line) into import-ready JSON.
 
 ## Quick start
 
@@ -74,11 +79,11 @@ Extraction re-runs this recipe on whatever page is loaded (including page 2 of p
 2. Click **Product mode**
 3. **Click an element on the page** — it gets an orange outline and appears as "Selected" in the panel
 4. **Click a field button in the panel** (Product Name, Price, Description, etc.) to tag it
-5. Repeat for each field you need
-6. For nested content (e.g. notes inside description): tag both fields on the page first, then on the parent field's card click **+ Add field** under **Also contains** or **Sometimes contains** and pick the related schema field (e.g. Note Name)
+5. Repeat for each field you need. Tagging the same field again **adds another element** (useful when data is split across multiple nodes). Use **Re-tag** on a field card to replace all elements with a new selection, or **Add another element** to append without re-picking the field name.
+6. For embedded content (e.g. size inside product name, price amount inside currency string): tag the parent field on the page, then on its card click **+ Add field** under **Also contains** or **Sometimes contains** and pick the related schema field (e.g. Size Value). The server uses these tags when building `llm_input.json` for the future LLM pass — the userscript does not parse embedded values itself.
 7. Click **Save product blueprint**
 
-Field tagging happens in the panel (not a floating menu), so you always see what to do next.
+Field tagging happens in the panel (not a floating menu), so you always see what to do next. Tagging means "the data for this field lives somewhere in the selected element(s)" — the tool does not split notes into arrays, parse sizes, or otherwise structure values. Schema `cardinality` (`single` / `multiple`) is informational for the future LLM step only.
 
 Product field locators are also recipes: stable semantic attributes (`itemprop`, `data-ui-id`, `data-dynamic`, `data-attribute-code`, etc.) plus relative structural position. Example product text, prices, and per-item IDs are **not** used for matching — only shown as `textSample` hints in the panel.
 
@@ -95,7 +100,32 @@ Product field locators are also recipes: stable semantic attributes (`itemprop`,
 2. Click **Extract mode**
 3. Click **Start extraction**
 
-The script opens every detected product URL in a background tab, waits for render completion, extracts tagged fields, POSTs `data.json` and image bytes to the server, then closes each tab.
+The script opens every detected product URL in a background tab, waits for the page to settle (network + DOM quiet, then all tagged locators resolving with meaningful text), extracts tagged fields as raw value arrays, POSTs to the server (which writes `data.json` and `llm_input.json`), uploads image bytes, then closes each tab.
+
+### Extract wait settings
+
+Per-host `extract` settings in `config.json` control how long auto-scrape tabs wait before extracting:
+
+```json
+"extract": {
+  "timeoutMs": 45000,
+  "domQuietMs": 1000,
+  "networkQuietMs": 1000,
+  "pollMs": 500,
+  "requireAllLocators": true,
+  "minResolvedRatio": 1,
+  "validateTextSample": true
+}
+```
+
+- `timeoutMs` — max wait before extracting anyway (default 45s)
+- `domQuietMs` — ms with no DOM mutations before considered settled
+- `networkQuietMs` — ms with no in-flight fetch/XHR before considered settled (patched at tab load)
+- `requireAllLocators` — wait until every tagged field/image locator resolves (default `true`)
+- `minResolvedRatio` — fallback threshold when `requireAllLocators` is `false` (default `1`)
+- `validateTextSample` — reject matches whose text is too short vs the tagged `textSample` (blocks placeholder matches like `"AERIN"` for description)
+
+If extraction times out, `data.json` includes `_extractReadiness` showing which locators were still pending.
 
 ## Output layout
 
@@ -105,20 +135,24 @@ scraper/sites/aerin_com/
 └── products/
     └── cedar-violet-abc12345/
         ├── data.json
+        ├── llm_input.json
         └── images/
             ├── 01.jpg
             └── 02.jpg
 ```
 
-`data.json` mirrors the backend import shape (raw values — sanitisation is deferred to a later iteration).
+- `data.json` — raw extracted text chunks from the DOM (no parsing or normalisation). Each field key maps to an array of strings, one per tagged element.
+- `llm_input.json` — server-built intermediary for the future LLM pass. Each tagged field includes its raw `value` array plus `also_contains` / `sometimes_contains` metadata (with schema types/labels). `derived_targets` lists every field the LLM must extract from a parent value (e.g. `size_value` and `size_unit` from `name`).
+
+Existing product folders keep their old `data.json` / `llm_input.json` shape until you re-run extraction. After re-scraping, values appear as raw arrays under each `fieldKey`.
 
 ## Schema
 
 Field definitions live in `schema/candle.schema.json`. Each field has:
 
 - `key`, `label`
-- `scope`: `product`, `size`, `note`, `accord`, `image`
-- `cardinality`: `single` or `multiple`
+- `scope`: `product`, `size`, `note`, `accord`, `image` — groups fields in the tagging UI only; extraction does not nest data by scope
+- `cardinality`: `single` or `multiple` — informational for the future LLM step; extraction always stores raw text arrays
 - `type`: `text`, `number`, `currency`, `boolean`, `url`
 
 Swap this file for other project domains while keeping the same userscript/server architecture.
@@ -131,6 +165,7 @@ Swap this file for other project domains while keeping the same userscript/serve
 - **JS-only product links** — browse mode records `js-click` strategy; extraction works best with real `href` links
 - **Auto-scrape tabs stay open** — browser popup blockers may prevent `window.close()`; check Tampermonkey tab permissions
 - **Wrong product URL count in Extract mode** — reload the userscript (v1.0.8+). Legacy configs are normalized on load; for best results re-lock the browse group and re-tag product fields so recipes exclude instance-specific attributes
+- **Fields empty or partial after extraction** — reload the userscript (v1.2.1+). Extraction now waits for network/DOM quiet and requires all locators with meaningful text. Increase `extract.timeoutMs` in `config.json` for slow API-driven sites. Check `data.json` → `_extractReadiness` for which locators timed out.
 - **Fields empty on a different product page** — re-tag fields on a representative product page; locators must use stable semantic signals, not example product names/prices
 
 ## Blueprint migration
@@ -144,5 +179,6 @@ No URLs or DOM element references are stored in blueprints — only reusable mat
 
 ## Out of scope (Part 1)
 
+- LLM pass (parsing `llm_input.json` into import-ready JSON)
 - Value sanitisation/normalisation
 - Push to backend `/import` endpoint

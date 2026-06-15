@@ -1,28 +1,58 @@
 {
   "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Meg%C3%A8ve%27s+Rose",
-  "scrapedAt": "2026-06-15T13:48:41.196Z",
-  "name": "Megève’s Rose 9.5oz Candle",
-  "description": "Home Classic Candle Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN Megève’s Rose 9.5oz Candle Add to Saved Items $125 ScentMegève's RoseSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The Megève's Rose scented candle was inspired by an area of natural beauty in the French Alps. Lemon Zest and Fresh Greens capture the crisp alpine air, while Rose Centifolia infuses a velvety floral deepened by rich, woody notes of Musk and Sandalwood. Presented in a cream glass vessel enhanced with a gold lid that the candle can sit in when in use, it is a beautiful addition to a table and makes a perfect gift. Details Notes: Lemon Zest, Fresh Greens, Rose Centifolia Firabs, Warm Musk, Sandalwood Cream candle in glass vessel Dimensions: 3.2\" x 3.2\" x 4\" Burn time: 55 hours Imported",
-  "sizes": [
-    {
-      "price_currency": "$125"
-    }
+  "scrapedAt": "2026-06-15T16:00:25.200Z",
+  "name": [
+    "Megève’s Rose 9.5oz Candle"
+  ],
+  "price_currency": [
+    "$125"
+  ],
+  "description": [
+    "AERIN"
+  ],
+  "note_name": [
+    "Home"
   ],
   "images": [
     {
-      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21221012_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 0,
       "is_primary": true
     },
     {
-      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221002_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21221012_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 1,
       "is_primary": false
     },
     {
-      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21221012_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 2,
       "is_primary": false
     }
-  ]
+  ],
+  "_extractReadiness": {
+    "ready": false,
+    "resolved": 5,
+    "required": 8,
+    "pending": [
+      {
+        "kind": "field",
+        "fieldKey": "description",
+        "order": null,
+        "reason": "empty_or_premature"
+      },
+      {
+        "kind": "field",
+        "fieldKey": "burn_time_hours",
+        "order": null,
+        "reason": "not_found"
+      },
+      {
+        "kind": "field",
+        "fieldKey": "note_name",
+        "order": null,
+        "reason": "empty_or_premature"
+      }
+    ]
+  }
 }

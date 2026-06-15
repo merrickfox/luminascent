@@ -1,28 +1,55 @@
 {
   "source_url": "https://www.aerin.com/mini-candle-trio-22220103/",
-  "scrapedAt": "2026-06-15T13:48:39.182Z",
-  "name": "Mini Candle Trio",
-  "description": "Home Mini Candle Trio Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN Mini Candle Trio Add to Saved Items $250 Aerin's Love Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description Presented in a branded gift box ready to give, three of AERIN's bestselling floral candles are now available in compact sizes in gold-rimmed ceramic vessels. Inspired by the island of Mustique, L'Ansecoy Orange Blossom offers sun-kissed orange blossom and sweet Cedar enhanced by the greens and citrus of Petitgrain. Uzes Tuberose captures the medieval town of Uzes in southern France with Tuberose, fruity Apricot, and a hint of spicy Clove. Monserrate Rose is a romantic pairing of Rose Centifolia and sparkling Gardenia enhanced by alluring Sandalwood, inspired by Portugal's Monserrate Palace and gardens. Details Ceramic 2.9 oz each Vessel dimensions: 2.4\" x 2.7\" Gift box dimensions: 9.1\" X 3.1\" X 3.4\" Burn time: approximately 24 hours Scents include: L'Ansecoy Orange Blossom, Uzes Tuberose, Monserrate Rose Imported",
-  "sizes": [
-    {
-      "price_currency": "$250"
-    }
+  "scrapedAt": "2026-06-15T16:00:24.050Z",
+  "name": [
+    "Mini Candle Trio"
+  ],
+  "price_currency": [
+    "$250"
+  ],
+  "description": [
+    "AERIN"
+  ],
+  "burn_time_hours": [
+    "Vessel dimensions: 2.4\" x 2.7\""
+  ],
+  "note_name": [
+    "Home"
   ],
   "images": [
     {
-      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 0,
       "is_primary": true
     },
     {
-      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 1,
       "is_primary": false
     },
     {
-      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22220103_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 2,
       "is_primary": false
     }
-  ]
+  ],
+  "_extractReadiness": {
+    "ready": false,
+    "resolved": 6,
+    "required": 8,
+    "pending": [
+      {
+        "kind": "field",
+        "fieldKey": "description",
+        "order": null,
+        "reason": "empty_or_premature"
+      },
+      {
+        "kind": "field",
+        "fieldKey": "note_name",
+        "order": null,
+        "reason": "empty_or_premature"
+      }
+    ]
+  }
 }

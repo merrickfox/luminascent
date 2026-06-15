@@ -123,6 +123,78 @@ function emptyBlueprint(host) {
   };
 }
 
+const CONTAINMENT_MODES = [
+  { mode: 'also_contains', confidence: 'also' },
+  { mode: 'sometimes_contains', confidence: 'sometimes' },
+];
+
+function schemaFieldMap(schema) {
+  const map = new Map();
+  (schema?.fields || []).forEach((field) => map.set(field.key, field));
+  return map;
+}
+
+function resolveFieldValue(field, data) {
+  const value = data[field.fieldKey];
+  if (value == null) return null;
+  if (Array.isArray(value)) return value.length ? value : null;
+  if (typeof value === 'string' && value !== '') return [value];
+  return null;
+}
+
+function expandContainedKeys(keys, schemaByKey) {
+  return (keys || []).map((key) => {
+    const schemaField = schemaByKey.get(key);
+    return {
+      fieldKey: key,
+      scope: schemaField?.scope || null,
+      type: schemaField?.type || null,
+      label: schemaField?.label || key,
+    };
+  });
+}
+
+function buildLlmInput(config, schema, data) {
+  const schemaByKey = schemaFieldMap(schema);
+  const fields = (config?.product?.fields || []).map((field) => {
+    const schemaField = schemaByKey.get(field.fieldKey);
+    return {
+      fieldKey: field.fieldKey,
+      scope: field.scope || schemaField?.scope || null,
+      type: field.type || schemaField?.type || null,
+      value: resolveFieldValue(field, data),
+      also_contains: expandContainedKeys(field.also_contains, schemaByKey),
+      sometimes_contains: expandContainedKeys(field.sometimes_contains, schemaByKey),
+    };
+  });
+
+  const derivedTargets = [];
+  (config?.product?.fields || []).forEach((field) => {
+    CONTAINMENT_MODES.forEach(({ mode, confidence }) => {
+      (field[mode] || []).forEach((containedKey) => {
+        const schemaField = schemaByKey.get(containedKey);
+        derivedTargets.push({
+          fieldKey: containedKey,
+          scope: schemaField?.scope || null,
+          type: schemaField?.type || null,
+          derive_from: field.fieldKey,
+          confidence,
+        });
+      });
+    });
+  });
+
+  return {
+    source_url: data.source_url || null,
+    schema: schema?.name || 'candle',
+    schema_version: schema?.version || 1,
+    generatedAt: new Date().toISOString(),
+    fields,
+    derived_targets: derivedTargets,
+    images: data.images || [],
+  };
+}
+
 async function handleRequest(req, res) {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, corsHeaders());
@@ -211,6 +283,15 @@ async function handleRequest(req, res) {
       };
 
       writeJsonFile(path.join(dir, 'data.json'), payload);
+
+      const cfgPath = configPath(host);
+      if (fs.existsSync(cfgPath) && fs.existsSync(SCHEMA_PATH)) {
+        const config = readJsonFile(cfgPath);
+        const schema = readJsonFile(SCHEMA_PATH);
+        const llmInput = buildLlmInput(config, schema, payload);
+        writeJsonFile(path.join(dir, 'llm_input.json'), llmInput);
+      }
+
       sendJson(res, 200, { ok: true, hostSlug: hostSlug(host), urlSlug: slug, path: dir });
       return;
     }
@@ -279,4 +360,5 @@ if (require.main === module) {
 module.exports = {
   hostSlug,
   urlSlug,
+  buildLlmInput,
 };

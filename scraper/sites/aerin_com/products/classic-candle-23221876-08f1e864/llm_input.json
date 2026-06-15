@@ -1,0 +1,112 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Villandry",
+  "schema": "candle",
+  "schema_version": 1,
+  "generatedAt": "2026-06-15T16:00:18.960Z",
+  "fields": [
+    {
+      "fieldKey": "name",
+      "scope": "product",
+      "type": "text",
+      "value": [
+        "Villandry 9.5oz Candle"
+      ],
+      "also_contains": [
+        {
+          "fieldKey": "size_value",
+          "scope": "size",
+          "type": "number",
+          "label": "Size Value"
+        },
+        {
+          "fieldKey": "size_unit",
+          "scope": "size",
+          "type": "text",
+          "label": "Size Unit"
+        }
+      ],
+      "sometimes_contains": []
+    },
+    {
+      "fieldKey": "price_currency",
+      "scope": "size",
+      "type": "text",
+      "value": null,
+      "also_contains": [
+        {
+          "fieldKey": "price_amount",
+          "scope": "size",
+          "type": "currency",
+          "label": "Price"
+        }
+      ],
+      "sometimes_contains": []
+    },
+    {
+      "fieldKey": "description",
+      "scope": "product",
+      "type": "text",
+      "value": [
+        "AERIN"
+      ],
+      "also_contains": [],
+      "sometimes_contains": []
+    },
+    {
+      "fieldKey": "burn_time_hours",
+      "scope": "size",
+      "type": "number",
+      "value": null,
+      "also_contains": [],
+      "sometimes_contains": []
+    },
+    {
+      "fieldKey": "note_name",
+      "scope": "note",
+      "type": "text",
+      "value": null,
+      "also_contains": [],
+      "sometimes_contains": []
+    }
+  ],
+  "derived_targets": [
+    {
+      "fieldKey": "size_value",
+      "scope": "size",
+      "type": "number",
+      "derive_from": "name",
+      "confidence": "also"
+    },
+    {
+      "fieldKey": "size_unit",
+      "scope": "size",
+      "type": "text",
+      "derive_from": "name",
+      "confidence": "also"
+    },
+    {
+      "fieldKey": "price_amount",
+      "scope": "size",
+      "type": "currency",
+      "derive_from": "price_currency",
+      "confidence": "also"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/5/25121387_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/5/25121387_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/5/25121387_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

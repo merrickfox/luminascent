@@ -1,23 +1,55 @@
 {
   "source_url": "https://www.aerin.com/sorrento-10-6oz-candle-22122315/?candle_scent=L%27Ansecoy+Orange+Blossom&color=Marbleized+Blue",
-  "scrapedAt": "2026-06-15T13:48:40.178Z",
-  "name": "Sorrento L'Ansecoy Orange Blossom 10.6oz Candle",
-  "description": "Home Sorrento 10.6oz Candle Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN Sorrento L'Ansecoy Orange Blossom 10.6oz Candle Add to Saved Items $195 Only at AERIN ScentL'Ansecoy Orange BlossomL'Ansecoy Orange BlossomColorMarbleized Blue Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The L’Ansecoy Orange Blossom scented candle imparts a sun-kissed floral fragrance. Presented in a blue marbleized pot handcrafted to create a unique pattern, and enhanced with gold edging, it is a beautiful addition to a table top and an ideal gift. Details Ceramic earthenware, 10k gold Dimensions: 3.5” x 3.5” x 4.2” Dust with a soft cloth Burn time: 57 hours Made in Italy",
+  "scrapedAt": "2026-06-15T16:00:20.199Z",
+  "name": [
+    "Sorrento L'Ansecoy Orange Blossom 10.6oz Candle"
+  ],
+  "price_currency": [
+    "$195"
+  ],
+  "description": [
+    "AERIN"
+  ],
+  "burn_time_hours": [
+    "Dust with a soft cloth"
+  ],
+  "note_name": [
+    "Home"
+  ],
   "images": [
     {
-      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21121009_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 0,
       "is_primary": true
     },
     {
-      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22122315_5_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21121009_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 1,
       "is_primary": false
     },
     {
-      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21121009_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
       "position": 2,
       "is_primary": false
     }
-  ]
+  ],
+  "_extractReadiness": {
+    "ready": false,
+    "resolved": 6,
+    "required": 8,
+    "pending": [
+      {
+        "kind": "field",
+        "fieldKey": "description",
+        "order": null,
+        "reason": "empty_or_premature"
+      },
+      {
+        "kind": "field",
+        "fieldKey": "note_name",
+        "order": null,
+        "reason": "empty_or_premature"
+      }
+    ]
+  }
 }

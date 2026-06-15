@@ -3,7 +3,7 @@
   "hostSlug": "aerin_com",
   "version": 1,
   "createdAt": "2026-06-12T20:57:52.696Z",
-  "updatedAt": "2026-06-15T13:48:19.687Z",
+  "updatedAt": "2026-06-15T15:49:01.560Z",
   "browse": {
     "container": {
       "version": 1,
@@ -34,43 +34,6 @@
         "scope": "product",
         "cardinality": "single",
         "type": "text",
-        "locator": {
-          "version": 1,
-          "tag": "span",
-          "attrs": {
-            "itemprop": "name",
-            "data-ui-id": "page-title-wrapper",
-            "data-dynamic": "name",
-            "class": "base lumiscrape-highlight-strong"
-          },
-          "anchor": null,
-          "textSample": "Villandry 9.5oz Candle",
-          "matchMode": "recipe",
-          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
-          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
-          "anchorAttrs": {
-            "itemprop": "name",
-            "data-ui-id": "page-title-wrapper",
-            "data-dynamic": "name",
-            "class": "base lumiscrape-highlight-strong"
-          },
-          "relativePathFromAnchor": "",
-          "extraction": {
-            "type": "text"
-          },
-          "signals": {
-            "tag": "span",
-            "attrs": {
-              "itemprop": "name",
-              "data-ui-id": "page-title-wrapper",
-              "data-dynamic": "name",
-              "class": "base lumiscrape-highlight-strong"
-            },
-            "anchor": null,
-            "textSample": "Villandry 9.5oz Candle",
-            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)"
-          }
-        },
         "extraction": {
           "type": "text"
         },
@@ -79,41 +42,52 @@
           "size_unit"
         ],
         "sometimes_contains": [],
-        "taggedAt": "2026-06-12T20:58:24.309Z"
+        "taggedAt": "2026-06-12T20:58:24.309Z",
+        "locators": [
+          {
+            "version": 1,
+            "tag": "span",
+            "attrs": {
+              "itemprop": "name",
+              "data-ui-id": "page-title-wrapper",
+              "data-dynamic": "name",
+              "class": "base"
+            },
+            "anchor": null,
+            "textSample": "Villandry 9.5oz Candle",
+            "matchMode": "recipe",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
+            "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
+            "anchorAttrs": {
+              "itemprop": "name",
+              "data-ui-id": "page-title-wrapper",
+              "data-dynamic": "name",
+              "class": "base"
+            },
+            "relativePathFromAnchor": "",
+            "extraction": {
+              "type": "text"
+            },
+            "signals": {
+              "tag": "span",
+              "attrs": {
+                "itemprop": "name",
+                "data-ui-id": "page-title-wrapper",
+                "data-dynamic": "name",
+                "class": "base"
+              },
+              "anchor": null,
+              "textSample": "Villandry 9.5oz Candle",
+              "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)"
+            }
+          }
+        ]
       },
       {
         "fieldKey": "price_currency",
         "scope": "size",
         "cardinality": "single",
         "type": "text",
-        "locator": {
-          "version": 1,
-          "tag": "span",
-          "attrs": {
-            "class": "price lumiscrape-highlight-strong"
-          },
-          "anchor": null,
-          "textSample": "$125",
-          "matchMode": "recipe",
-          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
-          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
-          "anchorAttrs": {
-            "class": "price lumiscrape-highlight-strong"
-          },
-          "relativePathFromAnchor": "",
-          "extraction": {
-            "type": "text"
-          },
-          "signals": {
-            "tag": "span",
-            "attrs": {
-              "class": "price lumiscrape-highlight-strong"
-            },
-            "anchor": null,
-            "textSample": "$125",
-            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)"
-          }
-        },
         "extraction": {
           "type": "text"
         },
@@ -121,47 +95,151 @@
           "price_amount"
         ],
         "sometimes_contains": [],
-        "taggedAt": "2026-06-12T20:58:57.838Z"
+        "taggedAt": "2026-06-12T20:58:57.838Z",
+        "locators": [
+          {
+            "version": 1,
+            "tag": "span",
+            "attrs": {
+              "class": "price"
+            },
+            "anchor": null,
+            "textSample": "$125",
+            "matchMode": "recipe",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+            "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+            "anchorAttrs": {
+              "class": "price"
+            },
+            "relativePathFromAnchor": "",
+            "extraction": {
+              "type": "text"
+            },
+            "signals": {
+              "tag": "span",
+              "attrs": {
+                "class": "price"
+              },
+              "anchor": null,
+              "textSample": "$125",
+              "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)"
+            }
+          }
+        ]
       },
       {
         "fieldKey": "description",
         "scope": "product",
         "cardinality": "single",
         "type": "text",
-        "locator": {
-          "version": 1,
-          "tag": "div",
-          "attrs": {
-            "class": "value lumiscrape-highlight-strong"
-          },
-          "anchor": null,
-          "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
-          "matchMode": "recipe",
-          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
-          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
-          "anchorAttrs": {
-            "class": "value lumiscrape-highlight-strong"
-          },
-          "relativePathFromAnchor": "",
-          "extraction": {
-            "type": "text"
-          },
-          "signals": {
-            "tag": "div",
-            "attrs": {
-              "class": "value lumiscrape-highlight-strong"
-            },
-            "anchor": null,
-            "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
-            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)"
-          }
-        },
         "extraction": {
           "type": "text"
         },
         "also_contains": [],
         "sometimes_contains": [],
-        "taggedAt": "2026-06-12T20:59:15.806Z"
+        "taggedAt": "2026-06-15T15:29:01.374Z",
+        "locators": [
+          {
+            "version": 1,
+            "tag": "div",
+            "attrs": {
+              "class": "value"
+            },
+            "anchor": null,
+            "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
+            "matchMode": "recipe",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "anchorAttrs": {
+              "class": "value"
+            },
+            "relativePathFromAnchor": "",
+            "extraction": {
+              "type": "text"
+            },
+            "signals": {
+              "tag": "div",
+              "attrs": {
+                "class": "value"
+              },
+              "anchor": null,
+              "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
+              "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)"
+            }
+          }
+        ]
+      },
+      {
+        "fieldKey": "burn_time_hours",
+        "scope": "size",
+        "cardinality": "single",
+        "type": "number",
+        "extraction": {
+          "type": "text"
+        },
+        "also_contains": [],
+        "sometimes_contains": [],
+        "taggedAt": "2026-06-15T15:24:01.524Z",
+        "locators": [
+          {
+            "version": 1,
+            "tag": "li",
+            "attrs": {},
+            "anchor": null,
+            "textSample": "Burn time: 55 hours",
+            "matchMode": "recipe",
+            "structuralPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3)",
+            "anchorPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3)",
+            "anchorAttrs": {},
+            "relativePathFromAnchor": "",
+            "extraction": {
+              "type": "text"
+            },
+            "signals": {
+              "tag": "li",
+              "attrs": {},
+              "anchor": null,
+              "textSample": "Burn time: 55 hours",
+              "structuralPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(3)"
+            }
+          }
+        ]
+      },
+      {
+        "fieldKey": "note_name",
+        "scope": "note",
+        "cardinality": "multiple",
+        "type": "text",
+        "extraction": {
+          "type": "text"
+        },
+        "also_contains": [],
+        "sometimes_contains": [],
+        "taggedAt": "2026-06-15T15:24:21.339Z",
+        "locators": [
+          {
+            "version": 1,
+            "tag": "li",
+            "attrs": {},
+            "anchor": null,
+            "textSample": "Notes: Orchid, Gardenia, Muguet, Freesia, Vanilla",
+            "matchMode": "recipe",
+            "structuralPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1)",
+            "anchorPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1)",
+            "anchorAttrs": {},
+            "relativePathFromAnchor": "",
+            "extraction": {
+              "type": "text"
+            },
+            "signals": {
+              "tag": "li",
+              "attrs": {},
+              "anchor": null,
+              "textSample": "Notes: Orchid, Gardenia, Muguet, Freesia, Vanilla",
+              "structuralPath": "main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1)"
+            }
+          }
+        ]
       }
     ]
   },
