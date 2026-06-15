@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Sintra+Gardenia",
+  "scrapedAt": "2026-06-15T13:48:38.235Z",
+  "name": "Sintra Gardenia 9.5oz Candle",
+  "description": "Home Classic Candle Skip to the end of the images gallery .fotorama1781531313736 .fotorama__nav--thumbs .fotorama__nav__frame{ padding:10px; height:52px} .fotorama1781531313736 .fotorama__thumb-border{ height:52px; border-width:2px; margin-top:10px} Skip to the beginning of the images gallery AERIN Sintra Gardenia 9.5oz Candle Add to Saved Items $125 ScentSintra GardeniaSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The Sintra Gardenia scented candle was inspired by the exquisite town of Sintra in Portugal, sitting amidst pine-covered hills. Its fragrance captures the exotic gardens and location with fragrant Lush Gardenia, delicious Cinnamon, and a deep evergreen scent of Cedarwood. Presented in a cream glass vessel enhanced with a gold lid that the candle can sit in when in use, it is a beautiful addition to a table and makes a perfect gift. Details Notes: Lush Gardenia, Cinnamon, Orange Flower, Cedarwood Cream candle in glass vessel Burn time: 55 hours",
+  "sizes": [
+    {
+      "price_currency": "$125"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221008_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221008_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221008_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

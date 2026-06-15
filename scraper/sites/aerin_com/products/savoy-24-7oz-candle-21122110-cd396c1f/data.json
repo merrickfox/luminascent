@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/savoy-24-7oz-candle-21122110/?candle_scent=L%27Ansecoy+Orange+Blossom&color=Cream",
+  "scrapedAt": "2026-06-15T13:48:40.146Z",
+  "name": "Savoy L'Ansecoy Orange Blossom 24.7oz Candle",
+  "description": "Home Savoy 24.7oz Candle Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN Savoy L'Ansecoy Orange Blossom 24.7oz Candle Add to Saved Items $350 Aerin's Love ScentL'Ansecoy Orange BlossomL'Ansecoy Orange BlossomNendaz CypressColorCream Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description Hand-crafted in Italy, this lidded pot holds a three-wick scented candle. The pot has been enhanced using a glazing technique that provides a textured, natural appearance, giving it an overall artisanal appeal, elevated by hand-painted gold detailing. A versatile piece that adds charm wherever it is placed. Details Ceramic, 24k gold Dimensions: 4.9\" x 4.9\" x 5.8\" Clean with a damp cloth Expect slight variation due to handmade process Burn time: 64 hours Made in Italy",
+  "sizes": [
+    {
+      "price_currency": "$350"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/1/21122110_53_1_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

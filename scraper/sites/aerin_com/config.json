@@ -2,11 +2,271 @@
   "host": "www.aerin.com",
   "hostSlug": "aerin_com",
   "version": 1,
-  "createdAt": "2026-06-12T19:56:38.691Z",
-  "updatedAt": "2026-06-12T19:56:38.691Z",
-  "browse": null,
-  "product": {
-    "fields": []
+  "createdAt": "2026-06-12T20:57:52.696Z",
+  "updatedAt": "2026-06-15T13:48:19.687Z",
+  "browse": {
+    "container": {
+      "version": 1,
+      "tag": "ul",
+      "anchorAttrs": {
+        "class": "kuResults"
+      },
+      "relativePathFromAnchor": "ul:nth-of-type(1)"
+    },
+    "itemFingerprint": "li[class~klevuproduct|ku-product-block]{div}@1",
+    "linkRule": {
+      "version": 1,
+      "selector": "a.klevuProductClick[href]",
+      "strategy": "href"
+    },
+    "fingerprint": "li[class~klevuproduct|ku-product-block]{div}@1",
+    "linkStrategy": "href",
+    "lockedAt": "2026-06-15T13:48:19.570Z",
+    "_debug": {
+      "count": 15,
+      "sampleText": "Aerin's Love AERIN Villandry 9.5oz Candle $125 Add to Saved "
+    }
   },
-  "images": []
+  "product": {
+    "fields": [
+      {
+        "fieldKey": "name",
+        "scope": "product",
+        "cardinality": "single",
+        "type": "text",
+        "locator": {
+          "version": 1,
+          "tag": "span",
+          "attrs": {
+            "itemprop": "name",
+            "data-ui-id": "page-title-wrapper",
+            "data-dynamic": "name",
+            "class": "base lumiscrape-highlight-strong"
+          },
+          "anchor": null,
+          "textSample": "Villandry 9.5oz Candle",
+          "matchMode": "recipe",
+          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
+          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)",
+          "anchorAttrs": {
+            "itemprop": "name",
+            "data-ui-id": "page-title-wrapper",
+            "data-dynamic": "name",
+            "class": "base lumiscrape-highlight-strong"
+          },
+          "relativePathFromAnchor": "",
+          "extraction": {
+            "type": "text"
+          },
+          "signals": {
+            "tag": "span",
+            "attrs": {
+              "itemprop": "name",
+              "data-ui-id": "page-title-wrapper",
+              "data-dynamic": "name",
+              "class": "base lumiscrape-highlight-strong"
+            },
+            "anchor": null,
+            "textSample": "Villandry 9.5oz Candle",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > h1:nth-of-type(1) > span:nth-of-type(1)"
+          }
+        },
+        "extraction": {
+          "type": "text"
+        },
+        "also_contains": [
+          "size_value",
+          "size_unit"
+        ],
+        "sometimes_contains": [],
+        "taggedAt": "2026-06-12T20:58:24.309Z"
+      },
+      {
+        "fieldKey": "price_currency",
+        "scope": "size",
+        "cardinality": "single",
+        "type": "text",
+        "locator": {
+          "version": 1,
+          "tag": "span",
+          "attrs": {
+            "class": "price lumiscrape-highlight-strong"
+          },
+          "anchor": null,
+          "textSample": "$125",
+          "matchMode": "recipe",
+          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)",
+          "anchorAttrs": {
+            "class": "price lumiscrape-highlight-strong"
+          },
+          "relativePathFromAnchor": "",
+          "extraction": {
+            "type": "text"
+          },
+          "signals": {
+            "tag": "span",
+            "attrs": {
+              "class": "price lumiscrape-highlight-strong"
+            },
+            "anchor": null,
+            "textSample": "$125",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1)"
+          }
+        },
+        "extraction": {
+          "type": "text"
+        },
+        "also_contains": [
+          "price_amount"
+        ],
+        "sometimes_contains": [],
+        "taggedAt": "2026-06-12T20:58:57.838Z"
+      },
+      {
+        "fieldKey": "description",
+        "scope": "product",
+        "cardinality": "single",
+        "type": "text",
+        "locator": {
+          "version": 1,
+          "tag": "div",
+          "attrs": {
+            "class": "value lumiscrape-highlight-strong"
+          },
+          "anchor": null,
+          "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
+          "matchMode": "recipe",
+          "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+          "anchorPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+          "anchorAttrs": {
+            "class": "value lumiscrape-highlight-strong"
+          },
+          "relativePathFromAnchor": "",
+          "extraction": {
+            "type": "text"
+          },
+          "signals": {
+            "tag": "div",
+            "attrs": {
+              "class": "value lumiscrape-highlight-strong"
+            },
+            "anchor": null,
+            "textSample": "The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château ",
+            "structuralPath": "div:nth-of-type(4) > main:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)"
+          }
+        },
+        "extraction": {
+          "type": "text"
+        },
+        "also_contains": [],
+        "sometimes_contains": [],
+        "taggedAt": "2026-06-12T20:59:15.806Z"
+      }
+    ]
+  },
+  "images": [
+    {
+      "order": 1,
+      "src": "https://www.aerin.com/media/catalog/product/2/5/25121387_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "locator": {
+        "version": 1,
+        "tag": "img",
+        "attrs": {
+          "class": "fotorama__img"
+        },
+        "anchor": null,
+        "textSample": "",
+        "matchMode": "recipe",
+        "structuralPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > img:nth-of-type(1)",
+        "anchorPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > img:nth-of-type(1)",
+        "anchorAttrs": {
+          "class": "fotorama__img"
+        },
+        "relativePathFromAnchor": "",
+        "extraction": {
+          "type": "attribute",
+          "attribute": "src"
+        },
+        "signals": {
+          "tag": "img",
+          "attrs": {
+            "class": "fotorama__img"
+          },
+          "anchor": null,
+          "textSample": "",
+          "structuralPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > img:nth-of-type(1)"
+        }
+      },
+      "kind": "img"
+    },
+    {
+      "order": 2,
+      "src": "https://www.aerin.com/media/catalog/product/2/5/25120334_2_5.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "locator": {
+        "version": 1,
+        "tag": "img",
+        "attrs": {
+          "class": "fotorama__img"
+        },
+        "anchor": null,
+        "textSample": "",
+        "matchMode": "recipe",
+        "structuralPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > img:nth-of-type(1)",
+        "anchorPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > img:nth-of-type(1)",
+        "anchorAttrs": {
+          "class": "fotorama__img"
+        },
+        "relativePathFromAnchor": "",
+        "extraction": {
+          "type": "attribute",
+          "attribute": "src"
+        },
+        "signals": {
+          "tag": "img",
+          "attrs": {
+            "class": "fotorama__img"
+          },
+          "anchor": null,
+          "textSample": "",
+          "structuralPath": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > img:nth-of-type(1)"
+        }
+      },
+      "kind": "img"
+    },
+    {
+      "order": 3,
+      "src": "https://www.aerin.com/media/catalog/product/2/5/25121387_3.jpg?quality=100&fit=bounds&height=52&width=52&canvas=52:52",
+      "locator": {
+        "version": 1,
+        "tag": "img",
+        "attrs": {
+          "class": "fotorama__img"
+        },
+        "anchor": null,
+        "textSample": "",
+        "matchMode": "recipe",
+        "structuralPath": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > img:nth-of-type(1)",
+        "anchorPath": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > img:nth-of-type(1)",
+        "anchorAttrs": {
+          "class": "fotorama__img"
+        },
+        "relativePathFromAnchor": "",
+        "extraction": {
+          "type": "attribute",
+          "attribute": "src"
+        },
+        "signals": {
+          "tag": "img",
+          "attrs": {
+            "class": "fotorama__img"
+          },
+          "anchor": null,
+          "textSample": "",
+          "structuralPath": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > img:nth-of-type(1)"
+        }
+      },
+      "kind": "img"
+    }
+  ]
 }

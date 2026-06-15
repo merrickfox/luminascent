@@ -54,25 +54,33 @@ Configure → Browse → Product → Images → Extract
 
 ### Browse mode
 
-1. Click **Browse mode**
-2. Click **Detect groups** — finds repeated DOM structures (nav, footer, product grids)
-3. Hover groups in the panel to highlight them on the page
-4. Click the correct product group, then **Lock selected group**
+1. Click **Browse mode** — the panel auto-scans and keeps watching for late-loaded content (API grids, infinite scroll)
+2. Hover groups in the panel to highlight them on the page
+3. Click the correct product group, then **Lock selected group**
 
-Stores container/item locators and link strategy (`href` vs `js-click`).
+Detection uses **structure-type fingerprints** (tag + child layout + semantic attributes), not unique per-item IDs like `data-id`. That lets dynamically injected product cards group together even when each item has a different ID. Nav/footer groups are deprioritized via generic region heuristics (`nav`, `header`, `footer`, `main`).
+
+Locking a group saves a **recipe**, not concrete URLs or element instances:
+
+- `container` — stable anchor (e.g. `data-block-id`) + relative path to the grid
+- `itemFingerprint` — structural fingerprint for product cards within the grid
+- `linkRule` — relative selector within each card to the product link (`href` vs `js-click`)
+
+Extraction re-runs this recipe on whatever page is loaded (including page 2 of pagination). URLs are computed live and never stored in the blueprint.
 
 ### Product mode
 
 1. Open a representative product page
 2. Click **Product mode**
-3. Click elements on the page — a context menu lists schema fields
-4. Tag fields like `name`, `price_amount`, `description`, etc.
-5. For nested content (e.g. notes inside description):
-   - Tag the parent field first
-   - Use **Add sub-tag under …** then choose **Also contains** or **Sometimes contains**
-6. Click **Save product blueprint**
+3. **Click an element on the page** — it gets an orange outline and appears as "Selected" in the panel
+4. **Click a field button in the panel** (Product Name, Price, Description, etc.) to tag it
+5. Repeat for each field you need
+6. For nested content (e.g. notes inside description): tag both fields on the page first, then on the parent field's card click **+ Add field** under **Also contains** or **Sometimes contains** and pick the related schema field (e.g. Note Name)
+7. Click **Save product blueprint**
 
-Locators use multi-signal matching (stable attributes, structural path, nearby labels, text samples) — not brittle CSS classes.
+Field tagging happens in the panel (not a floating menu), so you always see what to do next.
+
+Product field locators are also recipes: stable semantic attributes (`itemprop`, `data-ui-id`, `data-dynamic`, `data-attribute-code`, etc.) plus relative structural position. Example product text, prices, and per-item IDs are **not** used for matching — only shown as `textSample` hints in the panel.
 
 ### Images mode
 
@@ -87,7 +95,7 @@ Locators use multi-signal matching (stable attributes, structural path, nearby l
 2. Click **Extract mode**
 3. Click **Start extraction**
 
-The script opens product URLs in background tabs (max 3 concurrent), waits for render completion, extracts tagged fields, POSTs `data.json` and image bytes to the server, then closes each tab.
+The script opens every detected product URL in a background tab, waits for render completion, extracts tagged fields, POSTs `data.json` and image bytes to the server, then closes each tab.
 
 ## Output layout
 
@@ -122,6 +130,17 @@ Swap this file for other project domains while keeping the same userscript/serve
 - **Mixed content blocked** — the userscript uses `GM_xmlhttpRequest` with `@connect localhost` to bypass https → http restrictions
 - **JS-only product links** — browse mode records `js-click` strategy; extraction works best with real `href` links
 - **Auto-scrape tabs stay open** — browser popup blockers may prevent `window.close()`; check Tampermonkey tab permissions
+- **Wrong product URL count in Extract mode** — reload the userscript (v1.0.8+). Legacy configs are normalized on load; for best results re-lock the browse group and re-tag product fields so recipes exclude instance-specific attributes
+- **Fields empty on a different product page** — re-tag fields on a representative product page; locators must use stable semantic signals, not example product names/prices
+
+## Blueprint migration
+
+Configs saved before v1.0.8 may contain instance-bound locators (`data-id`, example `textSample`/`anchor` values, capped `membersSample` lists). The userscript normalizes these on load where possible, but you should:
+
+1. Re-lock the browse group on a list page (regenerates `container`, `itemFingerprint`, `linkRule`)
+2. Re-tag product fields and images on a representative product page
+
+No URLs or DOM element references are stored in blueprints — only reusable matching rules.
 
 ## Out of scope (Part 1)
 

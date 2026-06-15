@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Monserrate+Rose",
+  "scrapedAt": "2026-06-15T13:48:39.203Z",
+  "name": "Monserrate Rose 9.5oz Candle",
+  "description": "Home Classic Candle Skip to the end of the images gallery .fotorama1781531314172 .fotorama__nav--thumbs .fotorama__nav__frame{ padding:10px; height:52px} .fotorama1781531314172 .fotorama__thumb-border{ height:52px; border-width:2px; margin-top:10px} Skip to the beginning of the images gallery AERIN Monserrate Rose 9.5oz Candle Add to Saved Items $125 ScentMonserrate RoseSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The Monserrate Rose scented candle captures the romance of Monserrate Park and Palace in Sintra, Portugal. The ornate palace sits above expansive gardens planted with species from every corner of the world, from roses and azaleas to bamboo and cork trees. Velvety Rose Centifolia provides a luscious floral note, while sunny Gardenia adds a sparkling intensity that is further enhanced by an infusion of alluring Sandalwood. Presented in a cream glass vessel enhanced with a gold lid that also acts as a base when in use, this candle comes in floral packaging created by watercolor artist Helen Dealtry. Details Notes: Rose Centifolia, Gardenia, Sandalwood Glass vessel Dimensions: 3.2\" x 3.2\" x 4.0\" Imported",
+  "sizes": [
+    {
+      "price_currency": "$125"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22122273_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22122273_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/2/22122273_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

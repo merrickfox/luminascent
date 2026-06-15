@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Madaket+Geranium",
+  "scrapedAt": "2026-06-15T13:48:38.247Z",
+  "name": "Madaket Geranium 9.5oz Candle",
+  "description": "Home Classic Candle Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN Madaket Geranium 9.5oz Candle Add to Saved Items $125 ScentMadaket GeraniumSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description Madaket Geranium was inspired by Madaket Beach, which stretches along the west shore of Nantucket. The fragrance captures the destination with floral greens of Geranium, sparkling Jasmine, and a hint of Amber. Presented in a cream glass vessel enhanced with a gold lid that the candle can sit in when in use, it is a beautiful addition to a table and makes a perfect gift. Details Notes: Geranium, Pear, Rose, Jasmine, Amber Cream candle in glass vessel Dimensions: 3.2\" x 3.2\" x 4\" Burn time: 55 hours Imported",
+  "sizes": [
+    {
+      "price_currency": "$125"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221002_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

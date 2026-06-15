@@ -1,0 +1,15 @@
+{
+  "name": "scraper",
+  "version": "1.0.0",
+  "description": "Blueprint-driven visual scraper using Tampermonkey + a local Node server. Teach the system once per host where product lists, fields, and images live, then extract every product automatically.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "linkedom": "^0.18.12"
+  }
+}

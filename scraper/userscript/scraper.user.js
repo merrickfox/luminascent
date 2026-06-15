@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.0.0
+// @version      1.0.9
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -21,7 +21,6 @@
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
   const EXTRACT_KEY = 'lumiscrape_extract_state';
-  const MAX_CONCURRENT_TABS = 3;
 
   const state = {
     mode: 'start',
@@ -30,13 +29,17 @@
     config: null,
     hasConfig: false,
     browseCandidates: [],
-    hoveredCandidate: null,
+    selectedBrowseGroupId: null,
     highlightEls: [],
     selectedElement: null,
-    pendingContainmentParent: null,
+    pendingTagElement: null,
+    pendingTagPreview: '',
+    lastTaggedMessage: '',
+    pendingContainmentAdd: null,
     imageCandidates: [],
     imageSelections: [],
     extractRunning: false,
+    browseScanStatus: 'idle',
   };
 
   let shadowRoot = null;
@@ -44,6 +47,9 @@
   let highlightLayer = null;
   let contextMenuEl = null;
   let mutationObserver = null;
+  let browseWatchObserver = null;
+  let browseDetectTimer = null;
+  let browseDetectRunning = false;
 
   const STABLE_ATTRS = [
     'id',
@@ -53,9 +59,30 @@
     'itemprop',
     'data-testid',
     'data-test',
-    'data-product-id',
-    'data-sku',
-    'data-id',
+    'data-ui-id',
+    'data-dynamic',
+    'data-block-id',
+    'data-attribute-code',
+    'data-price-type',
+    'data-gallery-role',
+    'data-role',
+  ];
+
+  const RECIPE_ATTRS = [
+    'itemprop',
+    'role',
+    'name',
+    'data-ui-id',
+    'data-dynamic',
+    'data-block-id',
+    'data-testid',
+    'data-test',
+    'data-attribute-code',
+    'data-price-type',
+    'data-gallery-role',
+    'data-role',
+    'ku-block',
+    'ku-product-block',
   ];
 
   function gmRequest(options) {
@@ -147,6 +174,217 @@
       .map((child) => child.tagName.toLowerCase())
       .join(',');
     return `${tag}[${attrPart}]{${childTags}}`;
+  }
+
+  const INSTANCE_ATTR_PATTERNS = [
+    /^id$/i,
+    /^data-id$/i,
+    /^data-product-id$/i,
+    /^data-sku$/i,
+    /^data-entity-id$/i,
+    /^data-item-id$/i,
+    /^data-record-id$/i,
+    /^data-index$/i,
+    /^data-position$/i,
+    /^data-pos$/i,
+    /^data-uuid$/i,
+    /^data-guid$/i,
+    /^data-key$/i,
+    /^data-price-amount$/i,
+    /^data-option-selected$/i,
+    /^data-attribute-id$/i,
+    /^aria-controls$/i,
+    /^for$/i,
+    /^href$/i,
+    /^src$/i,
+    /^style$/i,
+    /^origin$/i,
+    /^onerror$/i,
+    /^title$/i,
+    /^alt$/i,
+  ];
+
+  function isInstanceSpecificAttr(name, value) {
+    if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
+    if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ''))) {
+      return true;
+    }
+    if (name === 'class' && /\b(?:slick-|swiper-|slide|cloned|active|current|selected|hover|focus|wishlist-item-icon)\b/i.test(value)) {
+      return true;
+    }
+    if (name === 'class' && /\d{3,}/.test(String(value || ''))) return true;
+    return false;
+  }
+
+  function filterRecipeAttrs(attrs) {
+    if (!attrs) return {};
+    const out = {};
+    for (const [key, value] of Object.entries(attrs)) {
+      if (!value || isInstanceSpecificAttr(key, value)) continue;
+      out[key] = value;
+    }
+    return out;
+  }
+
+  function classTokensOverlap(candidateValue, targetValue) {
+    const candidateTokens = new Set(String(candidateValue || '').split(/\s+/).filter(Boolean));
+    const targetTokens = String(targetValue || '').split(/\s+/).filter(Boolean);
+    if (!targetTokens.length) return false;
+    return targetTokens.every((token) => candidateTokens.has(token));
+  }
+
+  function getRecipeAttributes(el) {
+    const attrs = {};
+    if (!el?.attributes) return attrs;
+
+    for (const name of RECIPE_ATTRS) {
+      const value = el.getAttribute(name);
+      if (value && !isInstanceSpecificAttr(name, value)) {
+        attrs[name] = value;
+      } else if (el.hasAttribute(name) && !value) {
+        attrs[name] = '';
+      }
+    }
+
+    if (el.classList?.length) {
+      const tokens = Array.from(el.classList)
+        .filter((token) => !/\d{3,}/.test(token))
+        .filter((token) => !/\b(?:active|current|selected|hover|focus|cloned|slick-|swiper-)\b/i.test(token))
+        .slice(0, 4);
+      if (tokens.length) attrs.class = tokens.join(' ');
+    }
+
+    for (const attr of el.attributes) {
+      const name = attr.name;
+      const value = attr.value;
+      if (attrs[name] != null) continue;
+      if (!name.startsWith('data-') && name !== 'itemprop' && name !== 'role') continue;
+      if (isInstanceSpecificAttr(name, value)) continue;
+      attrs[name] = value;
+    }
+
+    return attrs;
+  }
+
+  function findRecipeStableAncestor(el, maxDepth = 10) {
+    let current = el;
+    let depth = 0;
+    while (current && current !== document.body && depth < maxDepth) {
+      const attrs = getRecipeAttributes(current);
+      if (Object.keys(attrs).length > 0) {
+        return { element: current, attrs };
+      }
+      current = current.parentElement;
+      depth += 1;
+    }
+    return { element: document.body, attrs: {} };
+  }
+
+  function normalizeTypeAttrValue(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/\d+/g, '#')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 48);
+  }
+
+  function elementTypeFingerprint(el) {
+    if (!el || el.nodeType !== 1) return '';
+
+    const tag = el.tagName.toLowerCase();
+    const typeAttrs = [];
+
+    for (const attr of el.attributes) {
+      const name = attr.name;
+      const value = attr.value;
+      if (isInstanceSpecificAttr(name, value)) continue;
+
+      if (name === 'class') {
+        const tokens = String(value || '')
+          .split(/\s+/)
+          .filter(Boolean)
+          .filter((token) => !/\d{3,}/.test(token))
+          .slice(0, 4)
+          .map((token) => normalizeTypeAttrValue(token));
+        if (tokens.length) typeAttrs.push(`class~${tokens.sort().join('.')}`);
+        continue;
+      }
+
+      if (!value || value === name) {
+        typeAttrs.push(name);
+      } else {
+        typeAttrs.push(`${name}~${normalizeTypeAttrValue(value)}`);
+      }
+    }
+
+    typeAttrs.sort();
+
+    const childTags = Array.from(el.children)
+      .slice(0, 8)
+      .map((child) => child.tagName.toLowerCase())
+      .join(',');
+
+    const childCount = Math.min(Array.from(el.children).length, 24);
+
+    return `${tag}[${typeAttrs.slice(0, 8).join('|')}]{${childTags}}@${childCount}`;
+  }
+
+  function isChromeRegion(el) {
+    if (!el) return false;
+    return !!el.closest('nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]');
+  }
+
+  function isMainContentRegion(el) {
+    if (!el) return false;
+    return !!el.closest('main, [role="main"], #contentarea, #content, .page-main, .main-content');
+  }
+
+  function getMemberLinks(member) {
+    return Array.from(member.querySelectorAll('a[href], [role="link"][href]')).filter((link) => {
+      if (!link.href || link.href.startsWith('javascript:')) return false;
+      if (link.href.startsWith('#')) return false;
+      return true;
+    });
+  }
+
+  function looksLikeProductMember(member) {
+    const links = getMemberLinks(member);
+    const hasImage = !!member.querySelector('img, picture, [style*="background-image"]');
+    const text = normalizeText(member.textContent);
+    const hasReasonableText = text.length >= 8 && text.length <= 500;
+    const sameHostLinks = links.filter((link) => {
+      try {
+        return new URL(link.href).hostname === location.hostname;
+      } catch {
+        return false;
+      }
+    });
+
+    let score = 0;
+    if (hasImage) score += 2;
+    if (hasReasonableText) score += 1;
+    if (sameHostLinks.length > 0) score += 3;
+    return score >= 3;
+  }
+
+  function scoreRepeatedGroup(container, members) {
+    const links = members.flatMap((member) => getMemberLinks(member));
+    const hrefLinks = links.filter((link) => link.href && !link.href.startsWith('javascript:'));
+    const productLikeCount = members.filter(looksLikeProductMember).length;
+
+    let score = members.length;
+    if (hrefLinks.length >= members.length) score += 8;
+    else if (hrefLinks.length >= Math.ceil(members.length * 0.6)) score += 5;
+    else if (hrefLinks.length > 0) score += 2;
+
+    score += Math.min(productLikeCount, members.length);
+
+    if (isMainContentRegion(container)) score += 6;
+    if (isChromeRegion(container)) score -= 10;
+
+    return score;
   }
 
   function getNthOfType(el) {
@@ -255,12 +493,12 @@
     return { type: 'text' };
   }
 
-  function buildLocator(el) {
+  function buildLocator(el, options = {}) {
     if (!el) return null;
 
-    const stable = findStableAncestor(el);
-    const attrs = getStableAttributes(el);
-    const anchor = findNearbyLabel(el);
+    const recipeMode = options.recipeMode !== false;
+    const stable = recipeMode ? findRecipeStableAncestor(el) : findStableAncestor(el);
+    const attrs = recipeMode ? getRecipeAttributes(el) : getStableAttributes(el);
     const textSample = normalizeText(el.textContent).slice(0, 120);
     const extraction = inferExtraction(el);
 
@@ -268,8 +506,9 @@
       version: 1,
       tag: el.tagName.toLowerCase(),
       attrs,
-      anchor,
+      anchor: recipeMode ? null : findNearbyLabel(el),
       textSample,
+      matchMode: recipeMode ? 'recipe' : 'legacy',
       structuralPath: buildStructuralPath(el),
       anchorPath: stable.element === document.body ? null : buildStructuralPath(stable.element),
       anchorAttrs: stable.attrs,
@@ -280,11 +519,197 @@
       signals: {
         tag: el.tagName.toLowerCase(),
         attrs,
-        anchor,
+        anchor: recipeMode ? null : findNearbyLabel(el),
         textSample,
         structuralPath: buildStructuralPath(el),
       },
     };
+  }
+
+  function normalizeLocatorRecipe(locator) {
+    if (!locator) return locator;
+    return {
+      ...locator,
+      matchMode: 'recipe',
+      anchor: null,
+      attrs: filterRecipeAttrs(locator.attrs),
+      anchorAttrs: filterRecipeAttrs(locator.anchorAttrs),
+      signals: locator.signals
+        ? {
+            ...locator.signals,
+            anchor: null,
+            attrs: filterRecipeAttrs(locator.signals.attrs),
+          }
+        : undefined,
+    };
+  }
+
+  function buildContainerRecipe(containerEl) {
+    if (!containerEl) return null;
+
+    const stable = findRecipeStableAncestor(containerEl);
+    const relativePathFromAnchor = stable.element === containerEl
+      ? ''
+      : buildRelativePath(stable.element, containerEl);
+
+    return {
+      version: 1,
+      tag: containerEl.tagName.toLowerCase(),
+      anchorAttrs: stable.attrs,
+      relativePathFromAnchor,
+    };
+  }
+
+  function buildLinkRule(members) {
+    const links = (members || []).flatMap((member) => getMemberLinks(member));
+    const hrefLinks = links.filter((link) => link.href && !link.href.startsWith('javascript:'));
+    const classCounts = new Map();
+
+    hrefLinks.forEach((link) => {
+      Array.from(link.classList || []).forEach((token) => {
+        if (!token || /\d/.test(token)) return;
+        classCounts.set(token, (classCounts.get(token) || 0) + 1);
+      });
+    });
+
+    const memberCount = Math.max((members || []).length, 1);
+    const commonClass = Array.from(classCounts.entries())
+      .filter(([, count]) => count >= Math.ceil(memberCount * 0.6))
+      .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const strategy = hrefLinks.length >= Math.ceil(memberCount * 0.6) ? 'href' : 'js-click';
+    let selector = 'a[href]';
+    if (commonClass) {
+      selector = `a.${cssEscape(commonClass)}[href]`;
+    } else if (strategy === 'js-click') {
+      selector = '[role="link"], button, [onclick], [data-href]';
+    }
+
+    return {
+      version: 1,
+      selector,
+      strategy,
+    };
+  }
+
+  function resolveFromAnchorPath(root, recipe, tag) {
+    if (!recipe?.anchorAttrs || !Object.keys(recipe.anchorAttrs).length) return null;
+
+    const anchors = queryByAttrs(root, recipe.anchorAttrs);
+    for (const anchorEl of anchors) {
+      let found = anchorEl;
+      if (recipe.relativePathFromAnchor) {
+        try {
+          found = anchorEl.querySelector(recipe.relativePathFromAnchor);
+        } catch {
+          found = null;
+        }
+      }
+      if (!found) continue;
+      if (tag && found.tagName.toLowerCase() !== tag) continue;
+      if (isVisible(found)) return found;
+    }
+
+    return null;
+  }
+
+  function resolveBrowseContainer(browse) {
+    if (!browse) return null;
+
+    if (browse.container) {
+      const resolved = resolveFromAnchorPath(document, browse.container, browse.container.tag);
+      if (resolved) return resolved;
+    }
+
+    if (browse.containerLocator) {
+      return findLocator(browse.containerLocator, document, { recipeMode: true });
+    }
+
+    return null;
+  }
+
+  function enumerateBrowseItems(browse) {
+    if (!browse) return [];
+
+    const container = resolveBrowseContainer(browse);
+    if (!container) return [];
+
+    const fingerprint = browse.itemFingerprint || browse.typeFingerprint || browse.fingerprint;
+    if (fingerprint) {
+      return Array.from(container.children).filter(
+        (child) => isVisible(child) && elementTypeFingerprint(child) === fingerprint,
+      );
+    }
+
+    return Array.from(container.children).filter(isVisible);
+  }
+
+  function normalizeBrowseConfig(browse) {
+    if (!browse) return browse;
+
+    const normalized = { ...browse };
+
+    if (!normalized.container) {
+      if (normalized.containerLocator) {
+        normalized.container = {
+          version: 1,
+          tag: normalized.containerLocator.tag,
+          anchorAttrs: filterRecipeAttrs(normalized.containerLocator.anchorAttrs),
+          relativePathFromAnchor: normalized.containerLocator.relativePathFromAnchor || '',
+        };
+      }
+    } else {
+      normalized.container = {
+        ...normalized.container,
+        anchorAttrs: filterRecipeAttrs(normalized.container.anchorAttrs),
+      };
+    }
+
+    normalized.itemFingerprint = normalized.itemFingerprint
+      || normalized.typeFingerprint
+      || normalized.fingerprint
+      || null;
+
+    if (!normalized.linkRule) {
+      normalized.linkRule = {
+        version: 1,
+        selector: normalized.linkStrategy === 'js-click'
+          ? '[role="link"], button, [onclick], [data-href]'
+          : 'a[href]',
+        strategy: normalized.linkStrategy || 'href',
+      };
+    }
+
+    return normalized;
+  }
+
+  function normalizeConfigRecipes(config) {
+    if (!config) return config;
+
+    const normalized = { ...config };
+
+    if (normalized.browse) {
+      normalized.browse = normalizeBrowseConfig(normalized.browse);
+    }
+
+    if (normalized.product?.fields) {
+      normalized.product = {
+        ...normalized.product,
+        fields: normalized.product.fields.map((field) => ({
+          ...field,
+          locator: normalizeLocatorRecipe(field.locator),
+        })),
+      };
+    }
+
+    if (normalized.images) {
+      normalized.images = normalized.images.map((image) => ({
+        ...image,
+        locator: normalizeLocatorRecipe(image.locator),
+      }));
+    }
+
+    return normalized;
   }
 
   function buildRelativePath(root, target) {
@@ -307,14 +732,31 @@
       selectors.push(`#${cssEscape(attrs.id)}`);
     }
 
-    const dataPairs = Object.entries(attrs).filter(([key]) => key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name');
+    if (attrs.class) {
+      const classSelector = String(attrs.class)
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((token) => `.${cssEscape(token)}`)
+        .join('');
+      if (classSelector) selectors.push(classSelector);
+    }
+
+    const dataPairs = Object.entries(attrs).filter(
+      ([key]) => key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name',
+    );
     if (dataPairs.length) {
       const selector = dataPairs
         .slice(0, 3)
         .map(([key, value]) => `[${key}="${cssEscape(value)}"]`)
         .join('');
-      selectors.push(`${root === document ? '' : ''}${selector}`);
+      selectors.push(selector);
     }
+
+    Object.entries(attrs).forEach(([key, value]) => {
+      if ((key === 'ku-block' || key === 'ku-product-block') && (value === '' || value == null)) {
+        selectors.push(`[${key}]`);
+      }
+    });
 
     const results = new Set();
     for (const selector of selectors) {
@@ -328,28 +770,32 @@
     return Array.from(results);
   }
 
-  function scoreLocatorMatch(candidate, locator) {
+  function scoreLocatorMatch(candidate, locator, options = {}) {
     if (!candidate || !locator) return 0;
+    const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
     let score = 0;
 
     if (locator.tag && candidate.tagName.toLowerCase() === locator.tag) score += 2;
 
-    const candidateAttrs = getStableAttributes(candidate);
+    const candidateAttrs = recipeMode ? getRecipeAttributes(candidate) : getStableAttributes(candidate);
     const targetAttrs = locator.attrs || {};
     for (const [key, value] of Object.entries(targetAttrs)) {
-      if (candidateAttrs[key] === value) score += 4;
+      if (candidateAttrs[key] === value) score += recipeMode ? 6 : 4;
+      else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) score += recipeMode ? 4 : 2;
     }
 
-    if (locator.anchor) {
-      const nearby = findNearbyLabel(candidate);
-      if (nearby && nearby.toLowerCase() === locator.anchor.toLowerCase()) score += 5;
-      else if (nearby && nearby.toLowerCase().includes(locator.anchor.toLowerCase())) score += 2;
-    }
+    if (!recipeMode) {
+      if (locator.anchor) {
+        const nearby = findNearbyLabel(candidate);
+        if (nearby && nearby.toLowerCase() === locator.anchor.toLowerCase()) score += 5;
+        else if (nearby && nearby.toLowerCase().includes(locator.anchor.toLowerCase())) score += 2;
+      }
 
-    if (locator.textSample) {
-      const text = normalizeText(candidate.textContent);
-      if (text === locator.textSample) score += 4;
-      else if (text.includes(locator.textSample) || locator.textSample.includes(text)) score += 2;
+      if (locator.textSample) {
+        const text = normalizeText(candidate.textContent);
+        if (text === locator.textSample) score += 4;
+        else if (text.includes(locator.textSample) || locator.textSample.includes(text)) score += 2;
+      }
     }
 
     if (locator.structuralPath) {
@@ -357,7 +803,20 @@
       const targetParts = locator.structuralPath.split(' > ').slice(-3);
       const currentParts = currentPath.split(' > ').slice(-3);
       const overlap = targetParts.filter((part, idx) => currentParts[idx] === part).length;
-      score += overlap;
+      score += recipeMode ? overlap * 2 : overlap;
+    }
+
+    if (recipeMode && locator.relativePathFromAnchor && locator.anchorAttrs) {
+      const resolved = resolveFromAnchorPath(document, {
+        anchorAttrs: locator.anchorAttrs,
+        relativePathFromAnchor: locator.relativePathFromAnchor,
+      }, locator.tag);
+      if (resolved === candidate) score += 10;
+    }
+
+    if (recipeMode) {
+      if (isMainContentRegion(candidate)) score += 5;
+      if (isChromeRegion(candidate)) score -= 8;
     }
 
     if (isVisible(candidate)) score += 1;
@@ -365,14 +824,21 @@
     return score;
   }
 
-  function findLocator(locator, root = document) {
+  function findLocator(locator, root = document, options = {}) {
     if (!locator) return null;
+
+    const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
+
+    if (recipeMode && locator.anchorAttrs && Object.keys(locator.anchorAttrs).length) {
+      const fromAnchor = resolveFromAnchorPath(root, locator, locator.tag);
+      if (fromAnchor) return fromAnchor;
+    }
 
     const candidates = new Set();
 
     queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
 
-    if (locator.anchor) {
+    if (!recipeMode && locator.anchor) {
       root.querySelectorAll('h1,h2,h3,h4,h5,h6,label,dt,strong,span,p').forEach((el) => {
         const text = normalizeText(el.textContent);
         if (text && text.toLowerCase().includes(locator.anchor.toLowerCase())) {
@@ -405,7 +871,7 @@
     let bestScore = 0;
 
     for (const candidate of candidates) {
-      const score = scoreLocatorMatch(candidate, locator);
+      const score = scoreLocatorMatch(candidate, locator, { recipeMode });
       if (score > bestScore) {
         bestScore = score;
         best = candidate;
@@ -449,8 +915,10 @@
 
   function detectRepeatedGroups() {
     const groups = new Map();
+    const skipTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH', 'IFRAME']);
 
-    document.querySelectorAll('ul, ol, div, section, main, article, tbody').forEach((container) => {
+    document.querySelectorAll('*').forEach((container) => {
+      if (skipTags.has(container.tagName)) return;
       if (!isVisible(container)) return;
 
       const children = Array.from(container.children).filter((child) => isVisible(child));
@@ -458,46 +926,234 @@
 
       const fingerprintCounts = new Map();
       children.forEach((child) => {
-        const fp = elementFingerprint(child);
+        const fp = elementTypeFingerprint(child);
+        if (!fp) return;
         fingerprintCounts.set(fp, (fingerprintCounts.get(fp) || 0) + 1);
       });
 
       for (const [fp, count] of fingerprintCounts.entries()) {
         if (count < 3) continue;
 
-        const members = children.filter((child) => elementFingerprint(child) === fp);
-        const links = members.flatMap((member) => Array.from(member.querySelectorAll('a[href], button, [role="link"], [onclick]')));
-        const hrefLinks = links.filter((link) => link.href && !link.href.startsWith('javascript:'));
-
-        let score = count;
-        if (hrefLinks.length >= count) score += 8;
-        else if (links.length >= count) score += 4;
+        const members = children.filter((child) => elementTypeFingerprint(child) === fp);
+        const score = scoreRepeatedGroup(container, members);
+        if (score < 4) continue;
 
         const sampleText = normalizeText(members[0]?.textContent || '').slice(0, 60);
-        const key = `${container.tagName.toLowerCase()}::${fp}`;
+        const key = `${buildStructuralPath(container)}::${fp}`;
+
+        const existing = groups.get(key);
+        if (existing && existing.score >= score) continue;
 
         groups.set(key, {
           id: key,
           container,
           members,
+          typeFingerprint: fp,
           fingerprint: fp,
-          count,
+          count: members.length,
           score,
           sampleText,
-          containerLocator: buildLocator(container),
-          itemLocator: buildLocator(members[0]),
+          containerRecipe: buildContainerRecipe(container),
+          linkRule: buildLinkRule(members),
         });
       }
     });
 
-    return Array.from(groups.values()).sort((a, b) => b.score - a.score).slice(0, 12);
+    return Array.from(groups.values()).sort((a, b) => b.score - a.score).slice(0, 15);
   }
 
-  function resolveLinkFromItem(itemEl) {
+  function getBrowseGroupById(groupId) {
+    if (!groupId) return null;
+    return state.browseCandidates.find((group) => group.id === groupId) || null;
+  }
+
+  function getSelectedBrowseGroup() {
+    return getBrowseGroupById(state.selectedBrowseGroupId);
+  }
+
+  function showBrowseHighlights(group) {
+    highlightElements(group?.members || [], true);
+  }
+
+  function restoreBrowseHighlights() {
+    const selected = getSelectedBrowseGroup();
+    if (selected) showBrowseHighlights(selected);
+    else clearHighlights();
+  }
+
+  function selectBrowseGroup(group) {
+    state.selectedBrowseGroupId = group?.id || null;
+    if (group) showBrowseHighlights(group);
+    else clearHighlights();
+  }
+
+  function browseStatusText() {
+    return {
+      idle: 'Idle',
+      scanning: 'Scanning page…',
+      watching: 'Content changed, re-scanning…',
+      waiting: 'No groups yet — waiting for content to load',
+      ready: `${state.browseCandidates.length} group(s) found`,
+    }[state.browseScanStatus] || state.browseScanStatus;
+  }
+
+  function updateBrowsePanelStatus() {
+    const statusEl = panelEl?.querySelector('#lumiscrape-browse-status');
+    if (statusEl) statusEl.textContent = browseStatusText();
+  }
+
+  function updateBrowseSelectionUi() {
+    if (!panelEl || state.mode !== 'browse') return;
+
+    panelEl.querySelectorAll('[data-group-index]').forEach((itemEl) => {
+      const index = Number(itemEl.getAttribute('data-group-index'));
+      const group = state.browseCandidates[index];
+      itemEl.classList.toggle('selected', !!(group && group.id === state.selectedBrowseGroupId));
+    });
+
+    const lockBtn = panelEl.querySelector('#lumiscrape-lock-browse');
+    if (lockBtn) lockBtn.disabled = !state.selectedBrowseGroupId;
+  }
+
+  function isScraperOwnedMutation(mutation) {
+    if (!(mutation.target instanceof Element)) return false;
+
+    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+      const el = mutation.target;
+      return (
+        el.classList.contains('lumiscrape-highlight')
+        || el.classList.contains('lumiscrape-highlight-strong')
+        || el.classList.contains('lumiscrape-selectable-hover')
+      );
+    }
+
+    return mutation.target.closest?.('#lumiscrape-root') != null;
+  }
+
+  function mutationIsRelevantForBrowse(mutations) {
+    return mutations.some((mutation) => !isScraperOwnedMutation(mutation));
+  }
+
+  function reconcileBrowseSelection() {
+    if (state.selectedBrowseGroupId && !getBrowseGroupById(state.selectedBrowseGroupId)) {
+      state.selectedBrowseGroupId = null;
+    }
+  }
+
+  function waitForDomQuiet(timeoutMs = 10000, quietMs = 700) {
+    return new Promise((resolve) => {
+      let settled = false;
+      let quietTimer = null;
+      const observer = new MutationObserver(() => {
+        clearTimeout(quietTimer);
+        quietTimer = setTimeout(finish, quietMs);
+      });
+
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        observer.disconnect();
+        clearTimeout(quietTimer);
+        clearTimeout(maxTimer);
+        resolve();
+      };
+
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
+
+      quietTimer = setTimeout(finish, quietMs);
+      const maxTimer = setTimeout(finish, timeoutMs);
+    });
+  }
+
+  function stopBrowseWatch() {
+    if (browseWatchObserver) {
+      browseWatchObserver.disconnect();
+      browseWatchObserver = null;
+    }
+    if (browseDetectTimer) {
+      clearTimeout(browseDetectTimer);
+      browseDetectTimer = null;
+    }
+  }
+
+  function scheduleBrowseDetection(delayMs = 700) {
+    if (state.mode !== 'browse') return;
+    if (browseDetectTimer) clearTimeout(browseDetectTimer);
+    browseDetectTimer = setTimeout(() => {
+      runBrowseDetection({ quiet: false });
+    }, delayMs);
+  }
+
+  function startBrowseWatch() {
+    stopBrowseWatch();
+    browseWatchObserver = new MutationObserver((mutations) => {
+      if (!mutationIsRelevantForBrowse(mutations)) return;
+      state.browseScanStatus = 'watching';
+      updateBrowsePanelStatus();
+      scheduleBrowseDetection(800);
+    });
+
+    browseWatchObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  async function runBrowseDetection(options = {}) {
+    if (state.mode !== 'browse' || browseDetectRunning) return;
+
+    browseDetectRunning = true;
+    state.browseScanStatus = 'scanning';
+    updateBrowsePanelStatus();
+
+    try {
+      if (options.quiet !== false) {
+        await waitForDomQuiet(options.timeoutMs || 10000, options.quietMs || 700);
+      }
+
+      if (state.mode !== 'browse') return;
+
+      state.browseCandidates = detectRepeatedGroups();
+      reconcileBrowseSelection();
+      state.browseScanStatus = state.browseCandidates.length ? 'ready' : 'waiting';
+      renderPanel();
+      restoreBrowseHighlights();
+    } finally {
+      browseDetectRunning = false;
+    }
+  }
+
+  function resolveLinkFromItem(itemEl, linkRule) {
     if (!itemEl) return { type: 'none', url: null, element: null };
 
+    const selector = linkRule?.selector;
+    const strategy = linkRule?.strategy || 'href';
+
+    if (selector && strategy !== 'js-click') {
+      const matchedLinks = Array.from(itemEl.querySelectorAll(selector)).filter((link) => {
+        if (!link.href || link.href.startsWith('javascript:') || link.href.startsWith('#')) return false;
+        try {
+          return new URL(link.href).hostname === location.hostname;
+        } catch {
+          return false;
+        }
+      });
+      if (matchedLinks.length) {
+        return { type: 'href', url: matchedLinks[0].href, element: matchedLinks[0] };
+      }
+    }
+
+    const links = getMemberLinks(itemEl);
+    if (links.length) {
+      return { type: 'href', url: links[0].href, element: links[0] };
+    }
+
     const anchor = itemEl.querySelector('a[href]') || (itemEl.matches('a[href]') ? itemEl : null);
-    if (anchor && anchor.href && !anchor.href.startsWith('javascript:')) {
+    if (anchor && anchor.href && !anchor.href.startsWith('javascript:') && !anchor.href.startsWith('#')) {
       return { type: 'href', url: anchor.href, element: anchor };
     }
 
@@ -517,35 +1173,19 @@
     const browse = state.config?.browse;
     if (!browse) return [];
 
-    const container = findLocator(browse.containerLocator) || browse.containerLocator?.containerElement;
-    const root = container || document;
-    const members = browse.membersSample
-      ? browse.membersSample.map((locator) => findLocator(locator, root)).filter(Boolean)
-      : [];
+    const linkRule = browse.linkRule || {
+      selector: browse.linkStrategy === 'js-click'
+        ? '[role="link"], button, [onclick], [data-href]'
+        : 'a[href]',
+      strategy: browse.linkStrategy || 'href',
+    };
 
-    let items = members;
-    if (!items.length && browse.itemLocator) {
-      const itemMatch = findLocator(browse.itemLocator, root);
-      if (itemMatch && itemMatch.parentElement) {
-        const fp = elementFingerprint(itemMatch);
-        items = Array.from(itemMatch.parentElement.children).filter(
-          (child) => elementFingerprint(child) === fp,
-        );
-      }
-    }
-
-    if (!items.length && browse.containerLocator) {
-      const foundContainer = findLocator(browse.containerLocator);
-      if (foundContainer) {
-        items = Array.from(foundContainer.children).filter(isVisible);
-      }
-    }
-
+    const items = enumerateBrowseItems(browse);
     const urls = [];
     const seen = new Set();
 
     items.forEach((item) => {
-      const link = resolveLinkFromItem(item);
+      const link = resolveLinkFromItem(item, linkRule);
       if (link.url && !seen.has(link.url)) {
         seen.add(link.url);
         urls.push(link.url);
@@ -667,6 +1307,7 @@
 
     try {
       state.config = await apiGet(`/config?host=${encodeURIComponent(state.host)}`);
+      state.config = normalizeConfigRecipes(state.config);
       state.hasConfig = true;
     } catch (err) {
       if (err.status !== 404) console.warn('[Luminascent] Failed to load config', err);
@@ -707,7 +1348,10 @@
         justify-content: space-between;
         padding: 12px 14px;
         border-bottom: 1px solid #374151;
+        cursor: grab;
+        user-select: none;
       }
+      .header.dragging { cursor: grabbing; }
       .title { font-weight: 700; font-size: 14px; }
       .subtle { color: #9ca3af; font-size: 12px; }
       .body { padding: 12px 14px; display: grid; gap: 10px; }
@@ -735,6 +1379,11 @@
         background: #0f172a;
       }
       .item:hover { border-color: #60a5fa; }
+      .item.selected {
+        border-color: #f59e0b;
+        background: #1f2937;
+        box-shadow: inset 0 0 0 1px #f59e0b;
+      }
       .tag {
         display: inline-block;
         padding: 2px 6px;
@@ -789,12 +1438,27 @@
         font-weight: 700;
       }
       .status { padding: 8px; background: #0f172a; border-radius: 8px; }
+      .field-picker { display: grid; gap: 10px; max-height: 260px; overflow: auto; }
+      .field-scope .row { margin-top: 4px; }
+      .field-tag-btn { font-size: 12px; padding: 6px 8px; flex: 1 1 auto; min-width: 45%; }
+      .tag-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+      .tag-actions .btn { font-size: 11px; padding: 4px 8px; }
+      .field-card.active { border-color: #f59e0b; box-shadow: inset 0 0 0 1px #f59e0b; }
+      .containment-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid #374151; }
+      .containment-group.pending { background: #1f2937; border-radius: 6px; padding: 6px 8px; margin-top: 6px; }
+      .containment-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+      .containment-header .btn { font-size: 11px; padding: 4px 8px; flex-shrink: 0; }
+      .containment-list { display: grid; gap: 4px; margin-top: 4px; }
+      .containment-entry { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+      .containment-entry .btn { font-size: 11px; padding: 2px 6px; flex-shrink: 0; }
+      .containment-entry .subtle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     `;
     shadowRoot.appendChild(style);
 
     panelEl = document.createElement('div');
     panelEl.className = 'panel';
     shadowRoot.appendChild(panelEl);
+    setupPanelDrag();
 
     contextMenuEl = document.createElement('div');
     contextMenuEl.className = 'context-menu';
@@ -846,13 +1510,301 @@
     clearHighlights();
     hideContextMenu();
 
-    if (mode !== 'browse') state.hoveredCandidate = null;
+    if (mode !== 'browse') {
+      state.selectedBrowseGroupId = null;
+      stopBrowseWatch();
+      state.browseScanStatus = 'idle';
+      clearHighlights();
+    }
+
+    if (mode === 'browse') {
+      state.browseScanStatus = 'scanning';
+      startBrowseWatch();
+      runBrowseDetection();
+    }
+
+    if (mode === 'product') {
+      ensureProductConfig();
+      state.pendingTagElement = null;
+      state.pendingTagPreview = '';
+      state.pendingContainmentAdd = null;
+      state.lastTaggedMessage = '';
+    }
+
     if (mode === 'images') {
       state.imageCandidates = gatherImages();
       state.imageSelections = [...(state.config?.images || [])];
     }
 
     renderPanel();
+  }
+
+  function ensureProductConfig() {
+    if (!state.config) {
+      state.config = {
+        host: state.host,
+        product: { fields: [] },
+        images: [],
+      };
+    }
+    if (!state.config.product) state.config.product = { fields: [] };
+    if (!state.config.product.fields) state.config.product.fields = [];
+  }
+
+  function getPendingTagPreview(el) {
+    if (!el) return '';
+    const text = normalizeText(el.textContent);
+    if (text) return text.slice(0, 80);
+    if (el.tagName === 'IMG') {
+      return `[image] ${normalizeText(el.getAttribute('alt') || el.getAttribute('src') || '')}`.slice(0, 80);
+    }
+    return `<${el.tagName.toLowerCase()}>`;
+  }
+
+  const CONTAINMENT_MODES = ['also_contains', 'sometimes_contains'];
+
+  function containmentModeLabel(mode) {
+    if (mode === 'also_contains') return 'Also contains';
+    if (mode === 'sometimes_contains') return 'Sometimes contains';
+    return String(mode || '').replace(/_/g, ' ');
+  }
+
+  function containmentEntryKey(entry) {
+    if (typeof entry === 'string') return entry;
+    if (entry?.fieldKey) return entry.fieldKey;
+    return null;
+  }
+
+  function normalizeContainmentArray(arr) {
+    return [...new Set((arr || []).map(containmentEntryKey).filter(Boolean))];
+  }
+
+  function getSchemaFieldLabel(fieldKey) {
+    const schemaField = state.schema?.fields?.find((field) => field.key === fieldKey);
+    return schemaField?.label || fieldKey;
+  }
+
+  function normalizeFieldEntry(field) {
+    if (!field) return field;
+    field.also_contains = normalizeContainmentArray(field.also_contains);
+    field.sometimes_contains = normalizeContainmentArray(field.sometimes_contains);
+    if (field.containment) delete field.containment;
+    return field;
+  }
+
+  function getTaggedField(fieldKey) {
+    const field = (state.config?.product?.fields || []).find((item) => item.fieldKey === fieldKey);
+    return field ? normalizeFieldEntry(field) : null;
+  }
+
+  function startContainmentAdd(fieldKey, mode) {
+    const field = getTaggedField(fieldKey);
+    if (!field) return;
+    hideContextMenu();
+    state.pendingContainmentAdd = { fieldKey, mode };
+    state.pendingTagElement = null;
+    state.pendingTagPreview = '';
+    state.lastTaggedMessage = '';
+    renderPanel();
+  }
+
+  function cancelContainmentAdd() {
+    state.pendingContainmentAdd = null;
+    state.pendingTagElement = null;
+    state.pendingTagPreview = '';
+    clearHighlights();
+    renderPanel();
+  }
+
+  function getContainmentCandidates(parentFieldKey, mode) {
+    const parent = getTaggedField(parentFieldKey);
+    if (!parent) return [];
+    const existing = new Set(parent[mode] || []);
+    return (state.schema?.fields || [])
+      .filter((field) => field.scope !== 'image')
+      .filter((field) => field.key !== parentFieldKey)
+      .filter((field) => !existing.has(field.key));
+  }
+
+  function renderContainmentFieldPicker(parentFieldKey, mode) {
+    const candidates = getContainmentCandidates(parentFieldKey, mode);
+    if (!candidates.length) {
+      return '<div class="subtle">No more schema fields available to add.</div>';
+    }
+
+    const scopeLabels = {
+      product: 'Product',
+      size: 'Size / Price',
+      note: 'Notes',
+      accord: 'Accords',
+    };
+    const scopes = ['product', 'size', 'note', 'accord'];
+
+    return scopes
+      .map((scope) => {
+        const scopeFields = candidates.filter((field) => field.scope === scope);
+        if (!scopeFields.length) return '';
+        const buttons = scopeFields
+          .map(
+            (field) => `
+              <button
+                class="btn field-tag-btn"
+                data-containment-pick="${parentFieldKey}"
+                data-containment-mode="${mode}"
+                data-field-key="${field.key}"
+                title="${field.key}"
+              >${field.label}</button>
+            `,
+          )
+          .join('');
+        return `
+          <div class="field-scope">
+            <div class="subtle">${scopeLabels[scope] || scope}</div>
+            <div class="row">${buttons}</div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  function renderContainmentGroup(field, mode) {
+    normalizeFieldEntry(field);
+    const tags = field[mode] || [];
+    const isPending = state.pendingContainmentAdd?.fieldKey === field.fieldKey
+      && state.pendingContainmentAdd?.mode === mode;
+    const items = tags
+      .map(
+        (containedKey, index) => `
+          <div class="containment-entry">
+            <span class="tag">${containedKey}</span>
+            <span class="subtle">${getSchemaFieldLabel(containedKey)}</span>
+            <button class="btn" data-remove-containment="${field.fieldKey}" data-containment-mode="${mode}" data-containment-index="${index}">×</button>
+          </div>
+        `,
+      )
+      .join('');
+
+    return `
+      <div class="containment-group ${isPending ? 'pending' : ''}">
+        <div class="containment-header">
+          <span class="subtle">${containmentModeLabel(mode)}</span>
+          <button
+            class="btn ${isPending ? 'active' : ''}"
+            data-add-containment="${field.fieldKey}"
+            data-containment-mode="${mode}"
+            ${state.pendingContainmentAdd && !isPending ? 'disabled' : ''}
+          >${isPending ? 'Pick field…' : '+ Add field'}</button>
+        </div>
+        ${items ? `<div class="containment-list">${items}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function renderProductFieldPicker() {
+    const schemaFields = (state.schema?.fields || []).filter((field) => field.scope !== 'image');
+    if (!schemaFields.length) {
+      return '<div class="status">Schema not loaded. Is the local server running?</div>';
+    }
+
+    if (state.pendingContainmentAdd) {
+      const { fieldKey, mode } = state.pendingContainmentAdd;
+      return `
+        <div class="status">
+          <strong>${fieldKey}</strong> → ${containmentModeLabel(mode)}
+        </div>
+        <div class="subtle">Pick a schema field that ${containmentModeLabel(mode).toLowerCase()} inside this region:</div>
+        <div class="field-picker">${renderContainmentFieldPicker(fieldKey, mode)}</div>
+        <button class="btn" id="lumiscrape-cancel-containment">Cancel</button>
+        ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
+      `;
+    }
+
+    if (!state.pendingTagElement) {
+      return `
+        <div class="status">Click an element on the page to tag a new field.</div>
+        <div class="subtle">On each tagged field card, use Also/Sometimes contains to link other schema fields.</div>
+        ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
+      `;
+    }
+
+    const preview = state.pendingTagPreview || getPendingTagPreview(state.pendingTagElement);
+    const scopeLabels = {
+      product: 'Product',
+      size: 'Size / Price',
+      note: 'Notes',
+      accord: 'Accords',
+    };
+
+    const scopes = ['product', 'size', 'note', 'accord'];
+    const fieldButtons = scopes
+      .map((scope) => {
+        const scopeFields = schemaFields.filter((field) => field.scope === scope);
+        if (!scopeFields.length) return '';
+        const buttons = scopeFields
+          .map(
+            (field) => `
+              <button class="btn field-tag-btn" data-field-key="${field.key}" title="${field.key}">
+                ${field.label}
+              </button>
+            `,
+          )
+          .join('');
+        return `
+          <div class="field-scope">
+            <div class="subtle">${scopeLabels[scope] || scope}</div>
+            <div class="row">${buttons}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="status"><strong>Selected:</strong> ${preview || '(element)'}</div>
+      <div class="subtle">Choose a field to tag:</div>
+      <div class="field-picker">${fieldButtons}</div>
+      <button class="btn" id="lumiscrape-clear-tag-selection">Clear selection</button>
+      ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
+    `;
+  }
+
+  function setupPanelDrag() {
+    if (!panelEl || panelEl.dataset.dragBound) return;
+    panelEl.dataset.dragBound = '1';
+
+    panelEl.addEventListener('mousedown', (e) => {
+      const header = e.target.closest('.header');
+      if (!header || !panelEl.contains(header)) return;
+      if (e.button !== 0) return;
+      if (e.target.closest('button, a, input, select, textarea')) return;
+
+      e.preventDefault();
+      const rect = panelEl.getBoundingClientRect();
+      panelEl.style.right = 'auto';
+      panelEl.style.left = `${rect.left}px`;
+      panelEl.style.top = `${rect.top}px`;
+
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      header.classList.add('dragging');
+
+      function onMove(ev) {
+        const maxX = window.innerWidth - panelEl.offsetWidth;
+        const maxY = window.innerHeight - panelEl.offsetHeight;
+        const x = Math.max(0, Math.min(maxX, ev.clientX - offsetX));
+        const y = Math.max(0, Math.min(maxY, ev.clientY - offsetY));
+        panelEl.style.left = `${x}px`;
+        panelEl.style.top = `${y}px`;
+      }
+
+      function onUp() {
+        header.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
   }
 
   function renderPanel() {
@@ -912,7 +1864,7 @@
       const items = state.browseCandidates
         .map(
           (group, index) => `
-            <div class="item" data-group-index="${index}">
+            <div class="item ${group.id === state.selectedBrowseGroupId ? 'selected' : ''}" data-group-index="${index}">
               <div><span class="tag">${group.count} items</span><span class="tag">score ${group.score}</span></div>
               <div>${group.sampleText || '(no sample text)'}</div>
             </div>
@@ -921,10 +1873,12 @@
         .join('');
 
       return `
-        <div class="subtle">Hover a group to highlight it on the page. Click to lock as product list.</div>
-        <button class="btn" id="lumiscrape-detect-groups">Detect groups</button>
+        <div class="subtle">Hover to preview. Click a group to select it, then lock.</div>
+        <div class="status" id="lumiscrape-browse-status">${browseStatusText()}</div>
+        <button class="btn" id="lumiscrape-detect-groups">Detect groups now</button>
+        <div class="subtle">Auto-watches for late-loaded content (API grids, infinite scroll).</div>
         <div class="list">${items || '<div class="subtle">No groups detected yet.</div>'}</div>
-        <button class="btn primary" id="lumiscrape-lock-browse" ${state.hoveredCandidate ? '' : 'disabled'}>
+        <button class="btn primary" id="lumiscrape-lock-browse" ${state.selectedBrowseGroupId ? '' : 'disabled'}>
           Lock selected group
         </button>
         <button class="btn" data-mode="start">Back</button>
@@ -933,19 +1887,29 @@
 
     if (state.mode === 'product') {
       const tagged = (state.config?.product?.fields || [])
-        .map(
-          (field) => `
-            <div class="item">
+        .map((field) => {
+          normalizeFieldEntry(field);
+          const isActiveCard = state.pendingContainmentAdd?.fieldKey === field.fieldKey;
+
+          return `
+            <div class="item field-card ${isActiveCard ? 'active' : ''}" data-field-card="${field.fieldKey}">
               <span class="tag">${field.fieldKey}</span>
-              ${field.containment ? `<span class="tag">${field.containment.mode}</span>` : ''}
               <div class="subtle">${field.locator?.textSample || field.locator?.anchor || field.locator?.tag || ''}</div>
+              ${renderContainmentGroup(field, 'also_contains')}
+              ${renderContainmentGroup(field, 'sometimes_contains')}
             </div>
-          `,
-        )
+          `;
+        })
         .join('');
 
+      const productInstructions = state.pendingContainmentAdd
+        ? `Pick a schema field for <strong>${state.pendingContainmentAdd.fieldKey}</strong> → ${containmentModeLabel(state.pendingContainmentAdd.mode)}.`
+        : '1. Click an element to tag a field · 2. Link related schema fields on each card · 3. Save';
+
       return `
-        <div class="subtle">Click elements on the page to tag schema fields.</div>
+        <div class="subtle">${productInstructions}</div>
+        ${renderProductFieldPicker()}
+        <div class="subtle">Tagged fields (${(state.config?.product?.fields || []).length}) · right-click a card for options</div>
         <div class="list">${tagged || '<div class="subtle">No fields tagged yet.</div>'}</div>
         <button class="btn primary" id="lumiscrape-save-product">Save product blueprint</button>
         <button class="btn" data-mode="start">Back</button>
@@ -1007,43 +1971,51 @@
     });
 
     panelEl.querySelector('#lumiscrape-detect-groups')?.addEventListener('click', () => {
-      state.browseCandidates = detectRepeatedGroups();
-      renderPanel();
+      runBrowseDetection();
     });
 
     panelEl.querySelectorAll('[data-group-index]').forEach((itemEl) => {
       const index = Number(itemEl.getAttribute('data-group-index'));
       itemEl.addEventListener('mouseenter', () => {
-        state.hoveredCandidate = state.browseCandidates[index];
-        highlightElements(state.hoveredCandidate?.members || [], true);
+        const group = state.browseCandidates[index];
+        if (group) showBrowseHighlights(group);
       });
       itemEl.addEventListener('mouseleave', () => {
-        if (state.mode === 'browse') clearHighlights();
+        if (state.mode === 'browse') restoreBrowseHighlights();
       });
-      itemEl.addEventListener('click', () => {
-        state.hoveredCandidate = state.browseCandidates[index];
-        highlightElements(state.hoveredCandidate?.members || [], true);
-        renderPanel();
+      itemEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const group = state.browseCandidates[index];
+        selectBrowseGroup(group);
+        updateBrowseSelectionUi();
       });
     });
 
     panelEl.querySelector('#lumiscrape-lock-browse')?.addEventListener('click', async () => {
-      const group = state.hoveredCandidate;
+      const group = getSelectedBrowseGroup();
       if (!group) return;
 
-      const linkSamples = group.members.slice(0, 5).map(resolveLinkFromItem);
+      const linkSamples = group.members.map(resolveLinkFromItem);
       const hrefCount = linkSamples.filter((sample) => sample.type === 'href' || sample.type === 'data-href').length;
       const jsCount = linkSamples.filter((sample) => sample.type === 'js-click').length;
+      const linkRule = group.linkRule || buildLinkRule(group.members);
 
       await saveConfig({
         browse: {
-          containerLocator: group.containerLocator,
-          itemLocator: group.itemLocator,
-          membersSample: group.members.slice(0, 5).map((member) => buildLocator(member)),
+          container: group.containerRecipe || buildContainerRecipe(group.container),
+          itemFingerprint: group.typeFingerprint,
+          linkRule: {
+            ...linkRule,
+            strategy: hrefCount >= jsCount ? 'href' : 'js-click',
+          },
           fingerprint: group.fingerprint,
-          count: group.count,
           linkStrategy: hrefCount >= jsCount ? 'href' : 'js-click',
           lockedAt: new Date().toISOString(),
+          _debug: {
+            count: group.count,
+            sampleText: group.sampleText,
+          },
         },
       });
 
@@ -1051,8 +2023,86 @@
     });
 
     panelEl.querySelector('#lumiscrape-save-product')?.addEventListener('click', async () => {
+      ensureProductConfig();
       await saveConfig({ product: state.config.product });
       setMode('start');
+    });
+
+    panelEl.querySelectorAll('[data-field-key]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const fieldKey = btn.getAttribute('data-field-key');
+        const field = state.schema?.fields?.find((item) => item.key === fieldKey);
+        if (field && state.pendingTagElement) {
+          tagField(field, state.pendingTagElement);
+        }
+      });
+    });
+
+    panelEl.querySelector('#lumiscrape-clear-tag-selection')?.addEventListener('click', () => {
+      state.pendingTagElement = null;
+      state.pendingTagPreview = '';
+      clearHighlights();
+      renderPanel();
+    });
+
+    panelEl.querySelector('#lumiscrape-cancel-containment')?.addEventListener('click', () => {
+      cancelContainmentAdd();
+    });
+
+    panelEl.querySelectorAll('[data-add-containment]').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        startContainmentAdd(
+          btn.getAttribute('data-add-containment'),
+          btn.getAttribute('data-containment-mode'),
+        );
+      });
+    });
+
+    panelEl.querySelectorAll('[data-remove-containment]').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        removeContainmentTag(
+          btn.getAttribute('data-remove-containment'),
+          btn.getAttribute('data-containment-mode'),
+          Number(btn.getAttribute('data-containment-index')),
+        );
+      });
+    });
+
+    panelEl.querySelectorAll('[data-containment-pick]').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        addContainmentField(
+          btn.getAttribute('data-containment-pick'),
+          btn.getAttribute('data-containment-mode'),
+          btn.getAttribute('data-field-key'),
+        );
+      });
+    });
+
+    panelEl.querySelectorAll('[data-field-card]').forEach((card) => {
+      card.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (state.pendingContainmentAdd || state.pendingTagElement) return;
+        const fieldKey = card.getAttribute('data-field-card');
+        if (!fieldKey) return;
+        const rect = card.getBoundingClientRect();
+        showContextMenu(rect.right - 8, rect.top + 8, [
+          {
+            label: 'Add also contains field…',
+            onClick: () => startContainmentAdd(fieldKey, 'also_contains'),
+          },
+          {
+            label: 'Add sometimes contains field…',
+            onClick: () => startContainmentAdd(fieldKey, 'sometimes_contains'),
+          },
+        ]);
+      });
     });
 
     panelEl.querySelectorAll('[data-image-id]').forEach((card) => {
@@ -1112,6 +2162,7 @@
 
   function onProductClick(event) {
     if (state.mode !== 'product') return;
+    if (state.pendingContainmentAdd) return;
 
     const el = getElementFromEvent(event);
     if (!el) return;
@@ -1119,43 +2170,16 @@
     event.preventDefault();
     event.stopPropagation();
 
+    state.pendingTagElement = el;
+    state.pendingTagPreview = getPendingTagPreview(el);
     state.selectedElement = el;
     highlightElements([el], true);
-
-    const schemaFields = state.schema?.fields || [];
-    const menuItems = schemaFields
-      .filter((field) => field.scope !== 'image')
-      .map((field) => ({
-        label: `${field.label} (${field.key})`,
-        onClick: () => tagField(field, el),
-      }));
-
-    if (state.pendingContainmentParent) {
-      menuItems.unshift({
-        label: `Also contains → ${state.pendingContainmentParent.fieldKey}`,
-        onClick: () => tagContainment('also_contains', el),
-      });
-      menuItems.unshift({
-        label: `Sometimes contains → ${state.pendingContainmentParent.fieldKey}`,
-        onClick: () => tagContainment('sometimes_contains', el),
-      });
-    }
-
-    const taggedFields = state.config?.product?.fields || [];
-    taggedFields.forEach((field) => {
-      menuItems.push({
-        label: `Add sub-tag under ${field.fieldKey}`,
-        onClick: () => {
-          state.pendingContainmentParent = field;
-          renderPanel();
-        },
-      });
-    });
-
-    showContextMenu(event.clientX, event.clientY, menuItems);
+    renderPanel();
   }
 
   function tagField(field, el) {
+    if (state.pendingContainmentAdd) return;
+    ensureProductConfig();
     const locator = buildLocator(el);
     const entry = {
       fieldKey: field.key,
@@ -1164,44 +2188,69 @@
       type: field.type,
       locator,
       extraction: locator.extraction,
+      also_contains: [],
+      sometimes_contains: [],
       taggedAt: new Date().toISOString(),
     };
 
-    const fields = [...(state.config?.product?.fields || [])];
-    const existingIndex = fields.findIndex((item) => item.fieldKey === field.key && !item.containment);
-    if (existingIndex >= 0) fields[existingIndex] = entry;
-    else fields.push(entry);
+    const fields = [...state.config.product.fields];
+    const existingIndex = fields.findIndex((item) => item.fieldKey === field.key);
+    if (existingIndex >= 0) {
+      const existing = normalizeFieldEntry(fields[existingIndex]);
+      entry.also_contains = existing.also_contains;
+      entry.sometimes_contains = existing.sometimes_contains;
+      fields[existingIndex] = entry;
+    } else {
+      fields.push(entry);
+    }
 
-    state.config.product = { ...(state.config.product || {}), fields };
-    state.pendingContainmentParent = null;
+    state.config.product = { ...state.config.product, fields };
+    state.pendingContainmentAdd = null;
+    state.pendingTagElement = null;
+    state.pendingTagPreview = '';
+    state.lastTaggedMessage = `Tagged as ${field.label}. Click the next element.`;
+    clearHighlights();
     renderPanel();
   }
 
-  function tagContainment(mode, el) {
-    const parent = state.pendingContainmentParent;
-    if (!parent) return;
+  function addContainmentField(parentFieldKey, mode, containedFieldKey) {
+    if (!CONTAINMENT_MODES.includes(mode) || !containedFieldKey) return;
+    if (parentFieldKey === containedFieldKey) return;
+    ensureProductConfig();
 
-    const parentIndex = (state.config?.product?.fields || []).findIndex((field) => field === parent);
+    const parentIndex = state.config.product.fields.findIndex((field) => field.fieldKey === parentFieldKey);
     if (parentIndex < 0) return;
 
-    const subLocator = buildLocator(el);
     const fields = [...state.config.product.fields];
     const parentField = { ...fields[parentIndex] };
+    normalizeFieldEntry(parentField);
 
-    parentField.containment = parentField.containment || { mode, subTags: [] };
-    parentField.containment.mode = mode;
-    parentField.containment.subTags = [
-      ...(parentField.containment.subTags || []),
-      {
-        locator: subLocator,
-        extraction: subLocator.extraction,
-        textSample: subLocator.textSample,
-      },
-    ];
+    if ((parentField[mode] || []).includes(containedFieldKey)) {
+      cancelContainmentAdd();
+      return;
+    }
 
+    parentField[mode] = [...(parentField[mode] || []), containedFieldKey];
     fields[parentIndex] = parentField;
     state.config.product = { ...state.config.product, fields };
-    state.pendingContainmentParent = null;
+    state.pendingContainmentAdd = null;
+    state.lastTaggedMessage = `Linked ${getSchemaFieldLabel(containedFieldKey)} to ${parentFieldKey} (${containmentModeLabel(mode)}).`;
+    renderPanel();
+  }
+
+  function removeContainmentTag(fieldKey, mode, index) {
+    if (!CONTAINMENT_MODES.includes(mode) || Number.isNaN(index)) return;
+    ensureProductConfig();
+
+    const parentIndex = state.config.product.fields.findIndex((field) => field.fieldKey === fieldKey);
+    if (parentIndex < 0) return;
+
+    const fields = [...state.config.product.fields];
+    const parentField = { ...fields[parentIndex] };
+    normalizeFieldEntry(parentField);
+    parentField[mode] = (parentField[mode] || []).filter((_, i) => i !== index);
+    fields[parentIndex] = parentField;
+    state.config.product = { ...state.config.product, fields };
     renderPanel();
   }
 
@@ -1217,10 +2266,10 @@
   function getExtractState() {
     return GM_getValue(EXTRACT_KEY, {
       active: false,
-      queue: [],
       inFlight: [],
       completed: [],
       failed: [],
+      total: 0,
     });
   }
 
@@ -1232,10 +2281,10 @@
     state.extractRunning = false;
     setExtractState({
       active: false,
-      queue: [],
       inFlight: [],
       completed: [],
       failed: [],
+      total: 0,
     });
     renderPanel();
   }
@@ -1261,23 +2310,13 @@
     }
   }
 
-  function launchNextTabs() {
-    const extractState = getExtractState();
-    if (!extractState.active) return;
-
-    while (
-      extractState.inFlight.length < MAX_CONCURRENT_TABS &&
-      extractState.queue.length > 0
-    ) {
-      const url = extractState.queue.shift();
-      extractState.inFlight.push(url);
+  function launchExtractTabs(urls) {
+    urls.forEach((url) => {
       GM_openInTab(withScrapeFlag(url), {
         active: false,
         insert: true,
       });
-    }
-
-    setExtractState(extractState);
+    });
     updateExtractStatus();
   }
 
@@ -1286,7 +2325,7 @@
     if (!statusEl) return;
     const extractState = getExtractState();
     statusEl.textContent = extractState.active
-      ? `Running · queued ${extractState.queue.length} · in flight ${extractState.inFlight.length} · done ${extractState.completed.length} · failed ${extractState.failed.length}`
+      ? `Running · open ${extractState.inFlight.length} · done ${extractState.completed.length} · failed ${extractState.failed.length} · total ${extractState.total}`
       : 'Idle';
   }
 
@@ -1297,15 +2336,15 @@
     state.extractRunning = true;
     setExtractState({
       active: true,
-      queue: urls,
-      inFlight: [],
+      inFlight: [...urls],
       completed: [],
       failed: [],
+      total: urls.length,
       host: state.host,
       startedAt: new Date().toISOString(),
     });
 
-    launchNextTabs();
+    launchExtractTabs(urls);
     renderPanel();
   }
 
@@ -1316,13 +2355,12 @@
     if (ok) extractState.completed.push(url);
     else extractState.failed.push({ url, error: errorMessage || 'unknown error' });
 
-    if (extractState.queue.length === 0 && extractState.inFlight.length === 0) {
+    if (extractState.inFlight.length === 0) {
       extractState.active = false;
       state.extractRunning = false;
     }
 
     setExtractState(extractState);
-    launchNextTabs();
     updateExtractStatus();
   }
 
@@ -1398,18 +2436,22 @@
 
       data[field.fieldKey] = value;
 
-      if (field.containment?.subTags?.length && el) {
-        field.containment.subTags.forEach((subTag, index) => {
-          const relative = findLocator(subTag.locator, el) || findLocator(subTag.locator);
-          const subValue = extractValue(relative, subTag.extraction);
-          if (!subValue) return;
+      CONTAINMENT_MODES.forEach((mode) => {
+        normalizeFieldEntry(field);
+        (field[mode] || []).forEach((containedKey) => {
+          const containedField = fields.find((item) => item.fieldKey === containedKey);
+          if (!containedField || !el) return;
+          const childEl = findLocator(containedField.locator, el) || findLocator(containedField.locator);
+          const subValue = extractValue(childEl, containedField.extraction);
+          if (subValue == null || subValue === '') return;
 
-          data[`${field.fieldKey}_embedded_${index + 1}`] = {
-            mode: field.containment.mode,
+          data[`${field.fieldKey}_${mode}_${containedKey}`] = {
+            mode,
+            fieldKey: containedKey,
             value: subValue,
           };
         });
-      }
+      });
     });
 
     if (Object.keys(sizeBucket).length) {
@@ -1503,7 +2545,10 @@
 
     document.addEventListener('click', onProductClick, true);
     document.addEventListener('mousemove', onHoverSelectable, true);
-    document.addEventListener('click', hideContextMenu, true);
+    document.addEventListener('click', (event) => {
+      if (event.composedPath().includes(contextMenuEl)) return;
+      hideContextMenu();
+    });
 
     setInterval(() => {
       if (state.mode === 'extract') updateExtractStatus();

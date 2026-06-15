@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=L%27Ansecoy+Orange+Blossom",
+  "scrapedAt": "2026-06-15T13:48:37.345Z",
+  "name": "L'Ansecoy Orange Blossom 9.5oz Candle",
+  "description": "Home Classic Candle Skip to the end of the images gallery Skip to the beginning of the images gallery AERIN L'Ansecoy Orange Blossom 9.5oz Candle Add to Saved Items $125 Aerin's Love ScentL'Ansecoy Orange BlossomSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The L'Ansecoy Orange Blossom scented candle was inspired by the laid-back vibe of Mustique. Its fragrance captures the flora that line the island’s beaches, with sun-kissed orange blossom and sweet Cedar enhanced by the greens and citrus of Petitgrain. Presented in a cream glass vessel enhanced with a gold lid that the candle can sit in when in use, it is a beautiful addition to a table and makes a perfect gift. Details Notes: Petit Grain, Orange Blossom, Cedar Cream candle in glass vessel Burn time: 55 hours",
+  "sizes": [
+    {
+      "price_currency": "$125"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221002_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Salzburg+Pine",
+  "scrapedAt": "2026-06-15T13:48:34.160Z",
+  "name": "Salzburg Pine 9.5 oz. Candle",
+  "description": "Home Classic Candle Skip to the end of the images gallery .fotorama1781531312199 .fotorama__nav--thumbs .fotorama__nav__frame{ padding:10px; height:52px} .fotorama1781531312199 .fotorama__thumb-border{ height:52px; border-width:2px; margin-top:10px} Skip to the beginning of the images gallery AERIN Salzburg Pine 9.5 oz. Candle Add to Saved Items $125 ScentSalzburg PineSalzburg PineSintra GardeniaMadaket GeraniumMonserrate RoseMegève's RoseVillandryL'Ansecoy Orange Blossom Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description The Salzburg Pine candle was inspired by Salzburg, Austria, a city of spires, Mozart, and baroque architecture surrounded by soaring peaks that offer beautiful alpine views. Its fragrance captures the fresh evergreen of the Alps, with Pine and Fir Balsam, enhanced with a spicy infusion of Cinnamon and Clove. Presented in a cream glass vessel enhanced with a gold lid that the candle can sit in when in use, it is a beautiful addition to a table and makes a perfect gift. Details Notes: Pine and Fir Balsam, Cinnamon, and Clove Cream candle in glass vessel Burn time: 55 hours",
+  "sizes": [
+    {
+      "price_currency": "$125"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221003_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221003_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/0/20221003_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550&dpr=2",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}

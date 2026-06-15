@@ -1,0 +1,28 @@
+{
+  "source_url": "https://www.aerin.com/madeira-candle-24221403/?color=Marigold",
+  "scrapedAt": "2026-06-15T13:48:40.189Z",
+  "name": "Madeira L'Ansecoy Orange Blossom 12.7oz Candle",
+  "description": "Home Madeira Candle Skip to the end of the images gallery Skip to the beginning of the images gallery Carolina Irving & Daughters for AERIN Madeira L'Ansecoy Orange Blossom 12.7oz Candle Add to Saved Items $195 ColorMarigold Quantity Availability: In Stock Add to Bag Select Gift Registry Add to Registry Description Beautifully presented in an artisanal vessel featuring a hand painted floral motif, the Madeira scented candle makes a perfect gift. The one-wick candle is infused with AERIN’s L’Ansecoy Orange Blossom scent, with notes of sun-kissed orange blossom and sweet Cedar enhanced by the greens and citrus of Petitgrain. This collaboration between AERIN and textile designer Carolina Irving’s homeware brand, taking inspiration from their collective love of travel, art history, and craftsmanship. Details Ceramic Dimensions: 3.75\" x 3.75\" x 3.75\" Clean with a damp cloth Burn time: 58 hours Expect slight variations due to the handmade process Made in Portugal",
+  "sizes": [
+    {
+      "price_currency": "$195"
+    }
+  ],
+  "images": [
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 0,
+      "is_primary": true
+    },
+    {
+      "source_url": "https://www.aerin.com/media/catalog/product/2/4/24122210_1.jpg?quality=100&fit=bounds&height=550&width=550&canvas=550:550",
+      "position": 1,
+      "is_primary": false
+    },
+    {
+      "source_url": "https://www.aerin.com/static/version1779881545/frontend/Aerin/theme/en_US/images/loader-1.gif",
+      "position": 2,
+      "is_primary": false
+    }
+  ]
+}
