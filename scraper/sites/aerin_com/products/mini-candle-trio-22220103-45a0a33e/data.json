@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/mini-candle-trio-22220103/",
-  "scrapedAt": "2026-06-15T16:00:24.050Z",
+  "scrapedAt": "2026-06-15T16:04:55.299Z",
   "name": [
     "Mini Candle Trio"
   ],
@@ -32,24 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 6,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      },
-      {
-        "kind": "field",
-        "fieldKey": "note_name",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

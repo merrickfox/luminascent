@@ -100,32 +100,7 @@ Product field locators are also recipes: stable semantic attributes (`itemprop`,
 2. Click **Extract mode**
 3. Click **Start extraction**
 
-The script opens every detected product URL in a background tab, waits for the page to settle (network + DOM quiet, then all tagged locators resolving with meaningful text), extracts tagged fields as raw value arrays, POSTs to the server (which writes `data.json` and `llm_input.json`), uploads image bytes, then closes each tab.
-
-### Extract wait settings
-
-Per-host `extract` settings in `config.json` control how long auto-scrape tabs wait before extracting:
-
-```json
-"extract": {
-  "timeoutMs": 45000,
-  "domQuietMs": 1000,
-  "networkQuietMs": 1000,
-  "pollMs": 500,
-  "requireAllLocators": true,
-  "minResolvedRatio": 1,
-  "validateTextSample": true
-}
-```
-
-- `timeoutMs` — max wait before extracting anyway (default 45s)
-- `domQuietMs` — ms with no DOM mutations before considered settled
-- `networkQuietMs` — ms with no in-flight fetch/XHR before considered settled (patched at tab load)
-- `requireAllLocators` — wait until every tagged field/image locator resolves (default `true`)
-- `minResolvedRatio` — fallback threshold when `requireAllLocators` is `false` (default `1`)
-- `validateTextSample` — reject matches whose text is too short vs the tagged `textSample` (blocks placeholder matches like `"AERIN"` for description)
-
-If extraction times out, `data.json` includes `_extractReadiness` showing which locators were still pending.
+The script opens every detected product URL in a background tab, waits for render completion, extracts tagged fields as raw values, POSTs to the server (which writes `data.json` and `llm_input.json`), uploads image bytes, then closes each tab.
 
 ## Output layout
 
@@ -165,7 +140,6 @@ Swap this file for other project domains while keeping the same userscript/serve
 - **JS-only product links** — browse mode records `js-click` strategy; extraction works best with real `href` links
 - **Auto-scrape tabs stay open** — browser popup blockers may prevent `window.close()`; check Tampermonkey tab permissions
 - **Wrong product URL count in Extract mode** — reload the userscript (v1.0.8+). Legacy configs are normalized on load; for best results re-lock the browse group and re-tag product fields so recipes exclude instance-specific attributes
-- **Fields empty or partial after extraction** — reload the userscript (v1.2.1+). Extraction now waits for network/DOM quiet and requires all locators with meaningful text. Increase `extract.timeoutMs` in `config.json` for slow API-driven sites. Check `data.json` → `_extractReadiness` for which locators timed out.
 - **Fields empty on a different product page** — re-tag fields on a representative product page; locators must use stable semantic signals, not example product names/prices
 
 ## Blueprint migration

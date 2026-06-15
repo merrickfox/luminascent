@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Meg%C3%A8ve%27s+Rose",
-  "scrapedAt": "2026-06-15T16:00:25.200Z",
+  "scrapedAt": "2026-06-15T16:04:54.242Z",
   "name": [
     "Megève’s Rose 9.5oz Candle"
   ],
@@ -29,30 +29,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 5,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      },
-      {
-        "kind": "field",
-        "fieldKey": "burn_time_hours",
-        "order": null,
-        "reason": "not_found"
-      },
-      {
-        "kind": "field",
-        "fieldKey": "note_name",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

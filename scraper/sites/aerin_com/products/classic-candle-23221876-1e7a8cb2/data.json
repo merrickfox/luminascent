@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Salzburg+Pine",
-  "scrapedAt": "2026-06-15T16:00:33.026Z",
+  "scrapedAt": "2026-06-15T16:04:48.207Z",
   "name": [
     "Salzburg Pine 9.5 oz. Candle"
   ],
@@ -32,18 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 7,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

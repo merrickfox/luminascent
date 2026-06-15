@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/tulia-wicker-17-4oz-candle-21122112/?candle_scent=Uz%C3%A8s+Tuberose",
-  "scrapedAt": "2026-06-15T16:00:26.640Z",
+  "scrapedAt": "2026-06-15T16:04:53.244Z",
   "name": [
     "Tulia Wicker Uzès Tuberose 17.4oz Candle"
   ],
@@ -32,24 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 6,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      },
-      {
-        "kind": "field",
-        "fieldKey": "note_name",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

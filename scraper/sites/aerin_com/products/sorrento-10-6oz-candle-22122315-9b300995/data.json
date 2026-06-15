@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/sorrento-10-6oz-candle-22122315/?candle_scent=L%27Ansecoy+Orange+Blossom&color=Marbleized+Blue",
-  "scrapedAt": "2026-06-15T16:00:20.199Z",
+  "scrapedAt": "2026-06-15T16:04:57.241Z",
   "name": [
     "Sorrento L'Ansecoy Orange Blossom 10.6oz Candle"
   ],
@@ -32,24 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 6,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      },
-      {
-        "kind": "field",
-        "fieldKey": "note_name",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

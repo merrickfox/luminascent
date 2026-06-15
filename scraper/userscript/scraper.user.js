@@ -37,7 +37,6 @@
     lastTaggedMessage: '',
     pendingContainmentAdd: null,
     pendingRetagFieldKey: null,
-    pendingAddLocatorFieldKey: null,
     imageCandidates: [],
     imageSelections: [],
     extractRunning: false,
@@ -206,18 +205,6 @@
     /^alt$/i,
   ];
 
-  function isLumiscrapeClassToken(token) {
-    return /^lumiscrape-/i.test(String(token || ''));
-  }
-
-  function sanitizeRecipeClassValue(value) {
-    return String(value || '')
-      .split(/\s+/)
-      .filter(Boolean)
-      .filter((token) => !isLumiscrapeClassToken(token))
-      .join(' ');
-  }
-
   function isInstanceSpecificAttr(name, value) {
     if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
     if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
@@ -228,8 +215,6 @@
       return true;
     }
     if (name === 'class' && /\d{3,}/.test(String(value || ''))) return true;
-    if (name === 'class' && isLumiscrapeClassToken(value)) return true;
-    if (name === 'class' && !sanitizeRecipeClassValue(value)) return true;
     return false;
   }
 
@@ -237,14 +222,7 @@
     if (!attrs) return {};
     const out = {};
     for (const [key, value] of Object.entries(attrs)) {
-      if (value == null || value === '') continue;
-      if (key === 'class') {
-        const sanitized = sanitizeRecipeClassValue(value);
-        if (!sanitized || isInstanceSpecificAttr(key, sanitized)) continue;
-        out[key] = sanitized;
-        continue;
-      }
-      if (isInstanceSpecificAttr(key, value)) continue;
+      if (!value || isInstanceSpecificAttr(key, value)) continue;
       out[key] = value;
     }
     return out;
@@ -273,7 +251,6 @@
     if (el.classList?.length) {
       const tokens = Array.from(el.classList)
         .filter((token) => !/\d{3,}/.test(token))
-        .filter((token) => !isLumiscrapeClassToken(token))
         .filter((token) => !/\b(?:active|current|selected|hover|focus|cloned|slick-|swiper-)\b/i.test(token))
         .slice(0, 4);
       if (tokens.length) attrs.class = tokens.join(' ');
@@ -330,7 +307,6 @@
           .split(/\s+/)
           .filter(Boolean)
           .filter((token) => !/\d{3,}/.test(token))
-          .filter((token) => !isLumiscrapeClassToken(token))
           .slice(0, 4)
           .map((token) => normalizeTypeAttrValue(token));
         if (tokens.length) typeAttrs.push(`class~${tokens.sort().join('.')}`);
@@ -720,11 +696,10 @@
     if (normalized.product?.fields) {
       normalized.product = {
         ...normalized.product,
-        fields: normalized.product.fields.map((field) => {
-          const next = { ...field };
-          normalizeFieldEntry(next);
-          return next;
-        }),
+        fields: normalized.product.fields.map((field) => ({
+          ...field,
+          locator: normalizeLocatorRecipe(field.locator),
+        })),
       };
     }
 
@@ -759,7 +734,7 @@
     }
 
     if (attrs.class) {
-      const classSelector = sanitizeRecipeClassValue(attrs.class)
+      const classSelector = String(attrs.class)
         .split(/\s+/)
         .filter(Boolean)
         .map((token) => `.${cssEscape(token)}`)
@@ -796,70 +771,6 @@
     return Array.from(results);
   }
 
-  function scoreStructuralPathOverlap(candidatePath, targetPath, recipeMode) {
-    if (!targetPath || !candidatePath) return 0;
-    const targetParts = targetPath.split(' > ').filter(Boolean);
-    const currentParts = candidatePath.split(' > ').filter(Boolean);
-    if (!targetParts.length || !currentParts.length) return 0;
-
-    let overlap = 0;
-    const maxCompare = Math.min(targetParts.length, currentParts.length);
-    for (let i = 1; i <= maxCompare; i += 1) {
-      if (targetParts[targetParts.length - i] === currentParts[currentParts.length - i]) {
-        overlap += 1;
-      } else {
-        break;
-      }
-    }
-
-    return recipeMode ? overlap * 3 : overlap;
-  }
-
-  function scoreTextSampleMatch(candidate, textSample, recipeMode) {
-    if (!textSample) return 0;
-    const text = normalizeText(candidate.textContent);
-    const sample = normalizeText(textSample);
-    if (!text || !sample) return 0;
-    if (text === sample) return recipeMode ? 12 : 4;
-    if (text.startsWith(sample) || sample.startsWith(text)) return recipeMode ? 8 : 2;
-    if (text.includes(sample) || sample.includes(text)) return recipeMode ? 5 : 2;
-    return recipeMode ? -4 : 0;
-  }
-
-  function hasRecipeAttrMatch(candidateAttrs, targetAttrs) {
-    for (const [key, value] of Object.entries(targetAttrs || {})) {
-      if (!value) continue;
-      if (candidateAttrs[key] === value) return true;
-      if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) return true;
-    }
-    return false;
-  }
-
-  function meetsRecipeLocatorThreshold(candidate, locator, score) {
-    if (!candidate || !locator || score < 6) return false;
-
-    const candidateAttrs = getRecipeAttributes(candidate);
-    const hasAttrMatch = hasRecipeAttrMatch(candidateAttrs, locator.attrs);
-    const textScore = scoreTextSampleMatch(candidate, locator.textSample, true);
-    const structuralScore = scoreStructuralPathOverlap(
-      buildStructuralPath(candidate),
-      locator.structuralPath,
-      true,
-    );
-
-    if (hasAttrMatch) return true;
-    if (textScore >= 5 && structuralScore >= 6) return true;
-    if (structuralScore >= 12) return true;
-
-    const fromAnchor = resolveFromAnchorPath(document, {
-      anchorAttrs: locator.anchorAttrs,
-      relativePathFromAnchor: locator.relativePathFromAnchor,
-    }, locator.tag);
-    if (fromAnchor === candidate) return true;
-
-    return false;
-  }
-
   function scoreLocatorMatch(candidate, locator, options = {}) {
     if (!candidate || !locator) return 0;
     const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
@@ -882,18 +793,18 @@
       }
 
       if (locator.textSample) {
-        score += scoreTextSampleMatch(candidate, locator.textSample, false);
+        const text = normalizeText(candidate.textContent);
+        if (text === locator.textSample) score += 4;
+        else if (text.includes(locator.textSample) || locator.textSample.includes(text)) score += 2;
       }
-    } else if (locator.textSample) {
-      score += scoreTextSampleMatch(candidate, locator.textSample, true);
     }
 
     if (locator.structuralPath) {
-      score += scoreStructuralPathOverlap(
-        buildStructuralPath(candidate),
-        locator.structuralPath,
-        recipeMode,
-      );
+      const currentPath = buildStructuralPath(candidate);
+      const targetParts = locator.structuralPath.split(' > ').slice(-3);
+      const currentParts = currentPath.split(' > ').slice(-3);
+      const overlap = targetParts.filter((part, idx) => currentParts[idx] === part).length;
+      score += recipeMode ? overlap * 2 : overlap;
     }
 
     if (recipeMode && locator.relativePathFromAnchor && locator.anchorAttrs) {
@@ -905,7 +816,7 @@
     }
 
     if (recipeMode) {
-      if (isMainContentRegion(candidate)) score += 2;
+      if (isMainContentRegion(candidate)) score += 5;
       if (isChromeRegion(candidate)) score -= 8;
     }
 
@@ -966,10 +877,6 @@
         bestScore = score;
         best = candidate;
       }
-    }
-
-    if (recipeMode) {
-      return meetsRecipeLocatorThreshold(best, locator, bestScore) ? best : null;
     }
 
     return bestScore >= 4 ? best : null;
@@ -1630,7 +1537,6 @@
       state.pendingTagPreview = '';
       state.pendingContainmentAdd = null;
       state.pendingRetagFieldKey = null;
-      state.pendingAddLocatorFieldKey = null;
       state.lastTaggedMessage = '';
     }
 
@@ -1692,21 +1598,7 @@
     field.also_contains = normalizeContainmentArray(field.also_contains);
     field.sometimes_contains = normalizeContainmentArray(field.sometimes_contains);
     if (field.containment) delete field.containment;
-
-    if (!field.locators) {
-      field.locators = field.locator ? [normalizeLocatorRecipe(field.locator)] : [];
-    } else {
-      field.locators = field.locators.map((locator) => normalizeLocatorRecipe(locator));
-    }
-    delete field.locator;
-
     return field;
-  }
-
-  function getFieldLocators(field) {
-    if (!field) return [];
-    normalizeFieldEntry(field);
-    return field.locators || [];
   }
 
   function getTaggedField(fieldKey) {
@@ -1733,51 +1625,10 @@
     renderPanel();
   }
 
-  function startAddLocatorField(fieldKey) {
-    if (!getTaggedField(fieldKey)) return;
-    hideContextMenu();
-    state.pendingAddLocatorFieldKey = fieldKey;
-    state.pendingRetagFieldKey = null;
-    state.pendingContainmentAdd = null;
-    state.pendingTagElement = null;
-    state.pendingTagPreview = '';
-    state.lastTaggedMessage = '';
-    clearHighlights();
-    renderPanel();
-  }
-
-  function cancelAddLocatorField() {
-    state.pendingAddLocatorFieldKey = null;
-    state.pendingTagElement = null;
-    state.pendingTagPreview = '';
-    clearHighlights();
-    renderPanel();
-  }
-
-  function removeFieldLocator(fieldKey, locatorIndex) {
-    if (!fieldKey || Number.isNaN(locatorIndex)) return;
-    ensureProductConfig();
-
-    const fieldIndex = state.config.product.fields.findIndex((field) => field.fieldKey === fieldKey);
-    if (fieldIndex < 0) return;
-
-    const fields = [...state.config.product.fields];
-    const field = { ...fields[fieldIndex] };
-    normalizeFieldEntry(field);
-    field.locators = (field.locators || []).filter((_, index) => index !== locatorIndex);
-    fields[fieldIndex] = field;
-    state.config.product = { ...state.config.product, fields };
-    state.lastTaggedMessage = field.locators.length
-      ? `Removed element ${locatorIndex + 1} from ${getSchemaFieldLabel(fieldKey)}.`
-      : `Removed last element from ${getSchemaFieldLabel(fieldKey)}. Tag again to restore.`;
-    renderPanel();
-  }
-
   function startRetagField(fieldKey) {
     if (!getTaggedField(fieldKey)) return;
     hideContextMenu();
     state.pendingRetagFieldKey = fieldKey;
-    state.pendingAddLocatorFieldKey = null;
     state.pendingContainmentAdd = null;
     state.pendingTagElement = null;
     state.pendingTagPreview = '';
@@ -1822,9 +1673,6 @@
     if (state.pendingContainmentAdd?.fieldKey === fieldKey) {
       state.pendingContainmentAdd = null;
     }
-    if (state.pendingAddLocatorFieldKey === fieldKey) {
-      state.pendingAddLocatorFieldKey = null;
-    }
     state.pendingTagElement = null;
     state.pendingTagPreview = '';
     state.lastTaggedMessage = `Deleted ${label}. Click an element to tag it again.`;
@@ -1840,40 +1688,6 @@
       .filter((field) => field.scope !== 'image')
       .filter((field) => field.key !== parentFieldKey)
       .filter((field) => !existing.has(field.key));
-  }
-
-  function renderFieldLocators(field) {
-    normalizeFieldEntry(field);
-    const locators = field.locators || [];
-    if (!locators.length) {
-      return '<div class="subtle">No elements tagged.</div>';
-    }
-
-    const rows = locators
-      .map((locator, index) => {
-        const preview = locator.textSample?.slice(0, 72) || locator.tag || 'element';
-        return `
-          <div class="locator-row row">
-            <span class="subtle">${index + 1}. ${preview}</span>
-            <button
-              class="btn"
-              data-remove-locator="${field.fieldKey}"
-              data-locator-index="${index}"
-              ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey || state.pendingTagElement ? 'disabled' : ''}
-            >Remove</button>
-          </div>
-        `;
-      })
-      .join('');
-
-    return `
-      <div class="locator-list">${rows}</div>
-      <button
-        class="btn"
-        data-add-locator="${field.fieldKey}"
-        ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey || state.pendingTagElement ? 'disabled' : ''}
-      >Add another element</button>
-    `;
   }
 
   function renderContainmentFieldPicker(parentFieldKey, mode) {
@@ -1942,7 +1756,7 @@
             class="btn ${isPending ? 'active' : ''}"
             data-add-containment="${field.fieldKey}"
             data-containment-mode="${mode}"
-            ${(state.pendingContainmentAdd && !isPending) || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey ? 'disabled' : ''}
+            ${(state.pendingContainmentAdd && !isPending) || state.pendingRetagFieldKey ? 'disabled' : ''}
           >${isPending ? 'Pick field…' : '+ Add field'}</button>
         </div>
         ${items ? `<div class="containment-list">${items}</div>` : ''}
@@ -1977,18 +1791,6 @@
         </div>
         <div class="subtle">Click the correct element on the page. Containment links will be kept.</div>
         <button class="btn" id="lumiscrape-cancel-retag">Cancel</button>
-        ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
-      `;
-    }
-
-    if (state.pendingAddLocatorFieldKey) {
-      const label = getSchemaFieldLabel(state.pendingAddLocatorFieldKey);
-      return `
-        <div class="status">
-          Adding element to <strong>${label}</strong> (<code>${state.pendingAddLocatorFieldKey}</code>)
-        </div>
-        <div class="subtle">Click another element on the page. Existing elements will be kept.</div>
-        <button class="btn" id="lumiscrape-cancel-add-locator">Cancel</button>
         ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
       `;
     }
@@ -2165,35 +1967,31 @@
           normalizeFieldEntry(field);
           const isActiveCard = state.pendingContainmentAdd?.fieldKey === field.fieldKey;
           const isRetagging = state.pendingRetagFieldKey === field.fieldKey;
-          const isAddingLocator = state.pendingAddLocatorFieldKey === field.fieldKey;
           const cardClass = [
             'item',
             'field-card',
             isActiveCard ? 'active' : '',
             isRetagging ? 'retagging' : '',
-            isAddingLocator ? 'retagging' : '',
           ].filter(Boolean).join(' ');
-          const locatorCount = (field.locators || []).length;
 
           return `
             <div class="${cardClass}" data-field-card="${field.fieldKey}">
               <div class="field-card-header">
                 <span class="tag">${field.fieldKey}</span>
-                <span class="tag">${locatorCount} element${locatorCount === 1 ? '' : 's'}</span>
                 <div class="field-card-actions">
                   <button
                     class="btn"
                     data-retag-field="${field.fieldKey}"
-                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey || state.pendingTagElement ? 'disabled' : ''}
+                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingTagElement ? 'disabled' : ''}
                   >Re-tag</button>
                   <button
                     class="btn danger"
                     data-delete-field="${field.fieldKey}"
-                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey ? 'disabled' : ''}
+                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey ? 'disabled' : ''}
                   >Delete</button>
                 </div>
               </div>
-              ${renderFieldLocators(field)}
+              <div class="subtle">${field.locator?.textSample || field.locator?.anchor || field.locator?.tag || ''}</div>
               ${renderContainmentGroup(field, 'also_contains')}
               ${renderContainmentGroup(field, 'sometimes_contains')}
             </div>
@@ -2203,8 +2001,6 @@
 
       const productInstructions = state.pendingRetagFieldKey
         ? `Click an element on the page to re-tag <strong>${getSchemaFieldLabel(state.pendingRetagFieldKey)}</strong>.`
-        : state.pendingAddLocatorFieldKey
-        ? `Click an element on the page to add to <strong>${getSchemaFieldLabel(state.pendingAddLocatorFieldKey)}</strong>.`
         : state.pendingContainmentAdd
         ? `Pick a schema field for <strong>${state.pendingContainmentAdd.fieldKey}</strong> → ${containmentModeLabel(state.pendingContainmentAdd.mode)}.`
         : '1. Click an element to tag a field · 2. Link related schema fields on each card · 3. Save';
@@ -2356,10 +2152,6 @@
       cancelRetagField();
     });
 
-    panelEl.querySelector('#lumiscrape-cancel-add-locator')?.addEventListener('click', () => {
-      cancelAddLocatorField();
-    });
-
     panelEl.querySelectorAll('[data-retag-field]').forEach((btn) => {
       btn.addEventListener('click', (event) => {
         event.preventDefault();
@@ -2411,30 +2203,11 @@
       });
     });
 
-    panelEl.querySelectorAll('[data-add-locator]').forEach((btn) => {
-      btn.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        startAddLocatorField(btn.getAttribute('data-add-locator'));
-      });
-    });
-
-    panelEl.querySelectorAll('[data-remove-locator]').forEach((btn) => {
-      btn.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        removeFieldLocator(
-          btn.getAttribute('data-remove-locator'),
-          Number(btn.getAttribute('data-locator-index')),
-        );
-      });
-    });
-
     panelEl.querySelectorAll('[data-field-card]').forEach((card) => {
       card.addEventListener('contextmenu', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (state.pendingContainmentAdd || state.pendingTagElement || state.pendingRetagFieldKey || state.pendingAddLocatorFieldKey) return;
+        if (state.pendingContainmentAdd || state.pendingTagElement || state.pendingRetagFieldKey) return;
         const fieldKey = card.getAttribute('data-field-card');
         if (!fieldKey) return;
         const rect = card.getBoundingClientRect();
@@ -2442,10 +2215,6 @@
           {
             label: 'Re-tag field…',
             onClick: () => startRetagField(fieldKey),
-          },
-          {
-            label: 'Add another element…',
-            onClick: () => startAddLocatorField(fieldKey),
           },
           {
             label: 'Add also contains field…',
@@ -2542,19 +2311,6 @@
       return;
     }
 
-    if (state.pendingAddLocatorFieldKey) {
-      const schemaField = state.schema?.fields?.find((field) => field.key === state.pendingAddLocatorFieldKey);
-      if (!schemaField) {
-        state.lastTaggedMessage = `Schema field "${state.pendingAddLocatorFieldKey}" not found.`;
-        state.pendingAddLocatorFieldKey = null;
-        renderPanel();
-        return;
-      }
-      highlightElements([el], true);
-      tagField(schemaField, el, { append: true });
-      return;
-    }
-
     state.pendingTagElement = el;
     state.pendingTagPreview = getPendingTagPreview(el);
     state.selectedElement = el;
@@ -2565,49 +2321,39 @@
   function tagField(field, el, options = {}) {
     if (state.pendingContainmentAdd) return;
     ensureProductConfig();
-
-    el.classList.remove('lumiscrape-highlight-strong', 'lumiscrape-highlight');
     const locator = buildLocator(el);
+    const entry = {
+      fieldKey: field.key,
+      scope: field.scope,
+      cardinality: field.cardinality,
+      type: field.type,
+      locator,
+      extraction: locator.extraction,
+      also_contains: [],
+      sometimes_contains: [],
+      taggedAt: new Date().toISOString(),
+    };
 
     const fields = [...state.config.product.fields];
     const existingIndex = fields.findIndex((item) => item.fieldKey === field.key);
-
+    const isRetag = options.retag || existingIndex >= 0;
     if (existingIndex >= 0) {
-      const existing = normalizeFieldEntry({ ...fields[existingIndex] });
-      existing.also_contains = existing.also_contains || [];
-      existing.sometimes_contains = existing.sometimes_contains || [];
-      existing.taggedAt = new Date().toISOString();
-
-      if (options.retag) {
-        existing.locators = [locator];
-        state.lastTaggedMessage = `Re-tagged ${field.label}. Click the next element.`;
-      } else {
-        existing.locators = [...(existing.locators || []), locator];
-        state.lastTaggedMessage = `Added another element to ${field.label} (${existing.locators.length} total).`;
-      }
-
-      fields[existingIndex] = existing;
+      const existing = normalizeFieldEntry(fields[existingIndex]);
+      entry.also_contains = existing.also_contains;
+      entry.sometimes_contains = existing.sometimes_contains;
+      fields[existingIndex] = entry;
     } else {
-      fields.push({
-        fieldKey: field.key,
-        scope: field.scope,
-        cardinality: field.cardinality,
-        type: field.type,
-        locators: [locator],
-        extraction: locator.extraction,
-        also_contains: [],
-        sometimes_contains: [],
-        taggedAt: new Date().toISOString(),
-      });
-      state.lastTaggedMessage = `Tagged as ${field.label}. Click the next element.`;
+      fields.push(entry);
     }
 
     state.config.product = { ...state.config.product, fields };
     state.pendingContainmentAdd = null;
     state.pendingRetagFieldKey = null;
-    state.pendingAddLocatorFieldKey = null;
     state.pendingTagElement = null;
     state.pendingTagPreview = '';
+    state.lastTaggedMessage = isRetag
+      ? `Re-tagged ${field.label}. Click the next element.`
+      : `Tagged as ${field.label}. Click the next element.`;
     clearHighlights();
     renderPanel();
   }
@@ -2801,27 +2547,44 @@
       scrapedAt: new Date().toISOString(),
     };
 
+    const sizeBucket = {};
+
     fields.forEach((field) => {
-      normalizeFieldEntry(field);
-      const locators = field.locators || [];
-      const seenElements = new Set();
-      const chunks = [];
+      const el = findLocator(field.locator);
+      const value = extractValue(el, field.extraction);
+      if (value == null || value === '') return;
 
-      locators.forEach((locator) => {
-        const el = findLocator(locator);
-        if (!el || seenElements.has(el)) return;
-        seenElements.add(el);
-        const extraction = locator.extraction || field.extraction;
-        const value = extractValue(el, extraction);
-        if (value != null && value !== '') {
-          chunks.push(value);
-        }
-      });
-
-      if (chunks.length) {
-        data[field.fieldKey] = chunks;
+      if (field.scope === 'size') {
+        const key = field.fieldKey === 'size_source_url' ? 'source_url' : field.fieldKey;
+        sizeBucket[key] = value;
+        return;
       }
+
+      if (field.scope === 'note') {
+        data.notes = data.notes || [];
+        data.notes.push({
+          name: field.fieldKey === 'note_name' ? value : undefined,
+          note_slug: field.fieldKey === 'note_slug' ? value : undefined,
+          pyramid_stage: field.fieldKey === 'note_pyramid_stage' ? value : undefined,
+        });
+        return;
+      }
+
+      if (field.scope === 'accord') {
+        data.accords = data.accords || [];
+        data.accords.push({
+          name: field.fieldKey === 'accord_name' ? value : undefined,
+          accord_slug: field.fieldKey === 'accord_slug' ? value : undefined,
+        });
+        return;
+      }
+
+      data[field.fieldKey] = value;
     });
+
+    if (Object.keys(sizeBucket).length) {
+      data.sizes = [sizeBucket];
+    }
 
     const images = [];
     (state.config?.images || []).forEach((imageSel) => {
@@ -2843,7 +2606,7 @@
   async function runAutoScrapeTab() {
     const cleanUrl = stripScrapeFlag(location.href);
     const requiredLocators = [
-      ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
+      ...(state.config?.product?.fields || []).map((field) => field.locator),
       ...(state.config?.images || []).map((image) => image.locator),
     ].filter(Boolean);
 

@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/classic-candle-23221876/?candle_scent=Madaket+Geranium",
-  "scrapedAt": "2026-06-15T16:00:19.895Z",
+  "scrapedAt": "2026-06-15T16:04:57.229Z",
   "name": [
     "Madaket Geranium 9.5oz Candle"
   ],
@@ -32,18 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 7,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "description",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }

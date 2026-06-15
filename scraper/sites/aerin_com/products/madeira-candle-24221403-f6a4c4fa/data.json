@@ -1,6 +1,6 @@
 {
   "source_url": "https://www.aerin.com/madeira-candle-24221403/?color=Marigold",
-  "scrapedAt": "2026-06-15T16:00:27.702Z",
+  "scrapedAt": "2026-06-15T16:04:53.258Z",
   "name": [
     "Madeira L'Ansecoy Orange Blossom 12.7oz Candle"
   ],
@@ -32,18 +32,5 @@
       "position": 2,
       "is_primary": false
     }
-  ],
-  "_extractReadiness": {
-    "ready": false,
-    "resolved": 7,
-    "required": 8,
-    "pending": [
-      {
-        "kind": "field",
-        "fieldKey": "note_name",
-        "order": null,
-        "reason": "empty_or_premature"
-      }
-    ]
-  }
+  ]
 }
