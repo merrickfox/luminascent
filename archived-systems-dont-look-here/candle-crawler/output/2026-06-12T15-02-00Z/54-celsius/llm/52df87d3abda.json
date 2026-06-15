@@ -1,0 +1,36 @@
+{
+  "url": "https://54celsius.com/products/moodz-candle-set",
+  "technique": "json_ld",
+  "json_ld_data": {
+    "name": "Moodz Candle Set",
+    "description": "Save and buy all 3! Moodz are made using a special production process combining different colors of wax into a single candle. The candles are molded and then polished to create a glossy finish. The use of palm wax gives them a very long life compared to soy or paraffin candles of the same size.",
+    "brand_name": "54Celsius",
+    "sizes": [
+      {
+        "size_value": null,
+        "size_unit": null,
+        "size_grams": null,
+        "price_amount": 11744,
+        "price_currency": "USD",
+        "burn_time_hours": null,
+        "sku": null,
+        "availability": "InStock",
+        "source_url": "https://54celsius.com/products/moodz-candle-set?variant=55223363731747",
+        "is_primary": true
+      }
+    ],
+    "images": [
+      {
+        "source_url": "https://54celsius.com/cdn/shop/files/moodz-collection.jpg?v=1781227449&width=1920",
+        "position": 0,
+        "is_primary": true
+      }
+    ],
+    "notes": [],
+    "accords": [],
+    "scent_summary": null,
+    "wax_type": null,
+    "vessel_material": null
+  },
+  "input_text": "\n"
+}

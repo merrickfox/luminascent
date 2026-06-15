@@ -1,0 +1,205 @@
+{
+  "name": "candle",
+  "version": 1,
+  "description": "Portable field definitions mirroring backend scrapedProductSchema",
+  "fields": [
+    {
+      "key": "source_url",
+      "label": "Source URL",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "url"
+    },
+    {
+      "key": "category_slug",
+      "label": "Category Slug",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "brand_name",
+      "label": "Brand Name",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "brand_slug",
+      "label": "Brand Slug",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "name",
+      "label": "Product Name",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "slug",
+      "label": "Product Slug",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "description",
+      "label": "Description",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "scent_summary",
+      "label": "Scent Summary",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "release_year",
+      "label": "Release Year",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "number"
+    },
+    {
+      "key": "wax_type",
+      "label": "Wax Type",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "vessel_material",
+      "label": "Vessel Material",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "is_discontinued",
+      "label": "Is Discontinued",
+      "scope": "product",
+      "cardinality": "single",
+      "type": "boolean"
+    },
+    {
+      "key": "size_value",
+      "label": "Size Value",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "number"
+    },
+    {
+      "key": "size_unit",
+      "label": "Size Unit",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "size_grams",
+      "label": "Size (grams)",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "number"
+    },
+    {
+      "key": "price_amount",
+      "label": "Price",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "currency"
+    },
+    {
+      "key": "price_currency",
+      "label": "Price Currency",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "burn_time_hours",
+      "label": "Burn Time (hours)",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "number"
+    },
+    {
+      "key": "sku",
+      "label": "SKU",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "availability",
+      "label": "Availability",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "text"
+    },
+    {
+      "key": "size_source_url",
+      "label": "Size Source URL",
+      "scope": "size",
+      "cardinality": "single",
+      "type": "url",
+      "mapsTo": "source_url"
+    },
+    {
+      "key": "note_name",
+      "label": "Note Name",
+      "scope": "note",
+      "cardinality": "multiple",
+      "type": "text",
+      "mapsTo": "notes[].name"
+    },
+    {
+      "key": "note_slug",
+      "label": "Note Slug",
+      "scope": "note",
+      "cardinality": "multiple",
+      "type": "text",
+      "mapsTo": "notes[].note_slug"
+    },
+    {
+      "key": "note_pyramid_stage",
+      "label": "Note Pyramid Stage",
+      "scope": "note",
+      "cardinality": "multiple",
+      "type": "text",
+      "mapsTo": "notes[].pyramid_stage"
+    },
+    {
+      "key": "accord_name",
+      "label": "Accord Name",
+      "scope": "accord",
+      "cardinality": "multiple",
+      "type": "text",
+      "mapsTo": "accords[].name"
+    },
+    {
+      "key": "accord_slug",
+      "label": "Accord Slug",
+      "scope": "accord",
+      "cardinality": "multiple",
+      "type": "text",
+      "mapsTo": "accords[].accord_slug"
+    },
+    {
+      "key": "image",
+      "label": "Product Image",
+      "scope": "image",
+      "cardinality": "multiple",
+      "type": "url"
+    }
+  ],
+  "containmentModes": ["also_contains", "sometimes_contains"]
+}

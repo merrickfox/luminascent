@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { api } from '@/lib/api'
+import { ColorSwatch } from '@/components/color-swatch'
 import { PageHeader } from '@/components/page-header'
 import { LoadingTable } from '@/components/loading-table'
 import { Field } from '@/components/field'
@@ -107,11 +108,12 @@ export function NotesPage() {
       {error ? (
         <p className="text-sm text-destructive">{(error as Error).message}</p>
       ) : isLoading ? (
-        <LoadingTable columns={3} />
+        <LoadingTable columns={4} />
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">Color</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Family</TableHead>
@@ -120,6 +122,9 @@ export function NotesPage() {
           <TableBody>
             {data?.notes.map((note) => (
               <TableRow key={note.id}>
+                <TableCell>
+                  <ColorSwatch color={note.color} colorGradient={note.color_gradient} />
+                </TableCell>
                 <TableCell className="font-medium">{note.name}</TableCell>
                 <TableCell>{note.slug}</TableCell>
                 <TableCell>{note.note_family ?? '—'}</TableCell>

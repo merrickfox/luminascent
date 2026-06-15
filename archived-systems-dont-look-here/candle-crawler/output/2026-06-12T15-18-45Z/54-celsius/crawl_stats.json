@@ -1,0 +1,134 @@
+{
+  "urls": {
+    "https://54celsius.com/products/moodz-candle-set": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/52df87d3abda.html",
+        "markdown_file": "54-celsius/markdown/52df87d3abda.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/products/death-lovers-tarot-bundle": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/d19454bc9032.html",
+        "markdown_file": "54-celsius/markdown/d19454bc9032.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/products/buon-appetito-baguette": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/ebd51634ebd7.html",
+        "markdown_file": "54-celsius/markdown/ebd51634ebd7.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/products/tarot-candle-duo-the-hermit-and-the-fool": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/340d089fb9a5.html",
+        "markdown_file": "54-celsius/markdown/340d089fb9a5.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/products/tarot-candle-duo-the-magician-the-high-priestess": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/d050312d2227.html",
+        "markdown_file": "54-celsius/markdown/d050312d2227.md",
+        "screenshot_file": null
+      }
+    }
+  }
+}

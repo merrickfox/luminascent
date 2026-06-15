@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { conflict, serverError } from '../../lib/http';
-import { createNote, listNotes } from './repo';
-import { createNoteSchema } from './schema';
+import { conflict, notFound, serverError } from '../../lib/http';
+import { createNote, getNoteById, listNotes, updateNoteColor } from './repo';
+import { createNoteSchema, updateNoteColorSchema } from './schema';
 
 export const noteRoutes = new Hono<{ Bindings: Env }>()
 	.get('/', async (c) => {
@@ -20,4 +20,13 @@ export const noteRoutes = new Hono<{ Bindings: Env }>()
 			}
 			return serverError(c);
 		}
+	})
+	.patch('/:id', zValidator('json', updateNoteColorSchema), async (c) => {
+		const id = c.req.param('id');
+		const existing = await getNoteById(c.env.DB, id);
+		if (!existing) return notFound(c, 'Note not found');
+
+		const input = c.req.valid('json');
+		const note = await updateNoteColor(c.env.DB, id, input);
+		return c.json({ note });
 	});

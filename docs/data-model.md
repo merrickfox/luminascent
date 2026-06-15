@@ -1,6 +1,6 @@
 # Data Model
 
-Luminascent stores product catalog data in **Cloudflare D1** (SQLite). Migrations live in `backend/migrations/`.
+Luminascent stores product catalog data in **Cloudflare D1** (SQLite). Migrations live in `backend/migrations/`. TypeScript row types mirror these tables in `backend/src/features/*/types.ts`.
 
 ## Entity relationships
 
@@ -22,6 +22,7 @@ erDiagram
   products ||--o{ product_images : has
   products ||--o{ product_sizes : offers
   products ||--o{ product_image_sources : sources
+  product_images ||--o| product_image_sources : uploaded_as
 ```
 
 ## Core entities
@@ -33,56 +34,63 @@ Maker/designer/house (Fragrantica "designer" maps here).
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID |
-| name | TEXT | |
-| slug | TEXT UNIQUE | URL-safe identifier |
+| name | TEXT NOT NULL | |
+| slug | TEXT UNIQUE NOT NULL | URL-safe identifier |
 | country | TEXT | optional |
 | website_url | TEXT | optional |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+| updated_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 ### `categories`
 
 Product type: candle, perfume, wax_melt, room_spray, diffuser, incense.
 
-| Column | Type |
-|--------|------|
-| id | TEXT PK |
-| name | TEXT |
-| slug | TEXT UNIQUE |
-
-### `products`
-
-The thing users search, review, and rate. Size-specific attributes (grams, price, burn time) live in `product_sizes`, not here.
-
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | |
-| category_id | TEXT FK | → categories |
-| brand_id | TEXT FK | → brands, optional |
-| name, slug | TEXT | slug is unique |
-| release_year | INTEGER | |
-| description, image_url | TEXT | `image_url` is legacy/external; uploaded images use `product_images` |
-| wax_type | TEXT | soy, paraffin, beeswax, vegetable wax, etc. (product-level) |
-| vessel_material | TEXT | glass, ceramic, tin, metal, etc. (product-level) |
-| is_discontinued | INTEGER | 0/1 |
+| name | TEXT NOT NULL | |
+| slug | TEXT UNIQUE NOT NULL | |
 
-### `product_sizes`
+### `products`
 
-Normalized size/price variants for a single logical product (e.g. 200g and 500g of the same candle). This is the source of truth for grams, price, and burn time.
+The thing users search, review, and rate. Size-specific attributes (grams, price, burn time) live in `product_sizes`, not here. Legacy size/price columns were removed in migration `0006_product_size_fields.sql`.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID |
-| product_id | TEXT FK | → products, CASCADE delete |
+| category_id | TEXT FK NOT NULL | → categories |
+| brand_id | TEXT FK | → brands, optional |
+| name | TEXT NOT NULL | |
+| slug | TEXT UNIQUE NOT NULL | |
+| release_year | INTEGER | |
+| description | TEXT | |
+| image_url | TEXT | legacy/external; uploaded images use `product_images` |
+| wax_type | TEXT | soy, paraffin, beeswax, vegetable wax, etc. (product-level) |
+| vessel_material | TEXT | glass, ceramic, tin, metal, etc. (product-level) |
+| is_discontinued | INTEGER NOT NULL | 0/1, default 0 |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+| updated_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+
+### `product_sizes`
+
+Normalized size/price variants for a single logical product (e.g. 200g and 500g of the same candle). Source of truth for grams, price, and burn time.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID |
+| product_id | TEXT FK NOT NULL | → products, CASCADE delete |
 | size_value | REAL | e.g. 200, 500 |
 | size_unit | TEXT | g, oz, ml, kg |
 | size_grams | INTEGER | normalized mass when unit is weight |
 | price_amount | INTEGER | minor units (pence/cents), per size |
 | price_currency | TEXT | |
-| burn_time_hours | INTEGER | per-size burn time |
+| burn_time_hours | INTEGER | per-size burn time (added in `0006`) |
 | sku | TEXT | optional retailer SKU |
 | availability | TEXT | InStock, OutOfStock, etc. |
 | source_url | TEXT | URL for this specific variant |
-| position | INTEGER | display order |
-| is_primary | INTEGER | 0/1 — default size for listings |
+| position | INTEGER NOT NULL | display order, default 0 |
+| is_primary | INTEGER NOT NULL | 0/1 — default size for listings |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 ### `product_images`
 
@@ -91,11 +99,11 @@ Uploaded images stored in R2. See [Storage](./storage.md) for bucket and key lay
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID |
-| product_id | TEXT FK | → products, CASCADE delete |
-| r2_key | TEXT UNIQUE | e.g. `{product-id}/{rand6}.png` |
-| position | INTEGER | Display order (0-based) |
-| is_primary | INTEGER | 0/1 — primary image for listings |
-| created_at | TEXT | |
+| product_id | TEXT FK NOT NULL | → products, CASCADE delete |
+| r2_key | TEXT UNIQUE NOT NULL | e.g. `{product-id}/{rand6}.png` |
+| position | INTEGER NOT NULL | display order (0-based), default 0 |
+| is_primary | INTEGER NOT NULL | 0/1 — primary image for listings |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 Public URL is built at read time: `{R2_PUBLIC_BASE_URL}/{r2_key}`.
 
@@ -106,11 +114,14 @@ Staging table for scraped image URLs before R2 upload. The import service copies
 | Column | Type | Notes |
 |--------|------|-------|
 | id | TEXT PK | UUID |
-| product_id | TEXT FK | → products, CASCADE delete |
-| source_url | TEXT | original retailer image URL |
-| position | INTEGER | display order |
-| is_primary | INTEGER | 0/1 |
+| product_id | TEXT FK NOT NULL | → products, CASCADE delete |
+| source_url | TEXT NOT NULL | original retailer image URL |
+| position | INTEGER NOT NULL | display order, default 0 |
+| is_primary | INTEGER NOT NULL | 0/1 |
 | r2_image_id | TEXT FK | → product_images, set after upload |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+
+Unique on `(product_id, source_url)`.
 
 ## Scent profile
 
@@ -118,11 +129,13 @@ Each product has one scent profile (may be reused across variants later).
 
 ### `scent_profiles`
 
-| Column | Type |
-|--------|------|
-| id | TEXT PK |
-| product_id | TEXT UNIQUE FK |
-| summary | TEXT |
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID |
+| product_id | TEXT UNIQUE FK NOT NULL | → products |
+| summary | TEXT | |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+| updated_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 ### `notes` + `scent_profile_notes`
 
@@ -130,12 +143,16 @@ Notes are normalized for fast filtering — not stored as JSON.
 
 | `notes` | |
 |---------|--|
-| id, name, slug UNIQUE | |
+| id | TEXT PK |
+| name | TEXT UNIQUE NOT NULL |
+| slug | TEXT UNIQUE NOT NULL |
 | note_family | citrus, spice, woods, floral, gourmand, resin, etc. |
+| color | solid hex (e.g. `#c47a4a`), set by LLM at scrape/import or backfill (`0007`) |
+| color_gradient | optional CSS gradient string; frontend prefers this over `color` when set |
 
 | `scent_profile_notes` | |
 |-----------------------|--|
-| scent_profile_id, note_id, pyramid_stage | PK composite |
+| scent_profile_id, note_id, pyramid_stage | composite PK |
 | pyramid_stage | top, middle, base, general, unknown |
 | position_index | ordering within stage |
 
@@ -143,8 +160,17 @@ Notes are normalized for fast filtering — not stored as JSON.
 
 Main accords (woody, vanilla, smoky, etc.) as first-class filterable entities.
 
+| `accords` | |
+|-----------|--|
+| id | TEXT PK |
+| name | TEXT UNIQUE NOT NULL |
+| slug | TEXT UNIQUE NOT NULL |
+| color | solid hex, same semantics as notes (`0007`) |
+| color_gradient | optional CSS gradient string |
+
 | `scent_profile_accords` | |
 |-------------------------|--|
+| scent_profile_id, accord_id | composite PK |
 | strength_score | optional intensity 0–1 |
 | position_index | display order |
 
@@ -152,49 +178,93 @@ Main accords (woody, vanilla, smoky, etc.) as first-class filterable entities.
 
 ### Vote dimensions (generic model)
 
-Instead of separate tables per widget, one pattern covers all vote types:
+Instead of separate tables per widget, one pattern covers all vote types.
 
-**`vote_dimensions`** — rating_reaction, season, longevity, sillage, gender, price_value, time_of_day, occasion
+**`vote_dimensions`**
 
-**`vote_options`** — e.g. love/like/ok/dislike/hate, spring/summer/autumn/winter, intimate/moderate/strong/enormous
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | |
+| name | TEXT UNIQUE NOT NULL | |
+| slug | TEXT UNIQUE NOT NULL | rating_reaction, season, longevity, sillage, gender, price_value, time_of_day, occasion |
 
-**`product_vote_aggregates`** — `(product_id, vote_option_id) → vote_count`
+**`vote_options`**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | |
+| dimension_id | TEXT FK NOT NULL | → vote_dimensions |
+| label | TEXT NOT NULL | display label, e.g. "Love", "Winter" |
+| slug | TEXT NOT NULL | e.g. love, winter, strong |
+| sort_order | INTEGER | display order within dimension |
+
+Unique on `(dimension_id, slug)`.
+
+**`product_vote_aggregates`**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| product_id | TEXT FK NOT NULL | → products, part of composite PK |
+| vote_option_id | TEXT FK NOT NULL | → vote_options, part of composite PK |
+| vote_count | INTEGER NOT NULL | default 0 |
 
 ### `product_rating_summaries`
 
 Numeric rating kept separate from reaction votes.
 
-| Column | Type |
-|--------|------|
-| rating_avg | REAL |
-| rating_count | INTEGER |
+| Column | Type | Notes |
+|--------|------|-------|
+| product_id | TEXT PK FK | → products |
+| rating_avg | REAL | |
+| rating_count | INTEGER NOT NULL | default 0 |
+| updated_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 ### `product_reminds_me_of`
 
 Product-to-product similarity suggestions. Supports both linked products and external references not yet in the catalog.
 
-| Column | Type |
-|--------|------|
-| reminded_product_id | TEXT FK, nullable |
-| external_brand_name, external_product_name | for unimported targets |
-| thumbs_up, thumbs_down | |
+| Column | Type | Notes |
+|--------|------|-------|
+| product_id | TEXT FK NOT NULL | source product, part of composite PK |
+| reminded_product_id | TEXT FK | target in catalog, nullable |
+| external_brand_name | TEXT | for unimported targets, part of composite PK |
+| external_product_name | TEXT | for unimported targets, part of composite PK |
+| external_source_url | TEXT | optional link to external reference |
+| thumbs_up | INTEGER NOT NULL | default 0 |
+| thumbs_down | INTEGER NOT NULL | default 0 |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
+
+Composite PK: `(product_id, reminded_product_id, external_brand_name, external_product_name)`.
 
 ### `reviews`
 
-| Column | Type |
-|--------|------|
-| author_name | TEXT (user_id deferred) |
-| rating, title, body | |
-| helpful_count, unhelpful_count | |
-| published_at | |
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID |
+| product_id | TEXT FK NOT NULL | → products |
+| author_name | TEXT | user_id deferred |
+| rating | REAL | |
+| title | TEXT | |
+| body | TEXT NOT NULL | |
+| language | TEXT | optional locale |
+| helpful_count | INTEGER | |
+| unhelpful_count | INTEGER | |
+| published_at | TEXT | |
+| created_at | TEXT NOT NULL | default `CURRENT_TIMESTAMP` |
 
 ## Full-text search
 
 **`product_search`** — FTS5 virtual table, denormalized text:
 
-- product name, brand name, description
-- all note names, all accord names
-- review snippets
+| Column | Indexed | Content |
+|--------|---------|---------|
+| product_id | no (UNINDEXED) | FK to products |
+| name | yes | product name |
+| brand_name | yes | brand name |
+| description | yes | product description |
+| notes | yes | space-separated note names |
+| accords | yes | space-separated accord names |
+| reviews | yes | review snippets |
 
 Rebuilt by `rebuildProductSearch()` whenever a product or its facets change.
 
@@ -240,18 +310,30 @@ WHERE c.slug = 'candle'
 
 ## Seed data
 
-Migration `0002_seed_reference.sql` seeds categories, vote dimensions/options, accords, notes, brands, and two sample candles. Migration `0006_product_size_fields.sql` backfills their size/price/burn data into `product_sizes` and removes the legacy columns from `products`.
+Migration `0002_seed_reference.sql` seeds categories, vote dimensions/options, accords, notes, brands, and two sample candles. Migration `0006_product_size_fields.sql` backfills their size/price/burn data into `product_sizes` and removes the legacy columns from `products`. Migration `0007_note_accord_colors.sql` adds optional `color` and `color_gradient` columns to `notes` and `accords`.
+
+See [migrations.md](./migrations.md) for the full migration list.
 
 ## Scraping output → import
 
 The crawler at `scrapling/crawler/` produces per-brand `products.json` shaped for import. Each product record includes:
 
-- `sizes[]` — per-variant grams, price, burn time, SKU, availability (no flat product-level size/price fields)
-- `images[]` — `{ source_url, position, is_primary }`
-- `notes[]`, `accords[]` — with slugs for reference data
-- `wax_type`, `vessel_material`, `description`, `scent_summary` — product-level
+| Field | Notes |
+|-------|-------|
+| `source_url` | retailer page URL |
+| `category_slug` | defaults to `candle` |
+| `brand_name`, `brand_slug` | brand identity (slug derived if omitted) |
+| `name`, `slug` | product identity (slug derived from name if omitted) |
+| `description`, `scent_summary` | product-level text |
+| `release_year`, `is_discontinued` | optional metadata |
+| `wax_type`, `vessel_material` | product-level candle attributes |
+| `sizes[]` | per-variant grams, price, burn time, SKU, availability, `source_url`, `is_primary` |
+| `images[]` | `{ source_url, position, is_primary }` |
+| `notes[]` | `{ note_slug, name, pyramid_stage, color?, color_gradient? }` |
+| `accords[]` | `{ accord_slug, name, color?, color_gradient? }` |
+| `_provenance` | `{ json_ld, llm }` — crawl metadata only, not stored in D1 |
 
-The admin import page (`/import`) or `POST /admin/import/product` writes these into D1. Resume/failure state for crawls lives in local files (`state.json`, `failures.jsonl`), not in D1.
+The admin import page (`/import`) or `POST /admin/import/product` writes these into D1. Import validation lives in `backend/src/features/import/schema.ts`. Resume/failure state for crawls lives in local files (`state.json`, `failures.jsonl`), not in D1.
 
 See [scrapling/crawler/README.md](../scrapling/crawler/README.md) for the full pipeline.
 

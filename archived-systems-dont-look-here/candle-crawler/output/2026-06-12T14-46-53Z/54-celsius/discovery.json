@@ -1,0 +1,1185 @@
+{
+  "seed_url": "https://54celsius.com/collections/pyropet-candles",
+  "technique": "seeder",
+  "seeder_count": 10,
+  "deep_crawl_count": 0,
+  "candidates": [
+    {
+      "url": "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 1.4,
+      "head_data": {
+        "title": "Twist Candle featured in the Houston Chronicle!",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "Our Twist candle has been featured in the Houston Chronicle. Great tabletop pieces for the holidays. https://www.houstonchronicle.com/thepage/article/Great-entertaining-pieces-for-your-holiday-party-15705907.php",
+          "og:type": "article",
+          "og:title": "Twist Candle featured in the Houston Chronicle!",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news20v2.jpg?v=1612426339&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news20v2.jpg?v=1612426339&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "Our Twist candle has been featured in the Houston Chronicle. Great tabletop pieces for the holidays. https://www.houstonchronicle.com/thepage/article/Great-entertaining-pieces-for-your-holiday-party-15705907.php",
+          "og:url": "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Twist Candle featured in the Houston Chronicle!",
+          "twitter:description": "Our Twist candle has been featured in the Houston Chronicle. Great tabletop pieces for the holidays.\nhttps://www.houstonchronicle.com/thepage/article/Great-entertaining-pieces-for-your-holiday-party-15705907.php",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news20v2.jpg?crop=center&height=1200&v=1612426339&width=1200",
+          "twitter:image:alt": "Twist Candle featured in the Houston Chronicle!"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/twist-candle-featured-in-the-houston-chronicle#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle"
+            },
+            "articleBody": "Our Twist candle has been featured in the Houston Chronicle. Great tabletop pieces for the holidays.\nhttps://www.houstonchronicle.com/thepage/article/Great-entertaining-pieces-for-your-holiday-party-15705907.php",
+            "headline": "Twist Candle featured in the Houston Chronicle!",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news20v2.jpg?v=1612426339&width=1920",
+            "datePublished": "2021-02-04T03:07:02-05:00",
+            "dateModified": "2020-11-04T04:30:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Twist Candle featured in the Houston Chronicle!",
+                "item": "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.9714094531297524,
+      "score": 1.3714094531297523,
+      "head_data": {
+        "title": "HouseBeautiful Featured the Kisa candle in a round-up of gifts",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "HouseBeautiful.com Featured the Kisa candle in a round-up of gifts and home décor purr-fect for cat lovers.  Check it out here: https://www.housebeautiful.com/shopping/home-accessories/g22839843/cat-decor-gifts/",
+          "og:type": "article",
+          "og:title": "HouseBeautiful Featured the Kisa candle in a round-up of gifts",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news16.jpg?v=1612421682&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news16.jpg?v=1612421682&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "HouseBeautiful.com Featured the Kisa candle in a round-up of gifts and home décor purr-fect for cat lovers.  Check it out here: https://www.housebeautiful.com/shopping/home-accessories/g22839843/cat-decor-gifts/",
+          "og:url": "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "HouseBeautiful Featured the Kisa candle in a round-up of gifts",
+          "twitter:description": "HouseBeautiful.com Featured the Kisa candle in a round-up of gifts and home décor purr-fect for cat lovers. \nCheck it out here:\nhttps://www.housebeautiful.com/shopping/home-accessories/g22839843/cat-decor-gifts/",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news16.jpg?crop=center&height=1200&v=1612421682&width=1200",
+          "twitter:image:alt": "HouseBeautiful Featured the Kisa candle in a round-up of gifts"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts"
+            },
+            "articleBody": "HouseBeautiful.com Featured the Kisa candle in a round-up of gifts and home décor purr-fect for cat lovers. \nCheck it out here:\nhttps://www.housebeautiful.com/shopping/home-accessories/g22839843/cat-decor-gifts/",
+            "headline": "HouseBeautiful Featured the Kisa candle in a round-up of gifts",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news16.jpg?v=1612421682&width=1920",
+            "datePublished": "2021-02-04T01:49:56-05:00",
+            "dateModified": "2020-12-03T02:00:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "HouseBeautiful Featured the Kisa candle in a round-up of gifts",
+                "item": "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.8923223066607062,
+      "score": 1.2923223066607061,
+      "head_data": {
+        "title": "Twist Candle Featured on Gifts & Decorative Accessories Magazine",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "The Twist candle has been Featured on Gifts &amp; Decorative Accessories Magazine. While we all stay cozied up in our homes bring the ambience to you with Celsius54 candles! Thank you @giftsanddecmag for the feature on Celsius54’s very own Dan Koval, who gives us all a little insight on trending decorative candles and ",
+          "og:type": "article",
+          "og:title": "Twist Candle Featured on Gifts & Decorative Accessories Magazine",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news9v3.jpg?v=1611064054&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news9v3.jpg?v=1611064054&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "The Twist candle has been Featured on Gifts &amp; Decorative Accessories Magazine. While we all stay cozied up in our homes bring the ambience to you with Celsius54 candles! Thank you @giftsanddecmag for the feature on Celsius54’s very own Dan Koval, who gives us all a little insight on trending decorative candles and ",
+          "og:url": "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Twist Candle Featured on Gifts & Decorative Accessories Magazine",
+          "twitter:description": "The Twist candle has been Featured on Gifts &amp; Decorative Accessories Magazine.\nWhile we all stay cozied up in our homes bring the ambience to you with Celsius54 candles! Thank you @giftsanddecmag for the feature on Celsius54’s very own Dan Koval, who gives us all a little insight on trending decorative candles and more!\nCheck it out here!",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news9v3.jpg?crop=center&height=1200&v=1611064054&width=1200",
+          "twitter:image:alt": "Twist Candle Featured on Gifts & Decorative Accessories Magazine"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine"
+            },
+            "articleBody": "The Twist candle has been Featured on Gifts &amp; Decorative Accessories Magazine.\nWhile we all stay cozied up in our homes bring the ambience to you with Celsius54 candles! Thank you @giftsanddecmag for the feature on Celsius54’s very own Dan Koval, who gives us all a little insight on trending decorative candles and more!\nCheck it out here!",
+            "headline": "Twist Candle Featured on Gifts & Decorative Accessories Magazine",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news9v3.jpg?v=1611064054&width=1920",
+            "datePublished": "2021-01-19T08:40:32-05:00",
+            "dateModified": "2021-01-03T03:00:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Twist Candle Featured on Gifts & Decorative Accessories Magazine",
+                "item": "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.8443448324481833,
+      "score": 0.8443448324481833,
+      "head_data": {
+        "title": "MSN.com picked up on the article in HouseBeautiful",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "Check out the MSN article featuring our Kisa PyroPet candle here: https://www.msn.com/en-us/lifestyle/home-and-garden/17-clever-gifts-and-decor-finds-for-the-cat-lover-in-your-life/ss-BB19Am1i",
+          "og:type": "article",
+          "og:title": "MSN.com picked up on the article in HouseBeautiful",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news17.jpg?v=1612422760&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news17.jpg?v=1612422760&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "Check out the MSN article featuring our Kisa PyroPet candle here: https://www.msn.com/en-us/lifestyle/home-and-garden/17-clever-gifts-and-decor-finds-for-the-cat-lover-in-your-life/ss-BB19Am1i",
+          "og:url": "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "MSN.com picked up on the article in HouseBeautiful",
+          "twitter:description": "Check out the MSN article featuring our Kisa PyroPet candle here:\nhttps://www.msn.com/en-us/lifestyle/home-and-garden/17-clever-gifts-and-decor-finds-for-the-cat-lover-in-your-life/ss-BB19Am1i",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news17.jpg?crop=center&height=1200&v=1612422760&width=1200",
+          "twitter:image:alt": "MSN.com picked up on the article in HouseBeautiful"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful"
+            },
+            "articleBody": "Check out the MSN article featuring our Kisa PyroPet candle here:\nhttps://www.msn.com/en-us/lifestyle/home-and-garden/17-clever-gifts-and-decor-finds-for-the-cat-lover-in-your-life/ss-BB19Am1i",
+            "headline": "MSN.com picked up on the article in HouseBeautiful",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news17.jpg?v=1612422760&width=1920",
+            "datePublished": "2021-02-04T02:12:39-05:00",
+            "dateModified": "2020-12-02T20:00:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "MSN.com picked up on the article in HouseBeautiful",
+                "item": "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/pyropets-reviewed-in-new-theory-magazine",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.8294531141788632,
+      "score": 0.8294531141788632,
+      "head_data": {
+        "title": "Pyropets Reviewed in New Theory Magazine",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "New Theory Magazine has a review of Pyropets. The editors praised the design stating \" One of the very cool things about Pyropet candle it’s that just because it has burned down, it doesn’t mean it’s done, underneath that awesome candle you there is a skeleton! A cute decoration you can keep to add some funky charm to ",
+          "og:type": "article",
+          "og:title": "Pyropets Reviewed in New Theory Magazine",
+          "og:image": "http://54celsius.com/cdn/shop/articles/2a764f433afdf2e11994f1f774240209.jpg?v=1509409033&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/2a764f433afdf2e11994f1f774240209.jpg?v=1509409033&width=2048",
+          "og:image:width": "1200",
+          "og:image:height": "900",
+          "og:description": "New Theory Magazine has a review of Pyropets. The editors praised the design stating \" One of the very cool things about Pyropet candle it’s that just because it has burned down, it doesn’t mean it’s done, underneath that awesome candle you there is a skeleton! A cute decoration you can keep to add some funky charm to ",
+          "og:url": "https://54celsius.com/blogs/news/pyropets-reviewed-in-new-theory-magazine",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Pyropets Reviewed in New Theory Magazine",
+          "twitter:description": "New Theory Magazine has a review of Pyropets. The editors praised the design stating \"\n\nOne of the very cool things about Pyropet candle it’s that just because it has burned down, it doesn’t mean it’s done, underneath that awesome candle you there is a skeleton! A cute decoration you can keep to add some funky charm to your home!\"\nRead the full review here.\n ",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/2a764f433afdf2e11994f1f774240209.jpg?crop=center&height=1200&v=1509409033&width=1200",
+          "twitter:image:alt": "Pyropets Reviewed in New Theory Magazine"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/pyropets-reviewed-in-new-theory-magazine"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/pyropets-reviewed-in-new-theory-magazine#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/pyropets-reviewed-in-new-theory-magazine"
+            },
+            "articleBody": "New Theory Magazine has a review of Pyropets. The editors praised the design stating \"\n\nOne of the very cool things about Pyropet candle it’s that just because it has burned down, it doesn’t mean it’s done, underneath that awesome candle you there is a skeleton! A cute decoration you can keep to add some funky charm to your home!\"\nRead the full review here.\n ",
+            "headline": "Pyropets Reviewed in New Theory Magazine",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/2a764f433afdf2e11994f1f774240209.jpg?v=1509409033&width=1920",
+            "datePublished": "2017-10-30T20:17:13-04:00",
+            "dateModified": "2017-10-30T20:17:00-04:00",
+            "author": {
+              "@type": "Person",
+              "name": "Mark Costigliola"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Pyropets Reviewed in New Theory Magazine",
+                "item": "https://54celsius.com/blogs/news/pyropets-reviewed-in-new-theory-magazine"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.7805494004171012,
+      "score": 0.7805494004171012,
+      "head_data": {
+        "title": "PyroPet in Heavy's 101 Weird Gifts for Men & Women",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "See our Kisa PyroPet candle shine! Check out the Heavy's 101 Weird Gifts for Men &amp; Women: The Ultimate List https://heavy.com/gifts/weird-gifts/",
+          "og:type": "article",
+          "og:title": "PyroPet in Heavy's 101 Weird Gifts for Men & Women",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news8v2.jpg?v=1611063439&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news8v2.jpg?v=1611063439&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "See our Kisa PyroPet candle shine! Check out the Heavy's 101 Weird Gifts for Men &amp; Women: The Ultimate List https://heavy.com/gifts/weird-gifts/",
+          "og:url": "https://54celsius.com/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "PyroPet in Heavy's 101 Weird Gifts for Men & Women",
+          "twitter:description": "See our Kisa PyroPet candle shine! Check out the Heavy's 101 Weird Gifts for Men &amp; Women: The Ultimate List\nhttps://heavy.com/gifts/weird-gifts/",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news8v2.jpg?crop=center&height=1200&v=1611063439&width=1200",
+          "twitter:image:alt": "PyroPet in Heavy's 101 Weird Gifts for Men & Women"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women"
+            },
+            "articleBody": "See our Kisa PyroPet candle shine! Check out the Heavy's 101 Weird Gifts for Men &amp; Women: The Ultimate List\nhttps://heavy.com/gifts/weird-gifts/",
+            "headline": "PyroPet in Heavy's 101 Weird Gifts for Men & Women",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news8v2.jpg?v=1611063439&width=1920",
+            "datePublished": "2021-01-19T08:33:21-05:00",
+            "dateModified": "2021-01-02T03:00:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "PyroPet in Heavy's 101 Weird Gifts for Men & Women",
+                "item": "https://54celsius.com/blogs/news/pyropet-in-heavys-101-weird-gifts-for-men-women"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.728483232634524,
+      "score": 0.728483232634524,
+      "head_data": {
+        "title": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "Buzzfeed: 45 Home Products That'll Make Excellent Gifts. A freaky cat candle – it's gonna look so cool when they melt it, you're both gonna wish it had nine lives. https://www.buzzfeed.com/malloryannp/best-home-gifts",
+          "og:type": "article",
+          "og:title": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news19.jpg?v=1612425784&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news19.jpg?v=1612425784&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "Buzzfeed: 45 Home Products That'll Make Excellent Gifts. A freaky cat candle – it's gonna look so cool when they melt it, you're both gonna wish it had nine lives. https://www.buzzfeed.com/malloryannp/best-home-gifts",
+          "og:url": "https://54celsius.com/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts",
+          "twitter:description": "Buzzfeed: 45 Home Products That'll Make Excellent Gifts.\nA freaky cat candle – it's gonna look so cool when they melt it, you're both gonna wish it had nine lives.\nhttps://www.buzzfeed.com/malloryannp/best-home-gifts",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news19.jpg?crop=center&height=1200&v=1612425784&width=1200",
+          "twitter:image:alt": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts"
+            },
+            "articleBody": "Buzzfeed: 45 Home Products That'll Make Excellent Gifts.\nA freaky cat candle – it's gonna look so cool when they melt it, you're both gonna wish it had nine lives.\nhttps://www.buzzfeed.com/malloryannp/best-home-gifts",
+            "headline": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news19.jpg?v=1612425784&width=1920",
+            "datePublished": "2021-02-04T03:00:54-05:00",
+            "dateModified": "2021-01-03T15:00:00-05:00",
+            "author": {
+              "@type": "Person",
+              "name": "Freshclick"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Pyropet featured by Buzzfeed in their list of 45 perfect gifts",
+                "item": "https://54celsius.com/blogs/news/pyropet-featured-by-buzzfeed-in-their-list-of-45-perfect-gifts"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/new-look-new-collections-and-new-news",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.6508749524482363,
+      "score": 0.6508749524482363,
+      "head_data": {
+        "title": "New Look, New Collections and New “News”",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "If you have not visited 54Celsius in awhile, you will see we have a new website and quite a few new brands of our unique candles. We’ve teamed up with some outstanding designers and craftspeople to bring you a wide array of candle choices.  Here are a few highlights:  Twist Candles by award winning Dutch Designer Lex P",
+          "og:type": "article",
+          "og:title": "New Look, New Collections and New “News”",
+          "og:image": "http://54celsius.com/cdn/shop/articles/news11.jpg?v=1611064652&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/news11.jpg?v=1611064652&width=2048",
+          "og:image:width": "1500",
+          "og:image:height": "600",
+          "og:description": "If you have not visited 54Celsius in awhile, you will see we have a new website and quite a few new brands of our unique candles. We’ve teamed up with some outstanding designers and craftspeople to bring you a wide array of candle choices.  Here are a few highlights:  Twist Candles by award winning Dutch Designer Lex P",
+          "og:url": "https://54celsius.com/blogs/news/new-look-new-collections-and-new-news",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "New Look, New Collections and New “News”",
+          "twitter:description": "If you have not visited 54Celsius in awhile, you will see we have a new website and quite a few new brands of our unique candles. We’ve teamed up with some outstanding designers and craftspeople to bring you a wide array of candle choices.  Here are a few highlights:  Twist Candles by award winning Dutch Designer Lex Pott bring a whole new meaning to the saying “Burning the candle at both ends”. Who thought opening a tin could bring so much joy? Check out Candlecan Candles by Lithuanian Designer Justinas Bruzas. Delicious to behold and smell. Everyday Emergency Candles are made to de-stress just about any unexpected situation and provide some warm light - whether to help you see in the dark or to provide a little ambiance.  As you will see, the one commonality is that all our candles are so gorgeous that",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/news11.jpg?crop=center&height=1200&v=1611064652&width=1200",
+          "twitter:image:alt": "New Look, New Collections and New “News”"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/new-look-new-collections-and-new-news"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/new-look-new-collections-and-new-news#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/new-look-new-collections-and-new-news"
+            },
+            "articleBody": "If you have not visited 54Celsius in awhile, you will see we have a new website and quite a few new brands of our unique candles. We’ve teamed up with some outstanding designers and craftspeople to bring you a wide array of candle choices. \n\nHere are a few highlights: \nTwist Candles by award winning Dutch Designer Lex Pott bring a whole new meaning to the saying “Burning the candle at both ends”.\n\nWho thought opening a tin could bring so much joy? Check out Candlecan Candles by Lithuanian Designer Justinas Bruzas. Delicious to behold and smell.\n\nEveryday Emergency Candles are made to de-stress just about any unexpected situation and provide some warm light - whether to help you see in the dark or to provide a little ambiance. \n\nAs you will see, the one commonality is that all our candles are so gorgeous that it will be hard to light them. But go ahead, burn them anyway. We’ll make more. \nLastly, this is our first post in our newly created blog with the astoundingly creative title: “News”. Every month, we will highlight the collections, designers, trends in decor, and other things we think will interest you.  Please bookmark &amp; share. \nEnjoy!\nDan, Jana and Thorunn",
+            "headline": "New Look, New Collections and New “News”",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/news11.jpg?v=1611064652&width=1920",
+            "datePublished": "2020-06-30T11:55:57-04:00",
+            "dateModified": "2020-06-30T11:55:00-04:00",
+            "author": {
+              "@type": "Person",
+              "name": "By Association Only Collaborator"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "New Look, New Collections and New “News”",
+                "item": "https://54celsius.com/blogs/news/new-look-new-collections-and-new-news"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.6384421976616084,
+      "score": 0.6384421976616084,
+      "head_data": {
+        "title": "Pyropets named as must have gift for Halloween on Today Show and iHear",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "Pyropets, the candle with a skeleton were featured on the Today Show and iHeartRadio as must have gifts for Halloween.  The Today Show featured Pyropets on their \"Ghoulish Gadgets\" segment which aired on October 13, 2007.  You can watch the video below:   Additionally, iHeartRadio featured a segment on Halloween Gadget",
+          "og:type": "article",
+          "og:title": "Pyropets named as must have gift for Halloween on Today Show and iHeartRadio",
+          "og:image": "http://54celsius.com/cdn/shop/articles/22365508_1957006991178427_7714930871419362995_n.jpg?v=1508183424&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/22365508_1957006991178427_7714930871419362995_n.jpg?v=1508183424&width=2048",
+          "og:image:width": "602",
+          "og:image:height": "602",
+          "og:description": "Pyropets, the candle with a skeleton were featured on the Today Show and iHeartRadio as must have gifts for Halloween.  The Today Show featured Pyropets on their \"Ghoulish Gadgets\" segment which aired on October 13, 2007.  You can watch the video below:   Additionally, iHeartRadio featured a segment on Halloween Gadget",
+          "og:url": "https://54celsius.com/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Pyropets named as must have gift for Halloween on Today Show and iHeartRadio",
+          "twitter:description": "Pyropets, the candle with a skeleton were featured on the Today Show and iHeartRadio as must have gifts for Halloween. \nThe Today Show featured Pyropets on their \"Ghoulish Gadgets\" segment which aired on October 13, 2007.  You can watch the video below:\n \nAdditionally, iHeartRadio featured a segment on Halloween Gadgets. You can listen to this segment here.\n ",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/22365508_1957006991178427_7714930871419362995_n.jpg?crop=center&height=1200&v=1508183424&width=1200",
+          "twitter:image:alt": "Pyropets named as must have gift for Halloween on Today Show and iHeartRadio"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio"
+            },
+            "articleBody": "Pyropets, the candle with a skeleton were featured on the Today Show and iHeartRadio as must have gifts for Halloween. \nThe Today Show featured Pyropets on their \"Ghoulish Gadgets\" segment which aired on October 13, 2007.  You can watch the video below:\n \nAdditionally, iHeartRadio featured a segment on Halloween Gadgets. You can listen to this segment here.\n ",
+            "headline": "Pyropets named as must have gift for Halloween on Today Show and iHeartRadio",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/22365508_1957006991178427_7714930871419362995_n.jpg?v=1508183424&width=1920",
+            "datePublished": "2017-10-16T15:50:24-04:00",
+            "dateModified": "2017-10-16T15:50:00-04:00",
+            "author": {
+              "@type": "Person",
+              "name": "Mark Costigliola"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Pyropets named as must have gift for Halloween on Today Show and iHeartRadio",
+                "item": "https://54celsius.com/blogs/news/pyropets-named-as-must-have-gift-for-halloween-on-today-show-and-iheartradio"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://54celsius.com/blogs/news/pyropet-kisa-valentines-day-huffington-post",
+      "source": "seeder",
+      "status": "valid",
+      "relevance_score": 0.44384635339460415,
+      "score": 0.44384635339460415,
+      "head_data": {
+        "title": "Pyropets featured in Huffington Post Weird Valentine's Day Gift Guide",
+        "charset": "utf-8",
+        "meta": {
+          "viewport": "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+          "description": "Pyropet Kisa was featured in the Huffington Post Weird Valentine's Day Gift guide among a selection of the most interesting gifts to give your loved one. Check it out here.",
+          "og:type": "article",
+          "og:title": "Pyropets featured in Huffington Post Weird Valentine's Day Gift Guide",
+          "og:image": "http://54celsius.com/cdn/shop/articles/5890dcb517000026002d9928.jpeg?v=1508865709&width=2048",
+          "og:image:secure_url": "https://54celsius.com/cdn/shop/articles/5890dcb517000026002d9928.jpeg?v=1508865709&width=2048",
+          "og:image:width": "600",
+          "og:image:height": "600",
+          "og:description": "Pyropet Kisa was featured in the Huffington Post Weird Valentine's Day Gift guide among a selection of the most interesting gifts to give your loved one. Check it out here.",
+          "og:url": "https://54celsius.com/blogs/news/pyropet-kisa-valentines-day-huffington-post",
+          "og:site_name": "54Celsius",
+          "twitter:card": "summary",
+          "twitter:title": "Pyropets featured in Huffington Post Weird Valentine's Day Gift Guide",
+          "twitter:description": "Pyropet Kisa was featured in the Huffington Post Weird Valentine's Day Gift guide among a selection of the most interesting gifts to give your loved one. Check it out here.",
+          "twitter:image": "https://54celsius.com/cdn/shop/articles/5890dcb517000026002d9928.jpeg?crop=center&height=1200&v=1508865709&width=1200",
+          "twitter:image:alt": "Kisa Cat Candle"
+        },
+        "link": {
+          "canonical": [
+            {
+              "href": "https://54celsius.com/blogs/news/pyropet-kisa-valentines-day-huffington-post"
+            }
+          ],
+          "shortcut": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=96"
+            }
+          ],
+          "apple-touch-icon": [
+            {
+              "href": "//54celsius.com/cdn/shop/files/54C_Logo_Transparent_1000px_ed6173b7-1c6a-42ad-8da9-d78c1a626318.png?v=1684816609&width=180"
+            }
+          ],
+          "preconnect": [
+            {
+              "href": "https://fonts.shopifycdn.com"
+            }
+          ],
+          "preload": [
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n5.7c8497861ffd15f4e1284cd221f14658b0e95d61.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            },
+            {
+              "href": "//54celsius.com/cdn/fonts/jost/jost_n4.d47a1b6347ce4a4c9f437608011273009d91f2b7.woff2",
+              "as": "font",
+              "type": "font/woff2"
+            }
+          ]
+        },
+        "jsonld": [
+          {
+            "@context": "http://schema.org/",
+            "@id": "/blogs/news/pyropet-kisa-valentines-day-huffington-post#article",
+            "@type": "Article",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": "https://54celsius.com/blogs/news/pyropet-kisa-valentines-day-huffington-post"
+            },
+            "articleBody": "Pyropet Kisa was featured in the Huffington Post Weird Valentine's Day Gift guide among a selection of the most interesting gifts to give your loved one. Check it out here.",
+            "headline": "Pyropets featured in Huffington Post Weird Valentine's Day Gift Guide",
+            "description": "",
+            "image": "https://54celsius.com/cdn/shop/articles/5890dcb517000026002d9928.jpeg?v=1508865709&width=1920",
+            "datePublished": "2017-03-15T06:45:08-04:00",
+            "dateModified": "2017-10-10T10:17:00-04:00",
+            "author": {
+              "@type": "Person",
+              "name": "Mark Costigliola"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "54Celsius"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://54celsius.com"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Press",
+                "item": "https://54celsius.com/blogs/news"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Pyropets featured in Huffington Post Weird Valentine's Day Gift Guide",
+                "item": "https://54celsius.com/blogs/news/pyropet-kisa-valentines-day-huffington-post"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "product_urls": [
+    "https://54celsius.com/collections/pyropet-candles",
+    "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle",
+    "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts",
+    "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine",
+    "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful"
+  ]
+}

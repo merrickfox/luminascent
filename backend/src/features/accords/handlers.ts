@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { conflict, serverError } from '../../lib/http';
-import { createAccord, listAccords } from './repo';
-import { createAccordSchema } from './schema';
+import { conflict, notFound, serverError } from '../../lib/http';
+import { createAccord, getAccordById, listAccords, updateAccordColor } from './repo';
+import { createAccordSchema, updateAccordColorSchema } from './schema';
 
 export const accordRoutes = new Hono<{ Bindings: Env }>()
 	.get('/', async (c) => {
@@ -20,4 +20,13 @@ export const accordRoutes = new Hono<{ Bindings: Env }>()
 			}
 			return serverError(c);
 		}
+	})
+	.patch('/:id', zValidator('json', updateAccordColorSchema), async (c) => {
+		const id = c.req.param('id');
+		const existing = await getAccordById(c.env.DB, id);
+		if (!existing) return notFound(c, 'Accord not found');
+
+		const input = c.req.valid('json');
+		const accord = await updateAccordColor(c.env.DB, id, input);
+		return c.json({ accord });
 	});

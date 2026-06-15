@@ -1,0 +1,56 @@
+{
+  "urls": {
+    "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/c1b87ccef3b6.html",
+        "markdown_file": "54-celsius/markdown/c1b87ccef3b6.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/collections/pyropet-candles": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/67fe5261cb08.html",
+        "markdown_file": "54-celsius/markdown/67fe5261cb08.md",
+        "screenshot_file": null
+      }
+    }
+  }
+}

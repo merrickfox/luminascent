@@ -1,10 +1,10 @@
 import { ALLOWED_IMAGE_TYPES, buildImageKey, imagePublicUrl, MAX_IMAGE_BYTES } from '../../lib/images';
 import { slugify } from '../../lib/slug';
-import { createAccord, getAccordBySlug } from '../accords/repo';
+import { createAccord, fillAccordColorIfNull, getAccordBySlug } from '../accords/repo';
 import { createBrand, getBrandBySlug } from '../brands/repo';
 import { listProductImages, setProductImages } from '../images/repo';
 import type { ProductImageInput } from '../images/types';
-import { createNote, getNoteBySlug } from '../notes/repo';
+import { createNote, fillNoteColorIfNull, getNoteBySlug } from '../notes/repo';
 import { createProduct, getProductBySlug, updateProduct } from '../products/repo';
 import type { ScrapedProduct } from './schema';
 import type {
@@ -140,11 +140,22 @@ async function ensureNotes(db: D1Database, notes: NonNullable<ScrapedProduct['no
 	for (const note of notes) {
 		const found = await getNoteBySlug(db, note.note_slug);
 		if (found) {
+			if (!found.color && note.color) {
+				await fillNoteColorIfNull(db, found.id, {
+					color: note.color,
+					color_gradient: note.color_gradient,
+				});
+			}
 			existing += 1;
 			continue;
 		}
 
-		await createNote(db, { name: note.name, slug: note.note_slug });
+		await createNote(db, {
+			name: note.name,
+			slug: note.note_slug,
+			color: note.color,
+			color_gradient: note.color_gradient,
+		});
 		created += 1;
 	}
 
@@ -158,11 +169,22 @@ async function ensureAccords(db: D1Database, accords: NonNullable<ScrapedProduct
 	for (const accord of accords) {
 		const found = await getAccordBySlug(db, accord.accord_slug);
 		if (found) {
+			if (!found.color && accord.color) {
+				await fillAccordColorIfNull(db, found.id, {
+					color: accord.color,
+					color_gradient: accord.color_gradient,
+				});
+			}
 			existing += 1;
 			continue;
 		}
 
-		await createAccord(db, { name: accord.name, slug: accord.accord_slug });
+		await createAccord(db, {
+			name: accord.name,
+			slug: accord.accord_slug,
+			color: accord.color,
+			color_gradient: accord.color_gradient,
+		});
 		created += 1;
 	}
 

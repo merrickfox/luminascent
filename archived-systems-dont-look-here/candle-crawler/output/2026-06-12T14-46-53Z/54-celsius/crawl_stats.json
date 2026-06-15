@@ -1,0 +1,134 @@
+{
+  "urls": {
+    "https://54celsius.com/blogs/news/msn-com-picked-up-on-the-article-in-housebeautiful": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/bc1f12e18849.html",
+        "markdown_file": "54-celsius/markdown/bc1f12e18849.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/blogs/news/twist-candle-featured-on-gifts-decorative-accessories-magazine": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/322db890ea9f.html",
+        "markdown_file": "54-celsius/markdown/322db890ea9f.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/blogs/news/twist-candle-featured-in-the-houston-chronicle": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/c1b87ccef3b6.html",
+        "markdown_file": "54-celsius/markdown/c1b87ccef3b6.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/blogs/news/housebeautiful-featured-the-kisa-candle-in-a-round-up-of-gifts": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/1c6efbb9eefd.html",
+        "markdown_file": "54-celsius/markdown/1c6efbb9eefd.md",
+        "screenshot_file": null
+      }
+    },
+    "https://54celsius.com/collections/pyropet-candles": {
+      "success": true,
+      "mode": "standard",
+      "blocked": false,
+      "status_code": 200,
+      "error_message": "",
+      "crawl_stats": {
+        "attempts": 1,
+        "retries": 0,
+        "proxies_used": [
+          {
+            "proxy": null,
+            "status_code": 200,
+            "blocked": false,
+            "reason": ""
+          }
+        ],
+        "fallback_fetch_used": false,
+        "resolved_by": "direct"
+      },
+      "artifacts": {
+        "html_file": "54-celsius/pages/67fe5261cb08.html",
+        "markdown_file": "54-celsius/markdown/67fe5261cb08.md",
+        "screenshot_file": null
+      }
+    }
+  }
+}

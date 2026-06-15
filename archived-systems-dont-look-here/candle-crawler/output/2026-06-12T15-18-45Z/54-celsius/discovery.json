@@ -1,0 +1,2633 @@
+{
+  "seed_url": "https://54celsius.com/collections/pyropet-candles",
+  "technique": "shopify_api",
+  "shopify_count": 327,
+  "browse_count": 0,
+  "seeder_count": 0,
+  "deep_crawl_count": 0,
+  "candidates": [
+    {
+      "url": "https://54celsius.com/products/moodz-candle-set",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Moodz Candle Set"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-tomato-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Tomato Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-terracotta-amphora-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Terracotta Amphora Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-olive-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Olive Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-morning-glory-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Morning Glory Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-lemon-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Lemon Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-clay-amphora-placemat",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Clay Amphora Placemat (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-tomato-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Tomato Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-red-anthurium-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Red Anthurium Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-pink-anthurium-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Pink Anthurium Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-olive-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Olive Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-morning-glory-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Morning Glory Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-lemon-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Lemon Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-ladybug-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Ladybug Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-daffodil-coaster",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Daffodil Coaster (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-duo-the-magician-the-high-priestess",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle Duo: The Magician & The High Priestess"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-duo-the-hermit-and-the-fool",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle Duo: The Hermit and The Fool"
+    },
+    {
+      "url": "https://54celsius.com/products/death-lovers-tarot-bundle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle Duo: The Lovers & Death"
+    },
+    {
+      "url": "https://54celsius.com/products/buon-appetito-baguette",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Buon Appetito Baguette"
+    },
+    {
+      "url": "https://54celsius.com/products/classic-8-ball-candle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Classic 8-Ball Candle"
+    },
+    {
+      "url": "https://54celsius.com/products/illusion-candle-red-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Illusion Candle - Red & White"
+    },
+    {
+      "url": "https://54celsius.com/products/illusion-candle-blue-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Illusion Candle - Blue & White"
+    },
+    {
+      "url": "https://54celsius.com/products/illusion-candle-black-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Illusion Candle - Black & White"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-hb-yellow-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – HB Yellow (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-schiaparelli-pink-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – Schiaparelli Pink (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-rothko-red-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – Rothko Red (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-turner-s-yellow-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – Turner’s Yellow (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-veronese-green-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – Veronese Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/proper-wax-pencil-candle-yves-klein-blue-2-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Proper Wax Pencil Candle – Yves Klein Blue (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/pencil-taper-candles-multicolor-5-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Pencil Taper Candles – Multicolor (5 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/moodz-grumpy-round-face-candle-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Moodz - Grumpy Round Face Candle - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/happy-pillar-face-candle-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Moodz - Happy Pillar Face Candle - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/moodz-dippy-pillar-face-candle-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Moodz - Dippy Pillar Face Candle - Green"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-candy-crush-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Candy Crush (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-coquette-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Coquette (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-cosmos-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Cosmos (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-fish-splash-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Fish Splash (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-tutti-frutti-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Tutti Frutti (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-pearl-shell-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Pearl Shell (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-beso-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Beso (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-pasta-party-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Pasta Party (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-picks-lucky-charm-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Picks - Lucky Charm (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-fish-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Fish - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/sorcery-reed-diffuser-potion-1-glow-up",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Sorcery Reed Diffuser: Potion #1 - Glow Up"
+    },
+    {
+      "url": "https://54celsius.com/products/sorcery-reed-diffuser-potion-2-chill",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Sorcery Reed Diffuser: Potion #2 - Chill"
+    },
+    {
+      "url": "https://54celsius.com/products/sorcery-reed-diffuser-potion-3-pamper",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Sorcery Reed Diffuser: Potion #3 - Pamper"
+    },
+    {
+      "url": "https://54celsius.com/products/sorcery-reed-diffuser-potion-4-lounge",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Sorcery Reed Diffuser: Potion #4 - Lounge"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-coasters-coquette-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Coasters - Coquette (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-coasters-amalfi-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Coasters - Amalfi (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-coasters-lily-leaf-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Coasters - Lily Leaf (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-coasters-fish-light-blue-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Coasters - Fish Light Blue (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-cocktail-coasters-fish-orange-set-of-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Cocktail Coasters - Fish Orange (Set of 4)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-placemat-swan-set-of-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Placemat - Swan (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-placemat-coquette-set-of-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Placemat - Coquette (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-placemat-amalfi-set-of-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Placemat - Amalfi (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-placemat-fish-pink-set-of-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Placemat - Fish Pink (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-placemat-fish-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Placemat - Fish Blue (Set of 2)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-swan",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Swan"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-sardine",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Sardine"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-pearl-shell",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Pearl Shell"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-coral",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Coral"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-coquette",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Coquette"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-christmas-bauble-3",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Christmas Bauble 3"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-christmas-bauble-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Christmas Bauble 2"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-christmas-bauble-1",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark - Christmas Bauble 1"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-high-tray-ivory",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Templo High Tray - Ivory"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-high-tray-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Templo High Tray - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-high-tray-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Templo High Tray - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-high-tray-dark-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Templo High Tray - Dark Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/thin-beeswax-candles-natural",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Thin Beeswax Candles - Natural"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-empress",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Empress"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-lovely-star",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The (Lovely) Star"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-moon",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Moon"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-sun",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Sun"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-amalfi-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Amalfi Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-amalfi-red",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Amalfi Red"
+    },
+    {
+      "url": "https://54celsius.com/products/pyropet-blaka-bat-candle-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Blaka Bat Candle - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/wishing-you-birthday-candles-cheeky",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wishing You: Birthday Candles - Cheeky"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-triple-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Triple Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-yellow-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Yellow & Pink (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-shell",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Shell"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-fruit-bowl",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Fruit Bowl"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-butterfly",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Butterfly"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-fish-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Fish Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-fish-ruby",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Fish Ruby"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-paper-vase-swan",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Paper Vase Swan"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-butterfly",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Butterfly"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-swan",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Swan"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-shell",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Shell"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-fish",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Fish"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-mini-paper-vase-fruit-bowl",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Octaevo Mini Paper Vase Fruit Bowl"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Lavender"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-mystic-journey-bundle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "Tarot Mystic Journey Bundle"
+    },
+    {
+      "url": "https://54celsius.com/products/youre-my-spark-in-the-dark",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - You're my Spark in the Dark"
+    },
+    {
+      "url": "https://54celsius.com/products/be-happy-be-bright-be-you",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - Be Happy, Be Bright, Be You"
+    },
+    {
+      "url": "https://54celsius.com/products/make-a-wish-secret-message-birthday-candle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - Make a Wish"
+    },
+    {
+      "url": "https://54celsius.com/products/you-light-my-fire-secret-message-candle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - You Light My Fire"
+    },
+    {
+      "url": "https://54celsius.com/products/skull-candle-with-crystal-eyeballs-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Skull Candle with Crystal Eyeballs - White"
+    },
+    {
+      "url": "https://54celsius.com/products/buon-appetito-tiered-cake-purple",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Buon Appetito Tiered Cake - Purple"
+    },
+    {
+      "url": "https://54celsius.com/products/big-banana-candle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Big Banana Candle"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-mini-paper-vase-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Mini Paper Vase - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-riviera-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Riviera - Brass"
+    },
+    {
+      "url": "https://54celsius.com/products/elysia-ceramic-tray-1",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Elysia Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/elysia-mini-paper-vase",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Elysia Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/elysia-paper-vase",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Elysia Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/giza-ceramic-tray",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Giza Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/giza-mini-paper-vase",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Giza Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/giza-paper-vase",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Giza Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-beso-ceramic-tray-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Beso Ceramic Tray - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-beso",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Beso Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-sculpture-fire",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Sculpture - Fire"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-sculpture-earth",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Sculpture - Earth"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-gaia",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Gaia Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-emporio",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Emporio Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-claire-johnson-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Claire Johnson Ceramic Tray - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-claire-johnson-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Claire Johnson Ceramic Tray - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/notebook-a5-janus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Janus Notes A5"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-ceramic-tray-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Ceramic Tray - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-bon-vivant-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Bon Vivant - Brass"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-airmail",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Airmail"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-heart",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Heart"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-templo",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Templo"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-apolino",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apolino Mini Paper Vase (Double-Sided)"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-riviera-wave",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Vase Riviera Wave"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-pale-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle - Pale Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/thin-beeswax-candles-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Thin Beeswax Candles - Lavender"
+    },
+    {
+      "url": "https://54celsius.com/products/thin-beeswax-brass-holder-xs-natural",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Thin Beeswax Natural + Brass Holder XS"
+    },
+    {
+      "url": "https://54celsius.com/products/nazar-paper-vase",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Nazar Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-plein-soleil",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Plein Soleil"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-euclid",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Euclid"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-riviera-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Riviera - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-apollo",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apollo Paper Vase (Double-Sided)"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-venus-paper-vase-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Venus Paper Vase - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-hamsa-paper-vase-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Hamsa Paper Vase - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-mini-paper-vase-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Mini Paper Vase - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-apollo-ceramic-tray-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apollo Ceramic Tray - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-candy",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Candy"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-eye",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Eye"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-planet",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Planet"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-hamsa",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Hamsa"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-venus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Venus"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-picnic",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Picnic Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/notebook-a6-janus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Janus Notes A6"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-claire-johnson-paper-vase-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Claire Johnson Paper Vase - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/mushroom-paper-scultpure-1",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mushroom Paper Sculpture 1"
+    },
+    {
+      "url": "https://54celsius.com/products/mushroom-paper-sculpture-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mushroom Paper Sculpture 2"
+    },
+    {
+      "url": "https://54celsius.com/products/mushroom-paper-sculpture-3",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mushroom Paper Sculpture 3"
+    },
+    {
+      "url": "https://54celsius.com/products/mushroom-paper-sculpture-4",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mushroom Paper Sculpture 4"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-gaia",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Gaia Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-gaia",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Gaia Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-claire-johnson-paper-vase-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Claire Johnson Paper Vase - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-bon-vivant-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Bon Vivant - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-bon-vivant-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Bon Vivant - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-bon-vivant-red",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Bon Vivant - Red"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-apollo-ceramic-tray-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apollo Ceramic Tray - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-hamsa-paper-vase-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Hamsa Paper Vase - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-venus-paper-vase-ivory",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Venus Paper Vase - Ivory"
+    },
+    {
+      "url": "https://54celsius.com/products/notebook-a6-apollo",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apollo Notes A6"
+    },
+    {
+      "url": "https://54celsius.com/products/notebook-a5-apollo",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Apollo Notes A5"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-the-voyage-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark The Voyage - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-ceramic-tray-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Ceramic Tray - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-basket-small-tangerine",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Basket Small - Tangerine"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-basket-small-light-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Basket Small - Light Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-small-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Small - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-small-light-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Small - Light Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-beso-ceramic-tray-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Beso Ceramic Tray - Green"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-sculpture-water",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Sculpture - Water"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-sculpture-air",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Sculpture - Air"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-bazaar",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bazaar Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-the-voyage-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark The Voyage - Brass"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-fortuna",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Fortuna"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-merci",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Merci"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-venus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Venus"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-philosopher",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Philosopher"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-bazaar",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bazaar Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-vasage-2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Jaime Hayon Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-vasage-1",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Jaime Hayon Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-small-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Small - Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-basket-small-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Basket Small - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-paper-vase-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Paper Vase - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-riviera-arch-ceramic-tray-purple",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Riviera Arch Ceramic Tray - Purple"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-riviera-wave-ceramic-tray-purple",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Riviera Wave Ceramic Tray - Purple"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-dolce-vita-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Dolce Vita - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-nazar-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Nazar - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-tangerine",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Tangerine"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-light-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Light Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-light-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Light Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-basket-large-light-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Basket Large - Light Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-large-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Large - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-large-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Large - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-tangerine",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Tangerine"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-light-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Light Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-light-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Light Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Large - Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Large - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Small - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Small - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-incense-holder-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Incense Holder - Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-incense-holder-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Incense Holder - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-incense-holder-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Incense Holder - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-miro-paper-vase-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Miró Paper Vase - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-miro-paper-vase-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Miró Paper Vase - Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-miro-paper-vase-ivory",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Miró Paper Vase - Ivory"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-beso",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Beso Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-beso-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Beso"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-incense-holder-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Incense Holder - Green"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Small - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-flora-candle-holder-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Flora Candle Holder Large - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-pale-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle - Pale Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-greco",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greco Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-emporio",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Emporio Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-emporio",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Emporio Mini Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-trivet-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Trivet - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-nazar-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Nazar - Brass"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-bookmark-dolce-vita-brass",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Dolce Vita - Brass"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-capri",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Capri"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-aziza",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Aziza"
+    },
+    {
+      "url": "https://54celsius.com/products/bookmark-artemis",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bookmark Artemis"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-cocktail",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Cocktail"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-kiss",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Kiss"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-sun",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Sun"
+    },
+    {
+      "url": "https://54celsius.com/products/greeting-card-flower",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greeting Card Flower"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-capri",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Capri"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-navigator",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Navigator"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-talisman",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Talisman"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-retiro",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Retiro"
+    },
+    {
+      "url": "https://54celsius.com/products/multi-use-clips-leclub",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Metal Clips Le Club"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-greco",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greco Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/ceramic-tray-bazaar",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Bazaar Ceramic Tray"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-riviera-wave-ceramic-tray-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Riviera Wave Ceramic Tray - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-riviera-arch-ceramic-tray-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Riviera Arch Ceramic Tray - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-janus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Janus Mini Paper Vase (Double-Sided)"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-greco",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Greco Paper Vase"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-siena-paper-vase-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Siena Paper Vase - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-janus",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Janus Paper Vase (Double-Sided)"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-riviera-arch",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mini Paper Vase Riviera Arch"
+    },
+    {
+      "url": "https://54celsius.com/products/paper-vase-riviera-arch",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Paper Vase Riviera Arch"
+    },
+    {
+      "url": "https://54celsius.com/products/mini-paper-vase-riviera-wave",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Mini Paper Vase Riviera Wave"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-iris-wire-basket-large-purple",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Iris Wire Basket Large - Purple"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-ash-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle - Ash Green"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-pale-rose",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle - Pale Rose"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-ivory",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle - Ivory"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-templo-candle-holder-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "OCTAEVO Templo Candle Holder - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/octaevo-sicilia-ceramic-basket-large-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "OCTAEVO Sicilia Ceramic Basket Large - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-mystery-card",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - Mystery Card"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-magician",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Magician"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-lovers",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Lovers"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-high-priestess",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The High Priestess"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-hermit",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Hermit"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-the-fool",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - The Fool"
+    },
+    {
+      "url": "https://54celsius.com/products/tarot-candle-death",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Tarot Candle - Death"
+    },
+    {
+      "url": "https://54celsius.com/products/twist-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Twist Candle - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/pivot-lavender-green-2-pack-brass-taper-candle-holder",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Pivot Lavender & Green (2 pack) + Brass Taper Candle Holder"
+    },
+    {
+      "url": "https://54celsius.com/products/pivot-orange-lavender-2-pack-brass-taper-candle-holder",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Pivot Orange & Lavender (2 pack) + Brass Taper Candle Holder"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-green-2-pack-brass-taper-candle-holder",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Green (2 pack) + Brass Taper Candle Holder"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-orange-2-pack-brass-taper-candle-holder",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Orange (2 pack) + Brass Taper Candle Holder"
+    },
+    {
+      "url": "https://54celsius.com/products/safety-matches-sebastian-curi",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candle Matches - \"Light a Match\" by Sebastian Curi"
+    },
+    {
+      "url": "https://54celsius.com/products/safety-matches-paulina-almira",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candle Matches - \"Chubby Flame\" by Paulina Almira"
+    },
+    {
+      "url": "https://54celsius.com/products/buon-appetito-cheese",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Buon Appetito Cheese"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-orange-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Orange, Pink & Lavender (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-lavender-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Lavender & Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-lavender-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Lavender & Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-orange-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Orange, Pink & Lavender (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/pivot-candles-orange-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Pivot Candles - Orange, Pink & Lavender (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/pivot-candles-lavender-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Pivot Candles - Lavender & Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wishing-you-birthday-candles-royal-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wishing You: Birthday Candles - Royal Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/wishing-you-birthday-candles-multi-color",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wishing You: Birthday Candles - Multi-Color"
+    },
+    {
+      "url": "https://54celsius.com/products/wishing-you-birthday-candles-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wishing You: Birthday Candles - Green"
+    },
+    {
+      "url": "https://54celsius.com/products/20-minute-meditation-clock-refill-pack",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "20-Minute Meditation Candles (Bundle of 30)"
+    },
+    {
+      "url": "https://54celsius.com/products/candlehand-candle-holder-ok",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand Taper Candle Holder - OK"
+    },
+    {
+      "url": "https://54celsius.com/products/candlehand-candle-holder-peace",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand Taper Candle Holder - Peace"
+    },
+    {
+      "url": "https://54celsius.com/products/candlehand-candle-holder-you-rock",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand Taper Candle Holder - You Rock"
+    },
+    {
+      "url": "https://54celsius.com/products/candlehand-candle-holder-fcuk-you",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand Taper Candle Holder - F*ck You"
+    },
+    {
+      "url": "https://54celsius.com/products/candlehand-candle-holder-crossed-fingers",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand Taper Candle Holder - Crossed Fingers"
+    },
+    {
+      "url": "https://54celsius.com/products/macaroni-candle-holder-royal-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Macaroni 2-in-1 Candleholder - Tapers & Tealights - Royal Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/macaroni-candle-holder-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Macaroni 2-in-1 Candleholder - Tapers & Tealights - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/buon-appetito-wine-bottle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Buon Appetito Wine Bottle"
+    },
+    {
+      "url": "https://54celsius.com/products/taper-candles-4-pack-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Taper Candles 4 Pack - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/taper-candles-4-pack-cream",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Taper Candles 4 Pack - Cream"
+    },
+    {
+      "url": "https://54celsius.com/products/taper-candles-4-pack-light-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Taper Candles 4 Pack - Lavender"
+    },
+    {
+      "url": "https://54celsius.com/products/taper-candles-4-pack-orange2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Taper Candles 4 Pack - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/rocket-candle-holder-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rocket Candle Holder - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/rocket-candle-holder-cream",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rocket Candle Holder - Cream"
+    },
+    {
+      "url": "https://54celsius.com/products/rocket-candle-holder-light-lavender",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rocket Candle Holder - Lavender"
+    },
+    {
+      "url": "https://54celsius.com/products/rocket-candle-holder-orange2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rocket Candle Holder - Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/wishing-you-birthday-candles-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wishing You: Birthday Candles - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/einar-hot-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Einar Unicorn Candle - Hot Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/54-celsius-gift-card",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 0.5,
+      "score": 1.2,
+      "title": "54Celsius Gift Card"
+    },
+    {
+      "url": "https://54celsius.com/products/thanks-secret-message-candle",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - Thanks!"
+    },
+    {
+      "url": "https://54celsius.com/products/dyri-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Dyri Reindeer Candle - White"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-light-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Light Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-black",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Black"
+    },
+    {
+      "url": "https://54celsius.com/products/einar-lilac",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Einar Unicorn Candle - Lilac"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-burgundy",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Burgundy"
+    },
+    {
+      "url": "https://54celsius.com/products/victory-peace-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"Peace\" Candle - Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/candlecan-cherry",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candlecan - Fruity Cherry"
+    },
+    {
+      "url": "https://54celsius.com/products/twist-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Twist Candle - Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/twist-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Twist Candle - Mint"
+    },
+    {
+      "url": "https://54celsius.com/products/victory-peace-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"Peace\" Candle - Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/fcukyou-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"F*ck You\" Candle - White"
+    },
+    {
+      "url": "https://54celsius.com/products/twist-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Twist Candle - Light Blue"
+    },
+    {
+      "url": "https://54celsius.com/products/candlecan-peeled-tangerines",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candlecan - Peeled Tangerines"
+    },
+    {
+      "url": "https://54celsius.com/products/einar-white",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Einar Unicorn Candle - White (Scented)"
+    },
+    {
+      "url": "https://54celsius.com/products/candle-care-set",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candle Care Set"
+    },
+    {
+      "url": "https://54celsius.com/products/brass-taper-candle-holder",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Brass Taper Candle Holder"
+    },
+    {
+      "url": "https://54celsius.com/products/fcukyou-neon-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"F*ck You\" Candle - Neon Green"
+    },
+    {
+      "url": "https://54celsius.com/products/fcukyou-neon-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"F*ck You\" Candle - Neon Orange"
+    },
+    {
+      "url": "https://54celsius.com/products/fcukyou-neon-yellow",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "CandleHand \"F*ck You\" Candle - Neon Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/stay-lit",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "SMC - Stay Lit!"
+    },
+    {
+      "url": "https://54celsius.com/products/twist-light-pink",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Twist Candle - Light Pink"
+    },
+    {
+      "url": "https://54celsius.com/products/kisa-mustard",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Kisa Cat Candle - Mustard Yellow"
+    },
+    {
+      "url": "https://54celsius.com/products/brass-candle-holder-xs",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Brass Candle Holder XS"
+    },
+    {
+      "url": "https://54celsius.com/products/candlecan-strawberry",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Candlecan - Strawberry"
+    },
+    {
+      "url": "https://54celsius.com/products/pyropet-cat-lover-gift-set",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "PyroPet Cat Lover Gift Set"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-blue",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Blue (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-green",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-mint",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Mint (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/wiggle-candles-orange",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Wiggle Candles - Orange (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-blue2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Blue (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-green2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Green (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-mint2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Mint (2 pack)"
+    },
+    {
+      "url": "https://54celsius.com/products/rope-candles-orange2",
+      "source": "shopify_api",
+      "status": "valid",
+      "relevance_score": 1.0,
+      "score": 2.0,
+      "title": "Rope Candles - Orange (2 pack)"
+    }
+  ],
+  "product_urls": [
+    "https://54celsius.com/products/moodz-candle-set",
+    "https://54celsius.com/products/tarot-candle-duo-the-magician-the-high-priestess",
+    "https://54celsius.com/products/tarot-candle-duo-the-hermit-and-the-fool",
+    "https://54celsius.com/products/death-lovers-tarot-bundle",
+    "https://54celsius.com/products/buon-appetito-baguette"
+  ]
+}

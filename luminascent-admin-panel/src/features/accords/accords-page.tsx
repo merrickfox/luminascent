@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { api } from '@/lib/api'
+import { ColorSwatch } from '@/components/color-swatch'
 import { PageHeader } from '@/components/page-header'
 import { LoadingTable } from '@/components/loading-table'
 import { Field } from '@/components/field'
@@ -102,11 +103,12 @@ export function AccordsPage() {
       {error ? (
         <p className="text-sm text-destructive">{(error as Error).message}</p>
       ) : isLoading ? (
-        <LoadingTable columns={2} />
+        <LoadingTable columns={3} />
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">Color</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
             </TableRow>
@@ -114,6 +116,9 @@ export function AccordsPage() {
           <TableBody>
             {data?.accords.map((accord) => (
               <TableRow key={accord.id}>
+                <TableCell>
+                  <ColorSwatch color={accord.color} colorGradient={accord.color_gradient} />
+                </TableCell>
                 <TableCell className="font-medium">{accord.name}</TableCell>
                 <TableCell>{accord.slug}</TableCell>
               </TableRow>

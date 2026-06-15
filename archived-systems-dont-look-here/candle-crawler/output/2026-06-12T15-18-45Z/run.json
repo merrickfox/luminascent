@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-06-12T15-18-45Z",
+  "started_at": "2026-06-12T15:19:04.479412+00:00",
+  "sites_file": "sites.json",
+  "config": {
+    "model": "ollama/qwen3:8b",
+    "ollama_base_url": "http://localhost:11434",
+    "max_products": 5,
+    "headful": false,
+    "resume": false
+  },
+  "sites": [
+    {
+      "name": "54 Celsius",
+      "url": "https://54celsius.com/collections/pyropet-candles",
+      "slug": "54-celsius",
+      "product_urls": 5,
+      "fetched": 5,
+      "extracted": 5,
+      "elapsed_seconds": 18.791,
+      "error": null
+    }
+  ],
+  "totals": {
+    "sites": 1,
+    "products": 5,
+    "elapsed_seconds": 18.792
+  }
+}

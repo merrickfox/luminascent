@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-06-12T15-24-10Z",
+  "started_at": "2026-06-12T15:24:20.901897+00:00",
+  "sites_file": "sites.json",
+  "config": {
+    "model": "ollama/qwen3:8b",
+    "ollama_base_url": "http://localhost:11434",
+    "max_products": null,
+    "headful": false,
+    "resume": false
+  },
+  "sites": [
+    {
+      "name": "Aerin",
+      "url": "https://www.aerin.com/fragrances-diffusers-candles/?Filters=product_type_filter:Candles",
+      "slug": "aerin",
+      "product_urls": 0,
+      "fetched": 0,
+      "extracted": 0,
+      "elapsed_seconds": 10.27,
+      "error": null
+    }
+  ],
+  "totals": {
+    "sites": 1,
+    "products": 0,
+    "elapsed_seconds": 10.27
+  }
+}

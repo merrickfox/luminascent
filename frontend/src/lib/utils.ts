@@ -1,5 +1,7 @@
+import { twMerge } from 'tailwind-merge'
+
 export function cn(...classes: (string | undefined | false | null)[]): string {
-  return classes.filter(Boolean).join(' ')
+  return twMerge(classes.filter(Boolean).join(' '))
 }
 
 export function formatPrice(amount: number | null, currency: string | null): string | null {

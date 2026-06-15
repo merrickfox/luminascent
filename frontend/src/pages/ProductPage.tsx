@@ -1,13 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
+import { Breadcrumb } from '../components/layout/Breadcrumb'
 import { PageSection } from '../components/layout/PageSection'
-import { AccordList } from '../components/product/AccordList'
 import { ImageGallery } from '../components/product/ImageGallery'
-import { RatingStat } from '../components/product/RatingStat'
-import { ReviewList } from '../components/product/ReviewList'
-import { ScentPyramid } from '../components/product/ScentPyramid'
-import { SizeList } from '../components/product/SizeList'
+import { NoteColumns } from '../components/product/NoteColumns'
+import { PurchasePanel } from '../components/product/PurchasePanel'
+import { RelatedProducts } from '../components/product/RelatedProducts'
+import { SpecStrip } from '../components/product/SpecStrip'
 import { EmptyState } from '../components/ui/EmptyState'
-import { Eyebrow } from '../components/ui/Eyebrow'
 import { Label } from '../components/ui/Label'
 import { Spinner } from '../components/ui/Spinner'
 import { useProduct } from '../hooks/useProduct'
@@ -34,27 +33,59 @@ export function ProductPage() {
     )
   }
 
-  const { product, brand, category, scent_profile, notes, accords, rating, reviews, images, sizes } =
-    data
+  const { product, brand, category, scent_profile, notes, accords, images, sizes } = data
 
-  const summary = scent_profile?.summary
+  const primarySize = sizes.find((size) => size.is_primary) ?? sizes[0] ?? null
+  const scentType =
+    accords[0]?.accord.name ?? scent_profile?.summary ?? null
+
+  const breadcrumbItems = [
+    { label: 'Home', to: '/' },
+    { label: category.name, to: '#' },
+    ...(brand ? [{ label: brand.name, to: `/brands/${brand.slug}` }] : []),
+    { label: product.name },
+  ]
+
+  const hasDetailsSection =
+    product.description ||
+    product.wax_type ||
+    product.vessel_material ||
+    notes.length > 0 ||
+    accords.length > 0
+
+  const brandLink = brand ? (
+    <Link
+      to={`/brands/${brand.slug}`}
+      className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-text-secondary transition-colors duration-300 hover:text-text"
+    >
+      {brand.name}
+    </Link>
+  ) : null
+
+  const productTitle = (
+    <h1 className="break-words text-3xl font-medium leading-tight md:text-4xl lg:text-5xl">
+      {product.name}
+    </h1>
+  )
+
+  const scentLine = scentType ? (
+    <p className="font-display text-lg italic text-text-secondary sm:text-xl">{scentType}</p>
+  ) : null
 
   return (
     <>
-      <PageSection className="border-b border-border">
-        <div className="mb-6">
-          {brand ? (
-            <Link
-              to={`/brands/${brand.slug}`}
-              className="text-sm text-text-secondary hover:text-accent"
-            >
-              {brand.name}
-            </Link>
-          ) : null}
-        </div>
+      <PageSection className="!py-6 sm:!py-8">
+        <Breadcrumb items={breadcrumbItems} className="mb-8 sm:mb-10" />
+      </PageSection>
 
-        <div className="grid min-w-0 grid-cols-1 gap-8 sm:gap-12 lg:grid-cols-[minmax(0,580px)_1fr] lg:items-start lg:gap-16">
-          <div className="min-w-0 lg:max-w-[580px]">
+      <PageSection className="!pt-0 border-b border-border">
+        <div className="grid min-w-0 grid-cols-1 gap-8 sm:grid-cols-2 sm:items-start sm:gap-x-8 md:gap-x-12 lg:gap-x-12 xl:gap-x-16">
+          <div className="order-1 min-w-0 sm:hidden">
+            {brandLink}
+            {productTitle}
+          </div>
+
+          <div className="order-2 min-w-0 sm:col-start-1 sm:row-start-1">
             <ImageGallery
               images={images}
               fallbackUrl={product.image_url}
@@ -62,82 +93,78 @@ export function ProductPage() {
             />
           </div>
 
-          <div className="flex min-w-0 flex-col">
-            <Eyebrow>{category.name}</Eyebrow>
-            <h1 className="break-words text-3xl font-medium leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
-              {product.name}
-            </h1>
+          {scentLine ? <div className="order-3 min-w-0 sm:hidden">{scentLine}</div> : null}
 
-            <div className="mt-5 space-y-4 sm:mt-6">
-              <RatingStat rating={rating} />
+          <div className="order-4 min-w-0 sm:hidden">
+            <PurchasePanel primarySize={primarySize} />
+          </div>
 
-              {summary ? (
-                <p className="font-display text-lg italic text-text-secondary sm:text-xl">
-                  {summary}
-                </p>
-              ) : null}
-
-              {product.description ? (
-                <p className="break-words text-text-secondary leading-relaxed">
-                  {product.description}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-text-secondary sm:mt-8 sm:flex sm:flex-wrap sm:gap-6">
-              {product.release_year ? (
-                <div>
-                  <Label className="mb-1 block">Released</Label>
-                  <span>{product.release_year}</span>
-                </div>
-              ) : null}
-              {product.wax_type ? (
-                <div>
-                  <Label className="mb-1 block">Wax</Label>
-                  <span>{product.wax_type}</span>
-                </div>
-              ) : null}
-              {product.vessel_material ? (
-                <div>
-                  <Label className="mb-1 block">Vessel</Label>
-                  <span>{product.vessel_material}</span>
-                </div>
-              ) : null}
-              {product.is_discontinued ? (
-                <div>
-                  <Label className="mb-1 block">Status</Label>
-                  <span className="text-error">Discontinued</span>
-                </div>
-              ) : null}
+          <div className="hidden min-w-0 flex-col sm:col-start-2 sm:row-start-1 sm:flex">
+            {brandLink}
+            {productTitle}
+            {scentLine ? <div className="mt-3">{scentLine}</div> : null}
+            <div className="mt-8">
+              <PurchasePanel primarySize={primarySize} />
             </div>
           </div>
         </div>
       </PageSection>
 
-      {(notes.length > 0 || accords.length > 0 || sizes.length > 0) && (
+      {hasDetailsSection ? (
         <PageSection className="border-b border-border">
-          <div className="grid min-w-0 grid-cols-1 gap-12 sm:gap-16 lg:grid-cols-2">
-            {notes.length > 0 ? (
-              <div className="min-w-0">
-                <h2 className="mb-6 font-display text-2xl sm:mb-8 sm:text-3xl">Scent profile</h2>
-                <ScentPyramid notes={notes} />
-              </div>
-            ) : null}
+          <div className="grid min-w-0 grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-0">
+            <div className="min-w-0 lg:border-r lg:border-border lg:pr-12 xl:pr-16">
+              <Label className="mb-4 block">Description</Label>
 
-            <div className="min-w-0 space-y-10 sm:space-y-12">
-              <AccordList accords={accords} />
-              <SizeList sizes={sizes} />
+              {product.description ? (
+                <p className="mb-8 break-words leading-relaxed text-text-secondary">
+                  {product.description}
+                </p>
+              ) : (
+                <p className="mb-8 text-text-secondary">No description available.</p>
+              )}
+
+              <dl className="space-y-3 text-sm">
+                {product.wax_type ? (
+                  <div className="flex gap-2">
+                    <dt className="font-medium uppercase tracking-[0.06em] text-text-secondary">
+                      Wax type:
+                    </dt>
+                    <dd className="text-text">{product.wax_type}</dd>
+                  </div>
+                ) : null}
+                {product.vessel_material ? (
+                  <div className="flex gap-2">
+                    <dt className="font-medium uppercase tracking-[0.06em] text-text-secondary">
+                      Vessel material:
+                    </dt>
+                    <dd className="text-text">{product.vessel_material}</dd>
+                  </div>
+                ) : null}
+                <div className="flex gap-2">
+                  <dt className="font-medium uppercase tracking-[0.06em] text-text-secondary">
+                    Category:
+                  </dt>
+                  <dd className="text-text">{category.name}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="min-w-0 lg:pl-12 xl:pl-16">
+              <NoteColumns notes={notes} accords={accords} scentType={scentType} />
             </div>
           </div>
         </PageSection>
-      )}
-
-      {reviews.length > 0 ? (
-        <PageSection narrow>
-          <h2 className="mb-8 font-display text-2xl sm:mb-10 sm:text-3xl">Community</h2>
-          <ReviewList reviews={reviews} />
-        </PageSection>
       ) : null}
+
+      <SpecStrip primarySize={primarySize} brand={brand} />
+
+      <RelatedProducts
+        currentProduct={product}
+        brandSlug={brand?.slug}
+        brandName={brand?.name}
+        categorySlug={category.slug}
+      />
     </>
   )
 }

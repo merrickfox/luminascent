@@ -13,15 +13,21 @@ const scrapedSizeSchema = z.object({
 	is_primary: z.boolean().optional(),
 });
 
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
 const scrapedNoteSchema = z.object({
 	note_slug: z.string().min(1),
 	name: z.string().min(1),
 	pyramid_stage: z.enum(['top', 'middle', 'base', 'general', 'unknown']).optional(),
+	color: hexColor.optional(),
+	color_gradient: z.string().optional(),
 });
 
 const scrapedAccordSchema = z.object({
 	accord_slug: z.string().min(1),
 	name: z.string().min(1),
+	color: hexColor.optional(),
+	color_gradient: z.string().optional(),
 });
 
 const scrapedImageSchema = z.object({

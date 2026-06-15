@@ -1,0 +1,12 @@
+{
+  "host": "www.aerin.com",
+  "hostSlug": "aerin_com",
+  "version": 1,
+  "createdAt": "2026-06-12T19:56:38.691Z",
+  "updatedAt": "2026-06-12T19:56:38.691Z",
+  "browse": null,
+  "product": {
+    "fields": []
+  },
+  "images": []
+}

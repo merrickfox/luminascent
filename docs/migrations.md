@@ -91,6 +91,7 @@ npm run db:rollback:remote -- --yes
 | `0004_product_sizes.sql` | `product_sizes` table for multi-variant products |
 | `0005_product_image_sources.sql` | `product_image_sources` staging for scraped URLs |
 | `0006_product_size_fields.sql` | Add `burn_time_hours` to `product_sizes`; backfill from products; drop legacy size/price columns from `products` |
+| `0007_note_accord_colors.sql` | Add `color` and `color_gradient` columns to `notes` and `accords` |
 
 ## Production setup
 

@@ -1,0 +1,445 @@
+{
+  "url": "https://54celsius.com/products/tarot-candle-duo-the-magician-the-high-priestess",
+  "instruction": "Extract structured candle product data from this page.\n\nReturn one product object with these rules:\n- category_slug must be \"candle\" unless clearly not a candle product\n- name is the product title\n- description is clean marketing copy only (no nav, cart, shipping promos)\n- scent_summary is a short phrase for overall scent character\n- notes are individual fragrance materials with pyramid_stage (top/middle/base/general/unknown)\n- accords are broad fragrance families (woody, vanilla, citrus, floral, gourmand, etc.)\n- sizes include price_amount in minor units (cents/pence), price_currency, burn_time_hours, sku, availability, source_url, is_primary\n- images include source_url, position (0-based), is_primary\n- wax_type must be one of: soy, paraffin, beeswax, coconut, rapeseed, palm, vegetable wax, gel, mineral wax, stearin, bayberry, carnauba, tallow, apricot, ceresin, coconut-soy, coconut-rapeseed, soy blend, blend, other, or null\n- vessel_material examples: glass, ceramic, tin, metal, concrete, porcelain, wood\n- use null for unknown scalar fields\n- if this page is not a candle product, still return best-effort fields with nulls where unknown\n",
+  "schema": {
+    "$defs": {
+      "ProductAccord": {
+        "properties": {
+          "accord_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accord Slug"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Color"
+          },
+          "color_gradient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Color Gradient"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProductAccord",
+        "type": "object"
+      },
+      "ProductImage": {
+        "properties": {
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "position": {
+            "default": 0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "is_primary": {
+            "default": false,
+            "title": "Is Primary",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source_url"
+        ],
+        "title": "ProductImage",
+        "type": "object"
+      },
+      "ProductNote": {
+        "properties": {
+          "note_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note Slug"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pyramid_stage": {
+            "$ref": "#/$defs/PyramidStage",
+            "default": "unknown"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Color"
+          },
+          "color_gradient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Color Gradient"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProductNote",
+        "type": "object"
+      },
+      "ProductSize": {
+        "properties": {
+          "size_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size Value"
+          },
+          "size_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size Unit"
+          },
+          "size_grams": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size Grams"
+          },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Price Amount"
+          },
+          "price_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Price Currency"
+          },
+          "burn_time_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Burn Time Hours"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sku"
+          },
+          "availability": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Availability"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Url"
+          },
+          "is_primary": {
+            "default": false,
+            "title": "Is Primary",
+            "type": "boolean"
+          }
+        },
+        "title": "ProductSize",
+        "type": "object"
+      },
+      "PyramidStage": {
+        "enum": [
+          "top",
+          "middle",
+          "base",
+          "general",
+          "unknown"
+        ],
+        "title": "PyramidStage",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "source_url": {
+        "title": "Source Url",
+        "type": "string"
+      },
+      "category_slug": {
+        "default": "candle",
+        "title": "Category Slug",
+        "type": "string"
+      },
+      "brand_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Brand Name"
+      },
+      "brand_slug": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Brand Slug"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "slug": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Slug"
+      },
+      "description": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Description"
+      },
+      "scent_summary": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Scent Summary"
+      },
+      "release_year": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Release Year"
+      },
+      "wax_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Wax Type"
+      },
+      "vessel_material": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Vessel Material"
+      },
+      "is_discontinued": {
+        "default": false,
+        "title": "Is Discontinued",
+        "type": "boolean"
+      },
+      "sizes": {
+        "items": {
+          "$ref": "#/$defs/ProductSize"
+        },
+        "title": "Sizes",
+        "type": "array"
+      },
+      "images": {
+        "items": {
+          "$ref": "#/$defs/ProductImage"
+        },
+        "title": "Images",
+        "type": "array"
+      },
+      "notes": {
+        "items": {
+          "$ref": "#/$defs/ProductNote"
+        },
+        "title": "Notes",
+        "type": "array"
+      },
+      "accords": {
+        "items": {
+          "$ref": "#/$defs/ProductAccord"
+        },
+        "title": "Accords",
+        "type": "array"
+      }
+    },
+    "required": [
+      "source_url",
+      "name"
+    ],
+    "title": "CandleProduct",
+    "type": "object"
+  },
+  "input_format": "fit_markdown",
+  "input_text": "\n",
+  "blocks": [
+    {
+      "index": 0,
+      "error": false,
+      "tags": [
+        "error"
+      ],
+      "content": "LLM returned no content (finish_reason: stop)"
+    }
+  ],
+  "parsed": null,
+  "usage": {
+    "usages": [
+      {
+        "completion_tokens": 1,
+        "prompt_tokens": 40959,
+        "total_tokens": 40960
+      },
+      {
+        "completion_tokens": 1,
+        "prompt_tokens": 40959,
+        "total_tokens": 40960
+      }
+    ],
+    "total_usage": {
+      "completion_tokens": 2,
+      "prompt_tokens": 81918,
+      "total_tokens": 81920
+    }
+  }
+}

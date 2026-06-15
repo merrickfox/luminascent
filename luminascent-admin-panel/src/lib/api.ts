@@ -18,6 +18,7 @@ import type {
   Product,
   ProductDetail,
   ProductListFilters,
+  UpdateColorInput,
   UpdateProductInput,
 } from '@/lib/types'
 
@@ -115,12 +116,22 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(input),
       }),
+    updateColor: (id: string, input: UpdateColorInput) =>
+      apiFetch<{ note: Note }>(`/notes/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
   },
   accords: {
     list: () => apiFetch<{ accords: Accord[] }>('/accords'),
     create: (input: CreateAccordInput) =>
       apiFetch<{ accord: Accord }>('/accords', {
         method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    updateColor: (id: string, input: UpdateColorInput) =>
+      apiFetch<{ accord: Accord }>(`/accords/${id}`, {
+        method: 'PATCH',
         body: JSON.stringify(input),
       }),
   },

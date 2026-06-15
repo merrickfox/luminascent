@@ -406,8 +406,8 @@ x-api-key: <ADMIN_API_KEY>
     "images": [
       { "source_url": "https://...master.1.H1.jpg", "position": 0, "is_primary": true }
     ],
-    "notes": [{ "note_slug": "italian-lemon", "name": "Italian lemon", "pyramid_stage": "unknown" }],
-    "accords": [{ "accord_slug": "green", "name": "green" }]
+    "notes": [{ "note_slug": "italian-lemon", "name": "Italian lemon", "pyramid_stage": "unknown", "color": "#e8c547" }],
+    "accords": [{ "accord_slug": "green", "name": "green", "color": "#7a9e6e" }]
   },
   "options": {
     "update_existing": true,
@@ -421,7 +421,7 @@ Returns `{ "result": { "status": "created"|"updated"|"skipped"|"failed", ... } }
 - `update_existing` — update product if slug already exists (default `true`)
 - `refetch_images` — re-download and upload images even if product already has them (default `false`)
 
-The import service auto-creates missing notes and accords, uploads images to R2, and writes sizes to `product_sizes`.
+The import service auto-creates missing notes and accords (with optional colors), uploads images to R2, and writes sizes to `product_sizes`. Existing note/accord colors are never overwritten on import; null colors may be filled from the payload.
 
 ## Reference data
 
@@ -431,10 +431,18 @@ All support `GET /` (list) and `POST /` (create).
 |----------|------|-------------|
 | Brands | `/brands` | `{ "name", "slug?", "country?", "website_url?" }` |
 | Categories | `/categories` | `{ "name", "slug?" }` |
-| Notes | `/notes` | `{ "name", "slug?", "note_family?" }` |
-| Accords | `/accords` | `{ "name", "slug?" }` |
+| Notes | `/notes` | `{ "name", "slug?", "note_family?", "color?", "color_gradient?" }` |
+| Accords | `/accords` | `{ "name", "slug?", "color?", "color_gradient?" }` |
 
 Slug is auto-generated from name when omitted.
+
+Notes and accords also support `PATCH /notes/:id` and `PATCH /accords/:id` (admin only) to set display colors:
+
+```json
+{ "color": "#c47a4a", "color_gradient": "linear-gradient(135deg, #c47a4a, #8b5a2b)" }
+```
+
+`color` is required (hex). `color_gradient` is optional (pass `null` to clear).
 
 ## Error responses
 

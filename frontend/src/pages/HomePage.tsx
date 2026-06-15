@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { BrandCard } from '../components/brand/BrandCard'
+import { Container } from '../components/layout/Container'
 import { PageSection } from '../components/layout/PageSection'
 import { ProductCard } from '../components/product/ProductCard'
 import { ButtonLink } from '../components/ui/Button'
@@ -25,7 +26,7 @@ export function HomePage() {
   return (
     <>
       <section className="border-b border-border py-16 sm:py-20 md:py-32">
-        <div className="mx-auto max-w-4xl px-5 text-center sm:px-6 md:px-10">
+        <Container size="hero" className="text-center">
           <Reveal>
             <Eyebrow>Editorial. Cultured. Understated.</Eyebrow>
             <h1 className="animate-reveal text-4xl font-medium leading-[1.08] sm:text-5xl md:text-6xl lg:text-7xl">
@@ -44,7 +45,7 @@ export function HomePage() {
               </ButtonLink>
             </div>
           </Reveal>
-        </div>
+        </Container>
       </section>
 
       <PageSection>
@@ -66,7 +67,7 @@ export function HomePage() {
         {brandsQuery.isLoading ? (
           <Spinner />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featuredBrands.map((brand, index) => (
               <Reveal key={brand.id} delay={index * 80}>
                 <BrandCard brand={brand} />
@@ -87,7 +88,7 @@ export function HomePage() {
         {productsQuery.isLoading || categoriesQuery.isLoading ? (
           <Spinner />
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
             {productsQuery.data?.products.map((product, index) => (
               <Reveal key={product.id} delay={index * 80}>
                 <ProductCard
