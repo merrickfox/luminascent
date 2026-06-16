@@ -15,28 +15,24 @@ function loadDom(relativePath, hostname = 'www.aerin.com') {
   return document;
 }
 
-function cssEscape(value) {
-  return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+function setDom(html, hostname = 'www.aerin.com') {
+  const { document, window } = parseHTML(html);
+  globalThis.document = document;
+  globalThis.window = window;
+  globalThis.location = { hostname, href: `https://${hostname}/` };
+  return document;
 }
 
-function normalizeText(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
+function cssEscape(value) {
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
 }
 
 function isVisible() {
   return true;
 }
 
-function isLumiscrapeClassToken(token) {
-  return /^lumiscrape-/i.test(String(token || ''));
-}
-
-function sanitizeRecipeClassValue(value) {
-  return String(value || '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .filter((token) => !isLumiscrapeClassToken(token))
-    .join(' ');
+function normalizeText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 const INSTANCE_ATTR_PATTERNS = [
@@ -45,26 +41,31 @@ const INSTANCE_ATTR_PATTERNS = [
   /^title$/i, /^alt$/i,
 ];
 
+function isLumiscrapeToken(token) {
+  return /^lumiscrape-/.test(String(token || ''));
+}
+
 function isInstanceSpecificAttr(name, value) {
   if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
   if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
   if (name === 'class' && /\d{3,}/.test(String(value || ''))) return true;
-  if (name === 'class' && isLumiscrapeClassToken(value)) return true;
-  if (name === 'class' && !sanitizeRecipeClassValue(value)) return true;
   return false;
 }
 
 function filterRecipeAttrs(attrs) {
   const out = {};
   for (const [key, value] of Object.entries(attrs || {})) {
-    if (value == null || value === '') continue;
+    if (value == null || value === '' && key !== 'ku-block' && key !== 'ku-product-block') continue;
+    if (isInstanceSpecificAttr(key, value)) continue;
     if (key === 'class') {
-      const sanitized = sanitizeRecipeClassValue(value);
-      if (!sanitized || isInstanceSpecificAttr(key, sanitized)) continue;
-      out[key] = sanitized;
+      const tokens = String(value)
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter((token) => !isLumiscrapeToken(token));
+      if (!tokens.length) continue;
+      out[key] = tokens.join(' ');
       continue;
     }
-    if (isInstanceSpecificAttr(key, value)) continue;
     out[key] = value;
   }
   return out;
@@ -84,7 +85,7 @@ function elementTypeFingerprint(el) {
     if (name === 'class') {
       const tokens = String(value || '').split(/\s+/).filter(Boolean)
         .filter((token) => !/\d{3,}/.test(token))
-        .filter((token) => !isLumiscrapeClassToken(token))
+        .filter((token) => !isLumiscrapeToken(token))
         .slice(0, 4)
         .map((token) => normalizeTypeAttrValue(token));
       if (tokens.length) typeAttrs.push(`class~${tokens.sort().join('.')}`);
@@ -101,50 +102,71 @@ function elementTypeFingerprint(el) {
 
 function queryByAttrs(root, attrs) {
   if (!attrs || !Object.keys(attrs).length) return [];
-  const selectors = [];
 
-  if (attrs.id) selectors.push(`#${cssEscape(attrs.id)}`);
+  const parts = [];
+
+  if (attrs.id) parts.push(`#${cssEscape(attrs.id)}`);
 
   if (attrs.class) {
-    const classSelector = sanitizeRecipeClassValue(attrs.class)
+    String(attrs.class)
       .split(/\s+/)
       .filter(Boolean)
-      .map((token) => `.${cssEscape(token)}`)
-      .join('');
-    if (classSelector) selectors.push(classSelector);
+      .forEach((token) => parts.push(`.${cssEscape(token)}`));
   }
 
-  const dataPairs = Object.entries(attrs).filter(
-    ([key]) => key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name',
-  );
-  if (dataPairs.length) {
-    selectors.push(dataPairs.slice(0, 3).map(([key, value]) => `[${key}="${cssEscape(value)}"]`).join(''));
-  }
-
-  const results = new Set();
-  for (const selector of selectors) {
-    try {
-      root.querySelectorAll(selector).forEach((el) => results.add(el));
-    } catch {
-      /* ignore invalid selectors */
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === 'id' || key === 'class') continue;
+    if (key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name') {
+      parts.push(`[${key}="${cssEscape(value)}"]`);
+      continue;
+    }
+    if ((key === 'ku-block' || key === 'ku-product-block') && (value === '' || value == null)) {
+      parts.push(`[${key}]`);
     }
   }
-  return Array.from(results);
+
+  if (!parts.length) return [];
+
+  try {
+    return Array.from(root.querySelectorAll(parts.join('')));
+  } catch {
+    return [];
+  }
+}
+
+function resolveAllFromAnchorPath(root, recipe, tag) {
+  if (!recipe?.anchorAttrs || !Object.keys(recipe.anchorAttrs).length) return [];
+
+  const results = [];
+  const seen = new Set();
+  const anchors = queryByAttrs(root, recipe.anchorAttrs);
+
+  for (const anchorEl of anchors) {
+    let foundList = [anchorEl];
+    if (recipe.relativePathFromAnchor) {
+      try {
+        const found = anchorEl.querySelector(recipe.relativePathFromAnchor);
+        foundList = found ? [found] : [];
+      } catch {
+        foundList = [];
+      }
+    }
+
+    for (const found of foundList) {
+      if (!found) continue;
+      if (tag && found.tagName.toLowerCase() !== tag) continue;
+      if (seen.has(found)) continue;
+      seen.add(found);
+      results.push(found);
+    }
+  }
+
+  return results;
 }
 
 function resolveFromAnchorPath(root, recipe, tag) {
-  if (!recipe?.anchorAttrs || !Object.keys(recipe.anchorAttrs).length) return null;
-  const anchors = queryByAttrs(root, recipe.anchorAttrs);
-  for (const anchorEl of anchors) {
-    let found = anchorEl;
-    if (recipe.relativePathFromAnchor) {
-      found = anchorEl.querySelector(recipe.relativePathFromAnchor);
-    }
-    if (!found) continue;
-    if (tag && found.tagName.toLowerCase() !== tag) continue;
-    if (isVisible(found)) return found;
-  }
-  return null;
+  const matches = resolveAllFromAnchorPath(root, recipe, tag);
+  return matches[0] || null;
 }
 
 function normalizeBrowseConfig(browse) {
@@ -155,6 +177,11 @@ function normalizeBrowseConfig(browse) {
       tag: normalized.containerLocator.tag,
       anchorAttrs: filterRecipeAttrs(normalized.containerLocator.anchorAttrs),
       relativePathFromAnchor: normalized.containerLocator.relativePathFromAnchor || '',
+    };
+  } else if (normalized.container) {
+    normalized.container = {
+      ...normalized.container,
+      anchorAttrs: filterRecipeAttrs(normalized.container.anchorAttrs),
     };
   }
   normalized.itemFingerprint = normalized.itemFingerprint || normalized.typeFingerprint || normalized.fingerprint;
@@ -175,14 +202,10 @@ function normalizeLocatorRecipe(locator) {
   };
 }
 
-function normalizeFieldEntry(field) {
-  if (!field.locators) {
-    field.locators = field.locator ? [normalizeLocatorRecipe(field.locator)] : [];
-  } else {
-    field.locators = field.locators.map((locator) => normalizeLocatorRecipe(locator));
-  }
-  delete field.locator;
-  return field;
+function getFieldLocators(field) {
+  if (!field) return [];
+  if (Array.isArray(field.locators)) return field.locators.filter(Boolean);
+  return field.locator ? [field.locator] : [];
 }
 
 function classTokensOverlap(candidateValue, targetValue) {
@@ -196,181 +219,121 @@ function getRecipeAttributes(el) {
   for (const attr of el.attributes || []) {
     const { name, value } = attr;
     if (isInstanceSpecificAttr(name, value)) continue;
-    if (name.startsWith('data-') || name === 'itemprop' || name === 'role' || name === 'class') {
-      if (name === 'class') {
-        const sanitized = sanitizeRecipeClassValue(value);
-        if (sanitized) attrs[name] = sanitized;
-      } else {
-        attrs[name] = value;
-      }
+    if (name === 'class') {
+      const tokens = String(value || '').split(/\s+/).filter(Boolean)
+        .filter((token) => !/\d{3,}/.test(token))
+        .filter((token) => !isLumiscrapeToken(token))
+        .slice(0, 4);
+      if (tokens.length) attrs.class = tokens.join(' ');
+      continue;
+    }
+    if (name.startsWith('data-') || name === 'itemprop' || name === 'role') {
+      attrs[name] = value;
     }
   }
   return attrs;
 }
 
 function getNthOfType(el) {
-  let index = 1;
-  let sibling = el.previousElementSibling;
-  while (sibling) {
-    if (sibling.tagName === el.tagName) index += 1;
-    sibling = sibling.previousElementSibling;
+  if (!el.parentElement) return 1;
+  let nth = 1;
+  for (const sibling of el.parentElement.children) {
+    if (sibling === el) break;
+    if (sibling.tagName === el.tagName) nth += 1;
   }
-  return index;
+  return nth;
 }
 
 function buildStructuralPath(el) {
   const segments = [];
   let current = el;
-  while (current && current !== document.body) {
+  while (current && current.tagName && current.tagName.toLowerCase() !== 'body') {
     segments.unshift(`${current.tagName.toLowerCase()}:nth-of-type(${getNthOfType(current)})`);
     current = current.parentElement;
   }
   return segments.join(' > ');
 }
 
-function isMainContentRegion(el) {
-  return !!el.closest('main, [role="main"], #contentarea, #content, .page-main, .main-content');
-}
-
-function isChromeRegion(el) {
-  return !!el.closest('nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]');
-}
-
-function scoreStructuralPathOverlap(candidatePath, targetPath, recipeMode) {
-  if (!targetPath || !candidatePath) return 0;
-  const targetParts = targetPath.split(' > ').filter(Boolean);
-  const currentParts = candidatePath.split(' > ').filter(Boolean);
-  if (!targetParts.length || !currentParts.length) return 0;
-
+function structuralTailOverlap(targetPath, currentPath) {
+  if (!targetPath || !currentPath) return 0;
+  const targetParts = targetPath.split(' > ');
+  const currentParts = currentPath.split(' > ');
+  const max = Math.min(targetParts.length, currentParts.length);
   let overlap = 0;
-  const maxCompare = Math.min(targetParts.length, currentParts.length);
-  for (let i = 1; i <= maxCompare; i += 1) {
-    if (targetParts[targetParts.length - i] === currentParts[currentParts.length - i]) {
-      overlap += 1;
-    } else {
-      break;
-    }
+  for (let i = 1; i <= max; i += 1) {
+    if (targetParts[targetParts.length - i] === currentParts[currentParts.length - i]) overlap += 1;
+    else break;
   }
-  return recipeMode ? overlap * 3 : overlap;
+  return overlap;
 }
 
-function scoreTextSampleMatch(candidate, textSample, recipeMode) {
-  if (!textSample) return 0;
-  const text = normalizeText(candidate.textContent);
-  const sample = normalizeText(textSample);
-  if (!text || !sample) return 0;
-  if (text === sample) return recipeMode ? 12 : 4;
-  if (text.startsWith(sample) || sample.startsWith(text)) return recipeMode ? 8 : 2;
-  if (text.includes(sample) || sample.includes(text)) return recipeMode ? 5 : 2;
-  return recipeMode ? -4 : 0;
-}
-
-function hasRecipeAttrMatch(candidateAttrs, targetAttrs) {
-  for (const [key, value] of Object.entries(targetAttrs || {})) {
-    if (!value) continue;
-    if (candidateAttrs[key] === value) return true;
-    if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) return true;
-  }
-  return false;
-}
-
-function meetsRecipeLocatorThreshold(candidate, locator, score) {
-  if (!candidate || !locator || score < 6) return false;
-
-  const candidateAttrs = getRecipeAttributes(candidate);
-  const hasAttrMatch = hasRecipeAttrMatch(candidateAttrs, locator.attrs);
-  const textScore = scoreTextSampleMatch(candidate, locator.textSample, true);
-  const structuralScore = scoreStructuralPathOverlap(
-    buildStructuralPath(candidate),
-    locator.structuralPath,
-    true,
-  );
-
-  if (hasAttrMatch) return true;
-  if (textScore >= 5 && structuralScore >= 6) return true;
-  if (structuralScore >= 12) return true;
-
-  const fromAnchor = resolveFromAnchorPath(document, {
-    anchorAttrs: locator.anchorAttrs,
-    relativePathFromAnchor: locator.relativePathFromAnchor,
-  }, locator.tag);
-  if (fromAnchor === candidate) return true;
-
-  return false;
-}
-
-function scoreLocatorMatch(candidate, locator, options = {}) {
-  const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
+function scoreLocatorMatch(candidate, locator) {
   let score = 0;
+  let evidence = 0;
 
   if (locator.tag && candidate.tagName.toLowerCase() === locator.tag) score += 2;
 
   const candidateAttrs = getRecipeAttributes(candidate);
   for (const [key, value] of Object.entries(locator.attrs || {})) {
-    if (candidateAttrs[key] === value) score += recipeMode ? 6 : 4;
-    else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) score += recipeMode ? 4 : 2;
+    if (candidateAttrs[key] === value) {
+      score += 6;
+      evidence += 5;
+    } else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) {
+      score += 4;
+      evidence += 2;
+    }
   }
 
   if (locator.textSample) {
-    score += scoreTextSampleMatch(candidate, locator.textSample, recipeMode);
+    const text = normalizeText(candidate.textContent);
+    if (text && text === locator.textSample) {
+      score += 6;
+      evidence += 3;
+    } else if (text && (text.includes(locator.textSample) || locator.textSample.includes(text))) {
+      score += 3;
+      evidence += 1;
+    }
   }
 
   if (locator.structuralPath) {
-    score += scoreStructuralPathOverlap(
-      buildStructuralPath(candidate),
-      locator.structuralPath,
-      recipeMode,
-    );
+    const overlap = structuralTailOverlap(locator.structuralPath, buildStructuralPath(candidate));
+    score += overlap * 2;
+    if (overlap >= 2) evidence += Math.min(overlap, 5);
   }
 
-  if (recipeMode && locator.relativePathFromAnchor && locator.anchorAttrs) {
-    const resolved = resolveFromAnchorPath(document, {
-      anchorAttrs: locator.anchorAttrs,
-      relativePathFromAnchor: locator.relativePathFromAnchor,
-    }, locator.tag);
-    if (resolved === candidate) score += 10;
-  }
-
-  if (recipeMode) {
-    if (isMainContentRegion(candidate)) score += 2;
-    if (isChromeRegion(candidate)) score -= 8;
-  }
-
-  if (isVisible(candidate)) score += 1;
-  return score;
+  return { score, evidence };
 }
 
-function findLocator(locator, root = document, options = {}) {
-  if (!locator) return null;
-  const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
+const LOCATOR_EVIDENCE_THRESHOLD = 5;
 
-  if (recipeMode && locator.anchorAttrs && Object.keys(locator.anchorAttrs).length) {
-    const fromAnchor = resolveFromAnchorPath(root, locator, locator.tag);
-    if (fromAnchor) return fromAnchor;
+function findLocator(locator, root = document) {
+  if (!locator) return null;
+  const candidates = new Set();
+
+  if (locator.anchorAttrs && Object.keys(locator.anchorAttrs).length) {
+    const anchorMatches = resolveAllFromAnchorPath(root, locator, locator.tag);
+    if (anchorMatches.length === 1) return anchorMatches[0];
+    anchorMatches.forEach((el) => candidates.add(el));
   }
 
-  const candidates = new Set();
   queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
   if (locator.tag) root.querySelectorAll(locator.tag).forEach((el) => candidates.add(el));
 
   let best = null;
-  let bestScore = 0;
+  let bestScore = -Infinity;
   for (const candidate of candidates) {
-    const score = scoreLocatorMatch(candidate, locator, { recipeMode });
+    const { score, evidence } = scoreLocatorMatch(candidate, locator);
+    if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
     if (score > bestScore) {
       bestScore = score;
       best = candidate;
     }
   }
-
-  if (recipeMode) {
-    return meetsRecipeLocatorThreshold(best, locator, bestScore) ? best : null;
-  }
-  return bestScore >= 4 ? best : null;
+  return best;
 }
 
 function enumerateBrowseItems(browse) {
-  const container = resolveFromAnchorPath(document, browse.container, browse.container.tag);
+  const container = resolveFromAnchorPath(document, browse.container, browse.container?.tag);
   if (!container) return [];
   return Array.from(container.children).filter(
     (child) => isVisible(child) && elementTypeFingerprint(child) === browse.itemFingerprint,
@@ -391,120 +354,171 @@ function collectProductUrls(browse) {
     .filter(Boolean);
 }
 
-function findFieldLocator(field, fieldKey) {
-  const normalized = normalizeFieldEntry({ ...field });
-  const locator = normalized.locators?.[0];
-  if (!locator) {
-    console.error(`FAIL: ${fieldKey} has no locators`);
-    process.exit(1);
-  }
-  return locator;
+function fail(message, extra) {
+  console.error(`FAIL: ${message}`, extra ?? '');
+  process.exit(1);
 }
 
 const config = JSON.parse(fs.readFileSync(path.join(rootDir, 'sites/aerin_com/config.json'), 'utf8'));
-loadDom('example-sites/aerin/dev-tools.html');
 
+// --- Recipe hygiene: no instance attrs, no leftover highlight classes ---
+const normalizedFields = config.product.fields.map((field) => ({
+  ...field,
+  locators: getFieldLocators(field).map((locator) => normalizeLocatorRecipe(locator)),
+}));
+
+for (const field of normalizedFields) {
+  for (const locator of field.locators) {
+    const badAttrs = Object.entries(locator.attrs || {}).filter(([key, value]) => isInstanceSpecificAttr(key, value));
+    if (badAttrs.length) fail(`${field.fieldKey} still has instance attrs`, badAttrs);
+    if (locator.anchor) fail(`${field.fieldKey} still has example anchor text`);
+    const classStr = `${locator.attrs?.class || ''} ${locator.anchorAttrs?.class || ''}`;
+    if (classStr.split(/\s+/).some(isLumiscrapeToken)) fail(`${field.fieldKey} still has a lumiscrape highlight class`);
+  }
+}
+console.log('PASS: normalized recipes carry no instance attrs or highlight classes');
+
+// --- filterRecipeAttrs strips highlight tokens but keeps real classes ---
+const stripped = filterRecipeAttrs({ class: 'value lumiscrape-highlight-strong' });
+if (stripped.class !== 'value') fail('filterRecipeAttrs did not strip highlight token', stripped);
+console.log('PASS: filterRecipeAttrs strips lumiscrape-* but keeps real class tokens');
+
+// --- Product field recipes resolve on a representative product fixture ---
+setDom(`
+  <div></div><div></div><div></div>
+  <div>
+    <main>
+      <div></div>
+      <div>
+        <div>
+          <div>
+            <div>
+              <h1><span itemprop="name" data-ui-id="page-title-wrapper" data-dynamic="name" class="base">Madaket Geranium 9.5oz Candle</span></h1>
+              <div>
+                <span class="price">$125</span>
+              </div>
+              <div></div><div></div><div></div><div></div><div></div><div></div>
+              <div>
+                <div>
+                  <div>
+                    <div>
+                      <div class="value">AERIN</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div>
+                      <div class="value">The Madaket Geranium scented candle was inspired by Madaket Beach.</div>
+                    </div>
+                  </div>
+                  <div></div>
+                  <div>
+                    <div>
+                      <div class="value">
+                        <ul>
+                          <li>Notes: Geranium, Pear, Rose, Jasmine, Amber</li>
+                          <li>Size: 9.5 oz</li>
+                          <li>Burn time: 55 hours</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+`);
+
+function fieldByKey(key) {
+  return normalizedFields.find((field) => field.fieldKey === key);
+}
+
+const nameEl = findLocator(fieldByKey('name')?.locators[0]);
+if (!nameEl || !nameEl.textContent.includes('Madaket Geranium')) fail('name recipe did not resolve');
+
+const priceEl = findLocator(fieldByKey('price_amount')?.locators[0]);
+if (!priceEl || !priceEl.textContent.includes('$125')) fail('price_amount recipe did not resolve');
+
+const descEl = findLocator(fieldByKey('description')?.locators[0]);
+if (!descEl) fail('description recipe did not resolve');
+if (!descEl.className.split(/\s+/).includes('value')) {
+  fail('description recipe resolved to wrong element (expected div.value)', descEl.className);
+}
+const descText = normalizeText(descEl.textContent);
+if (descText === 'AERIN') {
+  fail('description recipe resolved to brand field instead of description copy');
+}
+if (!descText.startsWith('The Madaket Geranium scented candle')) {
+  fail('description recipe captured unexpected text', descText.slice(0, 60));
+}
+
+const noteEl = findLocator(fieldByKey('note_name')?.locators[0]);
+if (!noteEl || !normalizeText(noteEl.textContent).startsWith('Notes: Geranium')) {
+  fail('note_name recipe did not resolve');
+}
+
+const burnEl = findLocator(fieldByKey('burn_time_hours')?.locators[0]);
+if (!burnEl || !normalizeText(burnEl.textContent).includes('Burn time: 55 hours')) {
+  fail('burn_time_hours recipe did not resolve');
+}
+
+console.log('PASS: name, price, description, notes, and burn time recipes resolve to the correct nodes');
+
+// --- Evidence gate rejects a region/tag-only match (the original over-grab bug) ---
+const noEvidence = findLocator({
+  tag: 'div',
+  attrs: {},
+  anchorAttrs: {},
+  structuralPath: 'main:nth-of-type(9) > section:nth-of-type(9) > div:nth-of-type(9)',
+});
+if (noEvidence) fail('evidence gate allowed a div with no real matching signal', noEvidence.className);
+console.log('PASS: evidence gate rejects tag-only matches (no more whole-column grabs)');
+
+// --- Browse recipe still enumerates products on the listing fixture ---
+loadDom('example-sites/aerin/dev-tools.html');
 const browse = normalizeBrowseConfig(config.browse);
 const items = enumerateBrowseItems(browse);
 const urls = collectProductUrls(browse);
+console.log('Browse items:', items.length, 'Product URLs:', urls.length);
+if (!items.length || items.length !== urls.length || new Set(urls).size !== urls.length) {
+  fail('browse recipe did not enumerate unique product URLs', { items: items.length, urls: urls.length });
+}
+console.log(`PASS: browse recipe enumerates ${urls.length} unique product URLs`);
 
-console.log('Browse items:', items.length);
-console.log('Product URLs:', urls.length);
+// --- Acqua di Parma: accordion panels share data-parent; only one tab open at a time ---
+const adpConfig = JSON.parse(fs.readFileSync(path.join(rootDir, 'sites/acquadiparma_com/config.json'), 'utf8'));
+const adpFields = adpConfig.product.fields.map((field) => ({
+  ...field,
+  locators: getFieldLocators(field).map((locator) => normalizeLocatorRecipe(locator)),
+}));
 
-if (items.length !== 15 || urls.length !== 15 || new Set(urls).size !== 15) {
-  console.error('FAIL: expected 15 unique browse items and URLs');
-  process.exit(1);
+loadDom('sites/acquadiparma_com/example-pages/product.html', 'www.acquadiparma.com');
+
+function adpFieldByKey(key) {
+  return adpFields.find((field) => field.fieldKey === key);
 }
 
-console.log('PASS: browse recipe enumerates 15 unique product URLs');
+const adpDescEl = findLocator(adpFieldByKey('description')?.locators[0]);
+const adpNoteEl = findLocator(adpFieldByKey('note_name')?.locators[0]);
+const adpDescText = normalizeText(adpDescEl?.textContent || '');
+const adpNoteText = normalizeText(adpNoteEl?.textContent || '');
 
-const normalizedFields = config.product.fields.map((field) => normalizeFieldEntry({ ...field }));
-
-for (const field of normalizedFields) {
-  for (const locator of field.locators || []) {
-    const badAttrs = Object.entries(locator.attrs || {}).filter(([key, value]) => {
-      if (key === 'class' && sanitizeRecipeClassValue(value).includes('lumiscrape')) return true;
-      return isInstanceSpecificAttr(key, value);
-    });
-    if (badAttrs.length) {
-      console.error(`FAIL: ${field.fieldKey} still has instance attrs`, badAttrs);
-      process.exit(1);
-    }
-    if (locator.anchor) {
-      console.error(`FAIL: ${field.fieldKey} still has example anchor text`);
-      process.exit(1);
-    }
-  }
+if (!adpDescEl || !adpDescText.startsWith('Diffuse enchanting scents')) {
+  fail('acquadiparma description recipe did not resolve', adpDescText.slice(0, 60));
+}
+if (!adpNoteEl || !adpNoteText.includes('Olfactive family: Aromatic green')) {
+  fail('acquadiparma note_name recipe did not resolve', adpNoteText.slice(0, 60));
+}
+if (adpDescText === adpNoteText) {
+  fail('acquadiparma description and note_name resolved to the same content');
+}
+if (adpNoteText.startsWith('Diffuse enchanting scents')) {
+  fail('acquadiparma note_name resolved to description accordion panel');
 }
 
-const productFixture = parseHTML(`
-  <main>
-    <div class="column main">
-      Skip to the end of the images gallery AERIN Villandry 9.5oz Candle $125 Add to Bag
-    </div>
-    <h1><span itemprop="name" data-ui-id="page-title-wrapper" data-dynamic="name">Madaket Geranium 9.5oz Candle</span></h1>
-    <span class="price"><span>$125</span></span>
-    <div class="product info detailed">
-      <div class="data item content">
-        <div class="value">The Villandry scented candle captures the romance of the fragrant flower gardens that surround the 16th-century Château de Villandry in France's Loire Valley.</div>
-      </div>
-      <div class="data item content">
-        <ul>
-          <li>Notes: Orchid, Gardenia, Muguet, Freesia, Vanilla</li>
-          <li>Dimensions: 3.2" x 3.2" x 4.0"</li>
-          <li>Burn time: 55 hours</li>
-        </ul>
-      </div>
-    </div>
-    <ul><li>1</li></ul>
-  </main>
-`).document;
+console.log('PASS: acquadiparma accordion description and tasting notes resolve independently');
 
-globalThis.document = productFixture;
-
-const nameField = normalizedFields.find((field) => field.fieldKey === 'name');
-const priceField = normalizedFields.find((field) => field.fieldKey === 'price_currency');
-const descriptionField = normalizedFields.find((field) => field.fieldKey === 'description');
-const notesField = normalizedFields.find((field) => field.fieldKey === 'note_name');
-
-const nameEl = findLocator(findFieldLocator(nameField, 'name'));
-const priceEl = findLocator(findFieldLocator(priceField, 'price_currency'));
-const descriptionEl = findLocator(findFieldLocator(descriptionField, 'description'));
-const notesEl = findLocator(findFieldLocator(notesField, 'note_name'));
-
-console.log('Fixture product name:', nameEl?.textContent?.trim());
-console.log('Fixture product price:', priceEl?.textContent?.trim());
-console.log('Fixture description:', descriptionEl?.textContent?.trim()?.slice(0, 80));
-console.log('Fixture notes:', notesEl?.textContent?.trim());
-
-if (!nameEl || !nameEl.textContent.includes('Madaket Geranium')) {
-  console.error('FAIL: name field recipe did not resolve on product fixture');
-  process.exit(1);
-}
-
-if (!priceEl || !priceEl.textContent.includes('$125')) {
-  console.error('FAIL: price field recipe did not resolve on product fixture');
-  process.exit(1);
-}
-
-if (!descriptionEl || !descriptionEl.textContent.includes('Villandry scented candle')) {
-  console.error('FAIL: description field recipe did not resolve on product fixture');
-  process.exit(1);
-}
-
-if (descriptionEl.textContent.includes('Add to Bag')) {
-  console.error('FAIL: description field matched product column wrapper instead of description block');
-  process.exit(1);
-}
-
-if (!notesEl || !notesEl.textContent.includes('Notes: Orchid')) {
-  console.error('FAIL: note_name field recipe did not resolve on product fixture');
-  process.exit(1);
-}
-
-if (notesEl.textContent.trim() === '1') {
-  console.error('FAIL: note_name field matched wrong li element');
-  process.exit(1);
-}
-
-console.log('PASS: normalized product field recipes resolve on product fixture');
+console.log('\nAll recipe checks passed.');

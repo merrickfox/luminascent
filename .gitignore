@@ -111,6 +111,7 @@ __pycache__/
 .scrapling_cache/
 
 # --- Crawler: generated output & local overrides ---
+scraper/sites/
 scrapling/crawler/output/
 scrapling/crawler/sites.local.json
 

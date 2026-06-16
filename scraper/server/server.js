@@ -134,45 +134,13 @@ function schemaFieldMap(schema) {
   return map;
 }
 
-function resolveFieldValue(field, data, schemaByKey) {
-  const { fieldKey, scope } = field;
-  const schemaField = schemaByKey.get(fieldKey);
-  const cardinality = field.cardinality || schemaField?.cardinality || 'single';
-
-  if (scope === 'size') {
-    const sizeBucket = data.sizes?.[0] || {};
-    const key = fieldKey === 'size_source_url' ? 'source_url' : fieldKey;
-    return sizeBucket[key] ?? null;
-  }
-
-  if (scope === 'note') {
-    const notes = data.notes || [];
-    const propMap = {
-      note_name: 'name',
-      note_slug: 'note_slug',
-      note_pyramid_stage: 'pyramid_stage',
-    };
-    const prop = propMap[fieldKey];
-    if (!prop) return null;
-    const values = notes.map((note) => note[prop]).filter((value) => value != null && value !== '');
-    if (!values.length) return null;
-    return cardinality === 'multiple' ? values : values[0];
-  }
-
-  if (scope === 'accord') {
-    const accords = data.accords || [];
-    const propMap = {
-      accord_name: 'name',
-      accord_slug: 'accord_slug',
-    };
-    const prop = propMap[fieldKey];
-    if (!prop) return null;
-    const values = accords.map((accord) => accord[prop]).filter((value) => value != null && value !== '');
-    if (!values.length) return null;
-    return cardinality === 'multiple' ? values : values[0];
-  }
-
-  return data[fieldKey] ?? null;
+function resolveFieldValue(field, data) {
+  // Extraction is cardinality-agnostic: each tagged field stores its raw
+  // capture under data.fields[fieldKey] (a string, or an array of strings when
+  // the field has multiple tags). Structuring is deferred to the later LLM step.
+  const captured = data.fields?.[field.fieldKey];
+  if (captured === undefined) return null;
+  return captured;
 }
 
 function expandContainedKeys(keys, schemaByKey) {
@@ -195,7 +163,7 @@ function buildLlmInput(config, schema, data) {
       fieldKey: field.fieldKey,
       scope: field.scope || schemaField?.scope || null,
       type: field.type || schemaField?.type || null,
-      value: resolveFieldValue(field, data, schemaByKey),
+      value: resolveFieldValue(field, data),
       also_contains: expandContainedKeys(field.also_contains, schemaByKey),
       sometimes_contains: expandContainedKeys(field.sometimes_contains, schemaByKey),
     };

@@ -11,8 +11,8 @@ Blueprint-driven visual scraper using Tampermonkey + a local Node server. Teach 
 
 Separation of concerns:
 
-- The userscript tags fields (including `also_contains` / `sometimes_contains` relationships) and extracts raw DOM text into `data.json`. Each field value is an **array of text chunks** — one entry per tagged element. A single tag produces a one-item array.
-- The server reads the host blueprint, schema, and raw `data.json`, then assembles `llm_input.json` — the intermediary artifact for a future LLM pass that will parse embedded values (e.g. size from product name, individual notes from a comma-separated line) into import-ready JSON.
+- The userscript tags fields (including `also_contains` / `sometimes_contains` relationships) and extracts raw DOM values into `data.json`.
+- The server reads the host blueprint, schema, and raw `data.json`, then assembles `llm_input.json` — the intermediary artifact for a future LLM pass that will parse embedded values (e.g. size from product name) into import-ready JSON.
 
 ## Quick start
 
@@ -79,11 +79,11 @@ Extraction re-runs this recipe on whatever page is loaded (including page 2 of p
 2. Click **Product mode**
 3. **Click an element on the page** — it gets an orange outline and appears as "Selected" in the panel
 4. **Click a field button in the panel** (Product Name, Price, Description, etc.) to tag it
-5. Repeat for each field you need. Tagging the same field again **adds another element** (useful when data is split across multiple nodes). Use **Re-tag** on a field card to replace all elements with a new selection, or **Add another element** to append without re-picking the field name.
+5. Repeat for each field you need
 6. For embedded content (e.g. size inside product name, price amount inside currency string): tag the parent field on the page, then on its card click **+ Add field** under **Also contains** or **Sometimes contains** and pick the related schema field (e.g. Size Value). The server uses these tags when building `llm_input.json` for the future LLM pass — the userscript does not parse embedded values itself.
 7. Click **Save product blueprint**
 
-Field tagging happens in the panel (not a floating menu), so you always see what to do next. Tagging means "the data for this field lives somewhere in the selected element(s)" — the tool does not split notes into arrays, parse sizes, or otherwise structure values. Schema `cardinality` (`single` / `multiple`) is informational for the future LLM step only.
+Field tagging happens in the panel (not a floating menu), so you always see what to do next.
 
 Product field locators are also recipes: stable semantic attributes (`itemprop`, `data-ui-id`, `data-dynamic`, `data-attribute-code`, etc.) plus relative structural position. Example product text, prices, and per-item IDs are **not** used for matching — only shown as `textSample` hints in the panel.
 
@@ -116,18 +116,18 @@ scraper/sites/aerin_com/
             └── 02.jpg
 ```
 
-- `data.json` — raw extracted text chunks from the DOM (no parsing or normalisation). Each field key maps to an array of strings, one per tagged element.
-- `llm_input.json` — server-built intermediary for the future LLM pass. Each tagged field includes its raw `value` array plus `also_contains` / `sometimes_contains` metadata (with schema types/labels). `derived_targets` lists every field the LLM must extract from a parent value (e.g. `size_value` and `size_unit` from `name`).
+- `data.json` — raw extracted values from the DOM (no parsing or normalisation). Captures live under `data.fields`, keyed by field. A field tagged once stores a string; a field tagged multiple times stores an array of raw strings.
+- `llm_input.json` — server-built intermediary for the future LLM pass. Each tagged field includes its raw `value` plus `also_contains` / `sometimes_contains` metadata (with schema types/labels). `derived_targets` lists every field the LLM must extract from a parent value (e.g. `size_value` and `size_unit` from `name`).
 
-Existing product folders keep their old `data.json` / `llm_input.json` shape until you re-run extraction. After re-scraping, values appear as raw arrays under each `fieldKey`.
+Tagging is deliberately cardinality-agnostic: selecting an element means "this field's data is somewhere in here." A single tag can hold an entire comma-separated list (e.g. all notes), or you can add several tags to one field. Splitting that raw text into structured values is the job of the later LLM step, not the extractor.
 
 ## Schema
 
 Field definitions live in `schema/candle.schema.json`. Each field has:
 
 - `key`, `label`
-- `scope`: `product`, `size`, `note`, `accord`, `image` — groups fields in the tagging UI only; extraction does not nest data by scope
-- `cardinality`: `single` or `multiple` — informational for the future LLM step; extraction always stores raw text arrays
+- `scope`: `product`, `size`, `note`, `accord`, `image`
+- `cardinality`: `single` or `multiple` — a hint for the later LLM step only; the extractor ignores it and captures whatever raw text/attribute you tag
 - `type`: `text`, `number`, `currency`, `boolean`, `url`
 
 Swap this file for other project domains while keeping the same userscript/server architecture.

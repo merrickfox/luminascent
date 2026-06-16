@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.2.0
+// @version      1.3.1
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -21,6 +21,8 @@
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
   const EXTRACT_KEY = 'lumiscrape_extract_state';
+  const EXTRACT_PREFS_KEY = 'lumiscrape_extract_prefs';
+  const BATCH_TIMEOUT_MS = 90000;
 
   const state = {
     mode: 'start',
@@ -37,9 +39,12 @@
     lastTaggedMessage: '',
     pendingContainmentAdd: null,
     pendingRetagFieldKey: null,
+    pendingAddTagFieldKey: null,
     imageCandidates: [],
     imageSelections: [],
     extractRunning: false,
+    extractMode: 'all',
+    extractBatchSize: 5,
     browseScanStatus: 'idle',
   };
 
@@ -51,6 +56,7 @@
   let browseWatchObserver = null;
   let browseDetectTimer = null;
   let browseDetectRunning = false;
+  let extractController = false;
 
   const STABLE_ATTRS = [
     'id',
@@ -205,6 +211,10 @@
     /^alt$/i,
   ];
 
+  function isLumiscrapeToken(token) {
+    return /^lumiscrape-/.test(String(token || ''));
+  }
+
   function isInstanceSpecificAttr(name, value) {
     if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
     if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
@@ -223,6 +233,15 @@
     const out = {};
     for (const [key, value] of Object.entries(attrs)) {
       if (!value || isInstanceSpecificAttr(key, value)) continue;
+      if (key === 'class') {
+        const tokens = String(value)
+          .split(/\s+/)
+          .filter(Boolean)
+          .filter((token) => !isLumiscrapeToken(token));
+        if (!tokens.length) continue;
+        out[key] = tokens.join(' ');
+        continue;
+      }
       out[key] = value;
     }
     return out;
@@ -251,6 +270,7 @@
     if (el.classList?.length) {
       const tokens = Array.from(el.classList)
         .filter((token) => !/\d{3,}/.test(token))
+        .filter((token) => !isLumiscrapeToken(token))
         .filter((token) => !/\b(?:active|current|selected|hover|focus|cloned|slick-|swiper-)\b/i.test(token))
         .slice(0, 4);
       if (tokens.length) attrs.class = tokens.join(' ');
@@ -307,6 +327,7 @@
           .split(/\s+/)
           .filter(Boolean)
           .filter((token) => !/\d{3,}/.test(token))
+          .filter((token) => !isLumiscrapeToken(token))
           .slice(0, 4)
           .map((token) => normalizeTypeAttrValue(token));
         if (tokens.length) typeAttrs.push(`class~${tokens.sort().join('.')}`);
@@ -593,25 +614,39 @@
     };
   }
 
-  function resolveFromAnchorPath(root, recipe, tag) {
-    if (!recipe?.anchorAttrs || !Object.keys(recipe.anchorAttrs).length) return null;
+  function resolveAllFromAnchorPath(root, recipe, tag) {
+    if (!recipe?.anchorAttrs || !Object.keys(recipe.anchorAttrs).length) return [];
 
+    const results = [];
+    const seen = new Set();
     const anchors = queryByAttrs(root, recipe.anchorAttrs);
+
     for (const anchorEl of anchors) {
-      let found = anchorEl;
+      let foundList = [anchorEl];
       if (recipe.relativePathFromAnchor) {
         try {
-          found = anchorEl.querySelector(recipe.relativePathFromAnchor);
+          const found = anchorEl.querySelector(recipe.relativePathFromAnchor);
+          foundList = found ? [found] : [];
         } catch {
-          found = null;
+          foundList = [];
         }
       }
-      if (!found) continue;
-      if (tag && found.tagName.toLowerCase() !== tag) continue;
-      if (isVisible(found)) return found;
+
+      for (const found of foundList) {
+        if (!found) continue;
+        if (tag && found.tagName.toLowerCase() !== tag) continue;
+        if (seen.has(found)) continue;
+        seen.add(found);
+        results.push(found);
+      }
     }
 
-    return null;
+    return results;
+  }
+
+  function resolveFromAnchorPath(root, recipe, tag) {
+    const matches = resolveAllFromAnchorPath(root, recipe, tag);
+    return matches[0] || null;
   }
 
   function resolveBrowseContainer(browse) {
@@ -696,10 +731,17 @@
     if (normalized.product?.fields) {
       normalized.product = {
         ...normalized.product,
-        fields: normalized.product.fields.map((field) => ({
-          ...field,
-          locator: normalizeLocatorRecipe(field.locator),
-        })),
+        fields: normalized.product.fields.map((field) => {
+          const locators = Array.isArray(field.locators)
+            ? field.locators
+            : (field.locator ? [field.locator] : []);
+          const next = {
+            ...field,
+            locators: locators.map((locator) => normalizeLocatorRecipe(locator)),
+          };
+          delete next.locator;
+          return next;
+        }),
       };
     }
 
@@ -727,84 +769,109 @@
 
   function queryByAttrs(root, attrs) {
     if (!attrs || !Object.keys(attrs).length) return [];
-    const selectors = [];
+
+    const parts = [];
 
     if (attrs.id) {
-      selectors.push(`#${cssEscape(attrs.id)}`);
+      parts.push(`#${cssEscape(attrs.id)}`);
     }
 
     if (attrs.class) {
-      const classSelector = String(attrs.class)
+      String(attrs.class)
         .split(/\s+/)
         .filter(Boolean)
-        .map((token) => `.${cssEscape(token)}`)
-        .join('');
-      if (classSelector) selectors.push(classSelector);
+        .forEach((token) => parts.push(`.${cssEscape(token)}`));
     }
 
-    const dataPairs = Object.entries(attrs).filter(
-      ([key]) => key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name',
-    );
-    if (dataPairs.length) {
-      const selector = dataPairs
-        .slice(0, 3)
-        .map(([key, value]) => `[${key}="${cssEscape(value)}"]`)
-        .join('');
-      selectors.push(selector);
-    }
-
-    Object.entries(attrs).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(attrs)) {
+      if (key === 'id' || key === 'class') continue;
+      if (key.startsWith('data-') || key === 'itemprop' || key === 'role' || key === 'name') {
+        parts.push(`[${key}="${cssEscape(value)}"]`);
+        continue;
+      }
       if ((key === 'ku-block' || key === 'ku-product-block') && (value === '' || value == null)) {
-        selectors.push(`[${key}]`);
-      }
-    });
-
-    const results = new Set();
-    for (const selector of selectors) {
-      try {
-        root.querySelectorAll(selector).forEach((el) => results.add(el));
-      } catch {
-        /* ignore invalid selectors */
+        parts.push(`[${key}]`);
       }
     }
 
-    return Array.from(results);
+    if (!parts.length) return [];
+
+    try {
+      return Array.from(root.querySelectorAll(parts.join('')));
+    } catch {
+      return [];
+    }
   }
 
+  function structuralTailOverlap(targetPath, currentPath) {
+    if (!targetPath || !currentPath) return 0;
+    const targetParts = targetPath.split(' > ');
+    const currentParts = currentPath.split(' > ');
+    const max = Math.min(targetParts.length, currentParts.length);
+    let overlap = 0;
+    for (let i = 1; i <= max; i += 1) {
+      if (targetParts[targetParts.length - i] === currentParts[currentParts.length - i]) {
+        overlap += 1;
+      } else {
+        break;
+      }
+    }
+    return overlap;
+  }
+
+  // Returns { score, evidence }. `score` ranks candidates (region/visibility
+  // included as tiebreakers); `evidence` counts only "real" matches (attrs,
+  // resolved anchor path, structural tail, exact text) and gates acceptance so a
+  // generic tag-in-main element can never win on region bonus alone.
   function scoreLocatorMatch(candidate, locator, options = {}) {
-    if (!candidate || !locator) return 0;
+    if (!candidate || !locator) return { score: 0, evidence: 0 };
     const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
     let score = 0;
+    let evidence = 0;
 
     if (locator.tag && candidate.tagName.toLowerCase() === locator.tag) score += 2;
 
     const candidateAttrs = recipeMode ? getRecipeAttributes(candidate) : getStableAttributes(candidate);
     const targetAttrs = locator.attrs || {};
     for (const [key, value] of Object.entries(targetAttrs)) {
-      if (candidateAttrs[key] === value) score += recipeMode ? 6 : 4;
-      else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) score += recipeMode ? 4 : 2;
+      if (candidateAttrs[key] === value) {
+        score += recipeMode ? 6 : 4;
+        evidence += 5;
+      } else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) {
+        score += recipeMode ? 4 : 2;
+        evidence += 2;
+      }
     }
 
-    if (!recipeMode) {
-      if (locator.anchor) {
-        const nearby = findNearbyLabel(candidate);
-        if (nearby && nearby.toLowerCase() === locator.anchor.toLowerCase()) score += 5;
-        else if (nearby && nearby.toLowerCase().includes(locator.anchor.toLowerCase())) score += 2;
+    if (!recipeMode && locator.anchor) {
+      const nearby = findNearbyLabel(candidate);
+      if (nearby && nearby.toLowerCase() === locator.anchor.toLowerCase()) {
+        score += 5;
+        evidence += 4;
+      } else if (nearby && nearby.toLowerCase().includes(locator.anchor.toLowerCase())) {
+        score += 2;
+        evidence += 1;
       }
+    }
 
-      if (locator.textSample) {
-        const text = normalizeText(candidate.textContent);
-        if (text === locator.textSample) score += 4;
-        else if (text.includes(locator.textSample) || locator.textSample.includes(text)) score += 2;
+    // textSample is a positive, non-required signal. Field text (e.g. a
+    // description) legitimately varies between products, so a mismatch is never
+    // penalized.
+    if (locator.textSample) {
+      const text = normalizeText(candidate.textContent);
+      if (text && text === locator.textSample) {
+        score += 6;
+        evidence += 3;
+      } else if (text && (text.includes(locator.textSample) || locator.textSample.includes(text))) {
+        score += 3;
+        evidence += 1;
       }
     }
 
     if (locator.structuralPath) {
-      const currentPath = buildStructuralPath(candidate);
-      const targetParts = locator.structuralPath.split(' > ').slice(-3);
-      const currentParts = currentPath.split(' > ').slice(-3);
-      const overlap = targetParts.filter((part, idx) => currentParts[idx] === part).length;
+      const overlap = structuralTailOverlap(locator.structuralPath, buildStructuralPath(candidate));
       score += recipeMode ? overlap * 2 : overlap;
+      if (overlap >= 2) evidence += Math.min(overlap, 5);
     }
 
     if (recipeMode && locator.relativePathFromAnchor && locator.anchorAttrs) {
@@ -812,7 +879,10 @@
         anchorAttrs: locator.anchorAttrs,
         relativePathFromAnchor: locator.relativePathFromAnchor,
       }, locator.tag);
-      if (resolved === candidate) score += 10;
+      if (resolved === candidate) {
+        score += 10;
+        evidence += 8;
+      }
     }
 
     if (recipeMode) {
@@ -822,20 +892,22 @@
 
     if (isVisible(candidate)) score += 1;
 
-    return score;
+    return { score, evidence };
   }
+
+  const LOCATOR_EVIDENCE_THRESHOLD = 5;
 
   function findLocator(locator, root = document, options = {}) {
     if (!locator) return null;
 
     const recipeMode = options.recipeMode || locator.matchMode === 'recipe';
+    const candidates = new Set();
 
     if (recipeMode && locator.anchorAttrs && Object.keys(locator.anchorAttrs).length) {
-      const fromAnchor = resolveFromAnchorPath(root, locator, locator.tag);
-      if (fromAnchor) return fromAnchor;
+      const anchorMatches = resolveAllFromAnchorPath(root, locator, locator.tag);
+      if (anchorMatches.length === 1) return anchorMatches[0];
+      anchorMatches.forEach((el) => candidates.add(el));
     }
-
-    const candidates = new Set();
 
     queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
 
@@ -869,17 +941,18 @@
     }
 
     let best = null;
-    let bestScore = 0;
+    let bestScore = -Infinity;
 
     for (const candidate of candidates) {
-      const score = scoreLocatorMatch(candidate, locator, { recipeMode });
+      const { score, evidence } = scoreLocatorMatch(candidate, locator, { recipeMode });
+      if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
       if (score > bestScore) {
         bestScore = score;
         best = candidate;
       }
     }
 
-    return bestScore >= 4 ? best : null;
+    return best;
   }
 
   function extractValue(el, extraction) {
@@ -1328,13 +1401,17 @@
 
     const style = document.createElement('style');
     style.textContent = `
+      *, *::before, *::after { box-sizing: border-box; }
       .panel {
         position: fixed;
         top: 16px;
         right: 16px;
         width: 340px;
+        max-width: calc(100vw - 32px);
         max-height: calc(100vh - 32px);
-        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         background: #111827;
         color: #f9fafb;
         border: 1px solid #374151;
@@ -1347,15 +1424,75 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 8px;
+        flex-shrink: 0;
+        min-width: 0;
         padding: 12px 14px;
         border-bottom: 1px solid #374151;
         cursor: grab;
         user-select: none;
       }
+      .header > div:first-child { min-width: 0; flex: 1; }
+      .header .btn { flex-shrink: 0; }
       .header.dragging { cursor: grabbing; }
-      .title { font-weight: 700; font-size: 14px; }
-      .subtle { color: #9ca3af; font-size: 12px; }
-      .body { padding: 12px 14px; display: grid; gap: 10px; }
+      .title { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+      .subtle {
+        color: #9ca3af;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .body {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .body > .status { flex-shrink: 0; }
+      .mode-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .scroll-region {
+        flex: 1;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+      .panel-actions {
+        flex-shrink: 0;
+        display: grid;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #374151;
+        background: #111827;
+      }
+      .tagging-zone {
+        flex-shrink: 0;
+        display: grid;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #374151;
+        max-height: min(340px, 45vh);
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .tagged-list-region {
+        flex: 1;
+        min-height: 60px;
+      }
+      .wrap-text { overflow-wrap: anywhere; word-break: break-word; }
       .btn {
         appearance: none;
         border: 1px solid #4b5563;
@@ -1365,8 +1502,12 @@
         padding: 8px 10px;
         cursor: pointer;
         text-align: left;
+        max-width: 100%;
+        overflow-wrap: anywhere;
       }
       .btn:hover { background: #374151; }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .btn:disabled:hover { background: #1f2937; }
       .btn.primary { background: #2563eb; border-color: #2563eb; }
       .btn.primary:hover { background: #1d4ed8; }
       .btn.active { outline: 2px solid #60a5fa; }
@@ -1378,6 +1519,9 @@
         padding: 8px;
         cursor: pointer;
         background: #0f172a;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       .item:hover { border-color: #60a5fa; }
       .item.selected {
@@ -1392,10 +1536,14 @@
         background: #374151;
         font-size: 11px;
         margin-right: 4px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
       }
+      .field-card-header .tag { flex: 1; min-width: 0; }
       .context-menu {
         position: fixed;
         min-width: 220px;
+        max-width: min(320px, calc(100vw - 16px));
         background: #111827;
         border: 1px solid #374151;
         border-radius: 8px;
@@ -1438,28 +1586,48 @@
         font-size: 11px;
         font-weight: 700;
       }
-      .status { padding: 8px; background: #0f172a; border-radius: 8px; }
-      .field-picker { display: grid; gap: 10px; max-height: 260px; overflow: auto; }
+      .status {
+        padding: 8px;
+        background: #0f172a;
+        border-radius: 8px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .field-picker { display: grid; gap: 10px; max-height: 200px; overflow-x: hidden; overflow-y: auto; }
       .field-scope .row { margin-top: 4px; }
-      .field-tag-btn { font-size: 12px; padding: 6px 8px; flex: 1 1 auto; min-width: 45%; }
+      .field-tag-btn { font-size: 12px; padding: 6px 8px; flex: 1 1 calc(50% - 4px); min-width: 0; max-width: 100%; }
       .tag-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-      .tag-actions .btn { font-size: 11px; padding: 4px 8px; }
+      .tag-actions .btn { font-size: 11px; padding: 4px 8px; flex: 1 1 auto; min-width: 0; }
       .field-card.active { border-color: #f59e0b; box-shadow: inset 0 0 0 1px #f59e0b; }
       .field-card.retagging { border-color: #60a5fa; box-shadow: inset 0 0 0 1px #60a5fa; }
-      .field-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-      .field-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+      .field-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-width: 0; }
+      .field-card-actions { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
       .field-card-actions .btn { font-size: 11px; padding: 2px 6px; }
       .field-card-actions .btn.danger { color: #fca5a5; border-color: #7f1d1d; }
       .context-item.danger { color: #fca5a5; }
       .context-item.danger:hover { background: #450a0a; }
       .containment-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid #374151; }
       .containment-group.pending { background: #1f2937; border-radius: 6px; padding: 6px 8px; margin-top: 6px; }
-      .containment-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+      .containment-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
       .containment-header .btn { font-size: 11px; padding: 4px 8px; flex-shrink: 0; }
       .containment-list { display: grid; gap: 4px; margin-top: 4px; }
-      .containment-entry { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+      .containment-entry { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; min-width: 0; }
       .containment-entry .btn { font-size: 11px; padding: 2px 6px; flex-shrink: 0; }
-      .containment-entry .subtle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .containment-entry .subtle { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+      .field-tag-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-top: 2px; min-width: 0; }
+      .field-tag-row .btn { font-size: 11px; padding: 0 6px; flex-shrink: 0; }
+      .field-tag-row .subtle { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+      .batch-size-row { display: flex; align-items: center; gap: 8px; }
+      .batch-size-input {
+        width: 64px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid #4b5563;
+        background: #1f2937;
+        color: #f9fafb;
+        font: inherit;
+      }
     `;
     shadowRoot.appendChild(style);
 
@@ -1511,6 +1679,12 @@
     contextMenuEl.style.left = `${x}px`;
     contextMenuEl.style.top = `${y}px`;
     contextMenuEl.style.display = 'block';
+
+    const rect = contextMenuEl.getBoundingClientRect();
+    const maxX = window.innerWidth - rect.width - 8;
+    const maxY = window.innerHeight - rect.height - 8;
+    contextMenuEl.style.left = `${Math.max(8, Math.min(x, maxX))}px`;
+    contextMenuEl.style.top = `${Math.max(8, Math.min(y, maxY))}px`;
   }
 
   function setMode(mode) {
@@ -1545,6 +1719,10 @@
       state.imageSelections = [...(state.config?.images || [])];
     }
 
+    if (mode === 'extract') {
+      state.extractRunning = !!getExtractState().active;
+    }
+
     renderPanel();
   }
 
@@ -1558,6 +1736,19 @@
     }
     if (!state.config.product) state.config.product = { fields: [] };
     if (!state.config.product.fields) state.config.product.fields = [];
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function locatorSample(locator) {
+    if (!locator) return '';
+    return locator.textSample || locator.anchor || locator.tag || '';
   }
 
   function getPendingTagPreview(el) {
@@ -1598,7 +1789,22 @@
     field.also_contains = normalizeContainmentArray(field.also_contains);
     field.sometimes_contains = normalizeContainmentArray(field.sometimes_contains);
     if (field.containment) delete field.containment;
+
+    // Migrate the legacy single `locator` shape to a `locators` array. Each
+    // entry is one tag and captures raw text/attribute independently.
+    if (!Array.isArray(field.locators)) {
+      field.locators = field.locator ? [field.locator] : [];
+    }
+    if (field.locator) delete field.locator;
+    if (field.extraction) delete field.extraction;
+
     return field;
+  }
+
+  function getFieldLocators(field) {
+    if (!field) return [];
+    if (Array.isArray(field.locators)) return field.locators.filter(Boolean);
+    return field.locator ? [field.locator] : [];
   }
 
   function getTaggedField(fieldKey) {
@@ -1629,10 +1835,32 @@
     if (!getTaggedField(fieldKey)) return;
     hideContextMenu();
     state.pendingRetagFieldKey = fieldKey;
+    state.pendingAddTagFieldKey = null;
     state.pendingContainmentAdd = null;
     state.pendingTagElement = null;
     state.pendingTagPreview = '';
     state.lastTaggedMessage = '';
+    clearHighlights();
+    renderPanel();
+  }
+
+  function startAddTag(fieldKey) {
+    if (!getTaggedField(fieldKey)) return;
+    hideContextMenu();
+    state.pendingAddTagFieldKey = fieldKey;
+    state.pendingRetagFieldKey = null;
+    state.pendingContainmentAdd = null;
+    state.pendingTagElement = null;
+    state.pendingTagPreview = '';
+    state.lastTaggedMessage = '';
+    clearHighlights();
+    renderPanel();
+  }
+
+  function cancelAddTag() {
+    state.pendingAddTagFieldKey = null;
+    state.pendingTagElement = null;
+    state.pendingTagPreview = '';
     clearHighlights();
     renderPanel();
   }
@@ -1645,12 +1873,13 @@
     renderPanel();
   }
 
-  function deleteTaggedField(fieldKey) {
+  function deleteTaggedField(fieldKey, options = {}) {
     if (!fieldKey) return;
     ensureProductConfig();
 
     const label = getSchemaFieldLabel(fieldKey);
-    if (!window.confirm(`Delete "${label}" (${fieldKey})? Its locator and containment links will be removed.`)) {
+    if (!options.skipConfirm
+      && !window.confirm(`Delete "${label}" (${fieldKey})? Its tags and containment links will be removed.`)) {
       return;
     }
 
@@ -1789,8 +2018,20 @@
         <div class="status">
           Re-tagging <strong>${label}</strong> (<code>${state.pendingRetagFieldKey}</code>)
         </div>
-        <div class="subtle">Click the correct element on the page. Containment links will be kept.</div>
+        <div class="subtle">Click the correct element on the page. This replaces all current tags; containment links are kept.</div>
         <button class="btn" id="lumiscrape-cancel-retag">Cancel</button>
+        ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
+      `;
+    }
+
+    if (state.pendingAddTagFieldKey) {
+      const label = getSchemaFieldLabel(state.pendingAddTagFieldKey);
+      return `
+        <div class="status">
+          Adding a tag to <strong>${label}</strong> (<code>${state.pendingAddTagFieldKey}</code>)
+        </div>
+        <div class="subtle">Click another element on the page that also holds this field's data.</div>
+        <button class="btn" id="lumiscrape-cancel-addtag">Cancel</button>
         ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
       `;
     }
@@ -1835,11 +2076,11 @@
       .join('');
 
     return `
-      <div class="status"><strong>Selected:</strong> ${preview || '(element)'}</div>
+      <div class="status wrap-text"><strong>Selected:</strong> ${escapeHtml(preview) || '(element)'}</div>
       <div class="subtle">Choose a field to tag:</div>
       <div class="field-picker">${fieldButtons}</div>
       <button class="btn" id="lumiscrape-clear-tag-selection">Clear selection</button>
-      ${state.lastTaggedMessage ? `<div class="status">${state.lastTaggedMessage}</div>` : ''}
+      ${state.lastTaggedMessage ? `<div class="status wrap-text">${escapeHtml(state.lastTaggedMessage)}</div>` : ''}
     `;
   }
 
@@ -1899,13 +2140,15 @@
         <button class="btn" id="lumiscrape-minimize">—</button>
       </div>
       <div class="body">
-        <div class="status">
+        <div class="status wrap-text">
           ${state.hasConfig ? 'Configured' : 'Not configured'} ·
           Browse ${browseDone ? '✓' : '—'} ·
           Fields ${fieldsCount} ·
           Images ${imagesCount}
         </div>
-        ${renderModeBody()}
+        <div class="mode-content">
+          ${renderModeBody()}
+        </div>
       </div>
     `;
 
@@ -1942,56 +2185,87 @@
           (group, index) => `
             <div class="item ${group.id === state.selectedBrowseGroupId ? 'selected' : ''}" data-group-index="${index}">
               <div><span class="tag">${group.count} items</span><span class="tag">score ${group.score}</span></div>
-              <div>${group.sampleText || '(no sample text)'}</div>
+              <div class="wrap-text">${escapeHtml(group.sampleText) || '(no sample text)'}</div>
             </div>
           `,
         )
         .join('');
 
       return `
-        <div class="subtle">Hover to preview. Click a group to select it, then lock.</div>
-        <div class="status" id="lumiscrape-browse-status">${browseStatusText()}</div>
-        <button class="btn" id="lumiscrape-detect-groups">Detect groups now</button>
-        <div class="subtle">Auto-watches for late-loaded content (API grids, infinite scroll).</div>
-        <div class="list">${items || '<div class="subtle">No groups detected yet.</div>'}</div>
-        <button class="btn primary" id="lumiscrape-lock-browse" ${state.selectedBrowseGroupId ? '' : 'disabled'}>
-          Lock selected group
-        </button>
-        <button class="btn" data-mode="start">Back</button>
+        <div class="scroll-region">
+          <div class="subtle">Hover to preview. Click a group to select it, then lock.</div>
+          <div class="status" id="lumiscrape-browse-status">${browseStatusText()}</div>
+          <button class="btn" id="lumiscrape-detect-groups">Detect groups now</button>
+          <div class="subtle">Auto-watches for late-loaded content (API grids, infinite scroll).</div>
+          <div class="list">${items || '<div class="subtle">No groups detected yet.</div>'}</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn primary" id="lumiscrape-lock-browse" ${state.selectedBrowseGroupId ? '' : 'disabled'}>
+            Lock selected group
+          </button>
+          <button class="btn" data-mode="start">Back</button>
+        </div>
       `;
     }
 
     if (state.mode === 'product') {
+      const pendingBusy = state.pendingContainmentAdd
+        || state.pendingRetagFieldKey
+        || state.pendingAddTagFieldKey
+        || state.pendingTagElement;
+
       const tagged = (state.config?.product?.fields || [])
         .map((field) => {
           normalizeFieldEntry(field);
           const isActiveCard = state.pendingContainmentAdd?.fieldKey === field.fieldKey;
           const isRetagging = state.pendingRetagFieldKey === field.fieldKey;
+          const isAdding = state.pendingAddTagFieldKey === field.fieldKey;
           const cardClass = [
             'item',
             'field-card',
             isActiveCard ? 'active' : '',
-            isRetagging ? 'retagging' : '',
+            (isRetagging || isAdding) ? 'retagging' : '',
           ].filter(Boolean).join(' ');
+
+          const locators = getFieldLocators(field);
+          const tagsList = locators
+            .map((locator, index) => `
+              <div class="field-tag-row">
+                <span class="subtle">${index + 1}. ${escapeHtml(locatorSample(locator)) || '(element)'}</span>
+                <button
+                  class="btn"
+                  data-remove-locator="${field.fieldKey}"
+                  data-locator-index="${index}"
+                  ${pendingBusy ? 'disabled' : ''}
+                  title="Remove this tag"
+                >×</button>
+              </div>
+            `)
+            .join('');
 
           return `
             <div class="${cardClass}" data-field-card="${field.fieldKey}">
               <div class="field-card-header">
-                <span class="tag">${field.fieldKey}</span>
+                <span class="tag">${field.fieldKey}${locators.length > 1 ? ` ·${locators.length}` : ''}</span>
                 <div class="field-card-actions">
                   <button
                     class="btn"
+                    data-addtag-field="${field.fieldKey}"
+                    ${pendingBusy ? 'disabled' : ''}
+                  >Add tag</button>
+                  <button
+                    class="btn"
                     data-retag-field="${field.fieldKey}"
-                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingTagElement ? 'disabled' : ''}
+                    ${pendingBusy ? 'disabled' : ''}
                   >Re-tag</button>
                   <button
                     class="btn danger"
                     data-delete-field="${field.fieldKey}"
-                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey ? 'disabled' : ''}
+                    ${state.pendingContainmentAdd || state.pendingRetagFieldKey || state.pendingAddTagFieldKey ? 'disabled' : ''}
                   >Delete</button>
                 </div>
               </div>
-              <div class="subtle">${field.locator?.textSample || field.locator?.anchor || field.locator?.tag || ''}</div>
+              ${tagsList || '<div class="subtle">(no tags)</div>'}
               ${renderContainmentGroup(field, 'also_contains')}
               ${renderContainmentGroup(field, 'sometimes_contains')}
             </div>
@@ -2000,18 +2274,26 @@
         .join('');
 
       const productInstructions = state.pendingRetagFieldKey
-        ? `Click an element on the page to re-tag <strong>${getSchemaFieldLabel(state.pendingRetagFieldKey)}</strong>.`
+        ? `Click an element on the page to re-tag <strong>${getSchemaFieldLabel(state.pendingRetagFieldKey)}</strong> (replaces all its tags).`
+        : state.pendingAddTagFieldKey
+        ? `Click an element to add another tag to <strong>${getSchemaFieldLabel(state.pendingAddTagFieldKey)}</strong>.`
         : state.pendingContainmentAdd
         ? `Pick a schema field for <strong>${state.pendingContainmentAdd.fieldKey}</strong> → ${containmentModeLabel(state.pendingContainmentAdd.mode)}.`
-        : '1. Click an element to tag a field · 2. Link related schema fields on each card · 3. Save';
+        : '1. Click an element to tag a field · 2. Add more tags or link related fields · 3. Save';
 
       return `
-        <div class="subtle">${productInstructions}</div>
-        ${renderProductFieldPicker()}
-        <div class="subtle">Tagged fields (${(state.config?.product?.fields || []).length}) · use Re-tag/Delete on each card, or right-click for options</div>
-        <div class="list">${tagged || '<div class="subtle">No fields tagged yet.</div>'}</div>
-        <button class="btn primary" id="lumiscrape-save-product">Save product blueprint</button>
-        <button class="btn" data-mode="start">Back</button>
+        <div class="tagging-zone">
+          <div class="subtle">${productInstructions}</div>
+          ${renderProductFieldPicker()}
+        </div>
+        <div class="scroll-region tagged-list-region">
+          <div class="subtle">Tagged fields (${(state.config?.product?.fields || []).length}) · Add tag / Re-tag / Delete on each card, or right-click for options</div>
+          <div class="list">${tagged || '<div class="subtle">No fields tagged yet.</div>'}</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn primary" id="lumiscrape-save-product">Save product blueprint</button>
+          <button class="btn" data-mode="start">Back</button>
+        </div>
       `;
     }
 
@@ -2030,22 +2312,62 @@
 
       return `
         <div class="subtle">Click images to assign order. Click again to remove.</div>
-        <div class="image-grid">${cards || '<div class="subtle">No images found.</div>'}</div>
-        <button class="btn primary" id="lumiscrape-save-images">Save image selections</button>
-        <button class="btn" data-mode="start">Back</button>
+        <div class="scroll-region">
+          <div class="image-grid">${cards || '<div class="subtle">No images found.</div>'}</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn primary" id="lumiscrape-save-images">Save image selections</button>
+          <button class="btn" data-mode="start">Back</button>
+        </div>
       `;
     }
 
     if (state.mode === 'extract') {
       const urls = collectProductUrls();
+      const extractState = getExtractState();
+      const extractionActive = !!extractState.active;
+      const modeLocked = extractController && extractionActive;
+      const batchControls = state.extractMode === 'batch'
+        ? `
+          <label class="subtle batch-size-row">
+            Tabs per batch
+            <input
+              type="number"
+              id="lumiscrape-batch-size"
+              class="batch-size-input"
+              min="1"
+              value="${state.extractBatchSize}"
+              ${modeLocked ? 'disabled' : ''}
+            />
+          </label>
+        `
+        : '';
       return `
         <div class="subtle">${urls.length} product URLs detected from browse blueprint.</div>
-        <button class="btn primary" id="lumiscrape-run-extract" ${urls.length ? '' : 'disabled'}>
-          Start extraction
-        </button>
-        <button class="btn" id="lumiscrape-stop-extract">Stop extraction</button>
-        <div class="status" id="lumiscrape-extract-status">${state.extractRunning ? 'Running…' : 'Idle'}</div>
-        <button class="btn" data-mode="start">Back</button>
+        <div class="subtle">Extraction mode</div>
+        <div class="row">
+          <button
+            type="button"
+            id="lumiscrape-extract-mode-all"
+            class="btn ${state.extractMode === 'all' ? 'active' : ''}"
+            ${modeLocked ? 'disabled' : ''}
+          >All at once</button>
+          <button
+            type="button"
+            id="lumiscrape-extract-mode-batch"
+            class="btn ${state.extractMode === 'batch' ? 'active' : ''}"
+            ${modeLocked ? 'disabled' : ''}
+          >Batched</button>
+        </div>
+        ${batchControls}
+        <div class="status" id="lumiscrape-extract-status">${extractionActive ? 'Running…' : 'Idle'}</div>
+        <div class="panel-actions">
+          <button class="btn primary" id="lumiscrape-run-extract" ${urls.length && !extractionActive ? '' : 'disabled'}>
+            Start extraction
+          </button>
+          <button class="btn" id="lumiscrape-stop-extract" ${extractionActive ? '' : 'disabled'}>Stop extraction</button>
+          <button class="btn" data-mode="start">Back</button>
+        </div>
       `;
     }
 
@@ -2152,11 +2474,34 @@
       cancelRetagField();
     });
 
+    panelEl.querySelector('#lumiscrape-cancel-addtag')?.addEventListener('click', () => {
+      cancelAddTag();
+    });
+
     panelEl.querySelectorAll('[data-retag-field]').forEach((btn) => {
       btn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         startRetagField(btn.getAttribute('data-retag-field'));
+      });
+    });
+
+    panelEl.querySelectorAll('[data-addtag-field]').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        startAddTag(btn.getAttribute('data-addtag-field'));
+      });
+    });
+
+    panelEl.querySelectorAll('[data-remove-locator]').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        removeFieldLocator(
+          btn.getAttribute('data-remove-locator'),
+          Number(btn.getAttribute('data-locator-index')),
+        );
       });
     });
 
@@ -2207,13 +2552,20 @@
       card.addEventListener('contextmenu', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (state.pendingContainmentAdd || state.pendingTagElement || state.pendingRetagFieldKey) return;
+        if (state.pendingContainmentAdd
+          || state.pendingTagElement
+          || state.pendingRetagFieldKey
+          || state.pendingAddTagFieldKey) return;
         const fieldKey = card.getAttribute('data-field-card');
         if (!fieldKey) return;
         const rect = card.getBoundingClientRect();
         showContextMenu(rect.right - 8, rect.top + 8, [
           {
-            label: 'Re-tag field…',
+            label: 'Add another tag…',
+            onClick: () => startAddTag(fieldKey),
+          },
+          {
+            label: 'Re-tag field (replace all)…',
             onClick: () => startRetagField(fieldKey),
           },
           {
@@ -2272,6 +2624,25 @@
       setMode('start');
     });
 
+    panelEl.querySelector('#lumiscrape-extract-mode-all')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setExtractMode('all');
+    });
+
+    panelEl.querySelector('#lumiscrape-extract-mode-batch')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setExtractMode('batch');
+    });
+
+    panelEl.querySelector('#lumiscrape-batch-size')?.addEventListener('change', (event) => {
+      const value = parseInt(event.target.value, 10);
+      state.extractBatchSize = Math.max(1, Number.isNaN(value) ? 5 : value);
+      saveExtractPrefs();
+      renderPanel();
+    });
+
     panelEl.querySelector('#lumiscrape-run-extract')?.addEventListener('click', () => {
       startExtraction();
     });
@@ -2311,6 +2682,19 @@
       return;
     }
 
+    if (state.pendingAddTagFieldKey) {
+      const schemaField = state.schema?.fields?.find((field) => field.key === state.pendingAddTagFieldKey);
+      if (!schemaField) {
+        state.lastTaggedMessage = `Schema field "${state.pendingAddTagFieldKey}" not found.`;
+        state.pendingAddTagFieldKey = null;
+        renderPanel();
+        return;
+      }
+      highlightElements([el], true);
+      tagField(schemaField, el, { append: true });
+      return;
+    }
+
     state.pendingTagElement = el;
     state.pendingTagPreview = getPendingTagPreview(el);
     state.selectedElement = el;
@@ -2322,39 +2706,70 @@
     if (state.pendingContainmentAdd) return;
     ensureProductConfig();
     const locator = buildLocator(el);
-    const entry = {
-      fieldKey: field.key,
-      scope: field.scope,
-      cardinality: field.cardinality,
-      type: field.type,
-      locator,
-      extraction: locator.extraction,
-      also_contains: [],
-      sometimes_contains: [],
-      taggedAt: new Date().toISOString(),
-    };
 
     const fields = [...state.config.product.fields];
     const existingIndex = fields.findIndex((item) => item.fieldKey === field.key);
-    const isRetag = options.retag || existingIndex >= 0;
+    const append = !!options.append && existingIndex >= 0;
+    const isRetag = !append && (options.retag || existingIndex >= 0);
+
+    let message;
     if (existingIndex >= 0) {
-      const existing = normalizeFieldEntry(fields[existingIndex]);
-      entry.also_contains = existing.also_contains;
-      entry.sometimes_contains = existing.sometimes_contains;
-      fields[existingIndex] = entry;
+      const existing = normalizeFieldEntry({ ...fields[existingIndex] });
+      // append: add another tag/locator. retag or re-tag of an existing field:
+      // replace the whole locator set. Containment links are always preserved.
+      const locators = append ? [...getFieldLocators(existing), locator] : [locator];
+      fields[existingIndex] = {
+        ...existing,
+        scope: field.scope,
+        type: field.type,
+        locators,
+        taggedAt: new Date().toISOString(),
+      };
+      message = append
+        ? `Added another tag to ${field.label} (${locators.length} total). Click the next element.`
+        : `Re-tagged ${field.label}. Click the next element.`;
     } else {
-      fields.push(entry);
+      fields.push({
+        fieldKey: field.key,
+        scope: field.scope,
+        type: field.type,
+        locators: [locator],
+        also_contains: [],
+        sometimes_contains: [],
+        taggedAt: new Date().toISOString(),
+      });
+      message = `Tagged as ${field.label}. Click the next element.`;
     }
 
     state.config.product = { ...state.config.product, fields };
     state.pendingContainmentAdd = null;
     state.pendingRetagFieldKey = null;
+    state.pendingAddTagFieldKey = null;
     state.pendingTagElement = null;
     state.pendingTagPreview = '';
-    state.lastTaggedMessage = isRetag
-      ? `Re-tagged ${field.label}. Click the next element.`
-      : `Tagged as ${field.label}. Click the next element.`;
+    state.lastTaggedMessage = message;
     clearHighlights();
+    renderPanel();
+  }
+
+  function removeFieldLocator(fieldKey, index) {
+    if (!fieldKey || Number.isNaN(index)) return;
+    ensureProductConfig();
+    const fields = [...state.config.product.fields];
+    const fieldIndex = fields.findIndex((item) => item.fieldKey === fieldKey);
+    if (fieldIndex < 0) return;
+
+    const field = normalizeFieldEntry({ ...fields[fieldIndex] });
+    const locators = getFieldLocators(field).filter((_, i) => i !== index);
+
+    if (!locators.length) {
+      // Removing the last tag deletes the field entirely (and its inbound links).
+      deleteTaggedField(fieldKey, { skipConfirm: true });
+      return;
+    }
+
+    fields[fieldIndex] = { ...field, locators };
+    state.config.product = { ...state.config.product, fields };
     renderPanel();
   }
 
@@ -2408,14 +2823,47 @@
     if (el) el.classList.add('lumiscrape-selectable-hover');
   }
 
-  function getExtractState() {
-    return GM_getValue(EXTRACT_KEY, {
+  function loadExtractPrefs() {
+    const prefs = GM_getValue(EXTRACT_PREFS_KEY, null);
+    if (!prefs) return;
+    if (prefs.mode === 'batch' || prefs.mode === 'all') state.extractMode = prefs.mode;
+    if (prefs.batchSize) state.extractBatchSize = Math.max(1, Number(prefs.batchSize) || 5);
+  }
+
+  function saveExtractPrefs() {
+    GM_setValue(EXTRACT_PREFS_KEY, {
+      mode: state.extractMode,
+      batchSize: state.extractBatchSize,
+    });
+  }
+
+  function setExtractMode(mode) {
+    if (extractController && getExtractState().active) return;
+    if (mode !== 'all' && mode !== 'batch') return;
+    state.extractMode = mode;
+    saveExtractPrefs();
+    renderPanel();
+  }
+
+  function getDefaultExtractState() {
+    return {
       active: false,
+      mode: 'all',
+      batchSize: 0,
+      queue: [],
+      batchStartedAt: null,
       inFlight: [],
       completed: [],
       failed: [],
       total: 0,
-    });
+    };
+  }
+
+  function getExtractState() {
+    return {
+      ...getDefaultExtractState(),
+      ...GM_getValue(EXTRACT_KEY, getDefaultExtractState()),
+    };
   }
 
   function setExtractState(next) {
@@ -2424,13 +2872,8 @@
 
   function stopExtraction() {
     state.extractRunning = false;
-    setExtractState({
-      active: false,
-      inFlight: [],
-      completed: [],
-      failed: [],
-      total: 0,
-    });
+    extractController = false;
+    setExtractState(getDefaultExtractState());
     renderPanel();
   }
 
@@ -2469,9 +2912,73 @@
     const statusEl = panelEl?.querySelector('#lumiscrape-extract-status');
     if (!statusEl) return;
     const extractState = getExtractState();
-    statusEl.textContent = extractState.active
-      ? `Running · open ${extractState.inFlight.length} · done ${extractState.completed.length} · failed ${extractState.failed.length} · total ${extractState.total}`
-      : 'Idle';
+    if (!extractState.active) {
+      statusEl.textContent = 'Idle';
+      return;
+    }
+
+    const queuePart = extractState.mode === 'batch'
+      ? ` · queued ${(extractState.queue || []).length}`
+      : '';
+    statusEl.textContent = `Running · open ${extractState.inFlight.length}${queuePart} · done ${extractState.completed.length} · failed ${extractState.failed.length} · total ${extractState.total}`;
+  }
+
+  function launchNextBatch() {
+    const extractState = getExtractState();
+    if (!extractState.active || extractState.mode !== 'batch') return;
+    if (extractState.inFlight.length > 0) return;
+    if (!extractState.queue || extractState.queue.length === 0) return;
+
+    const batchSize = Math.max(1, extractState.batchSize || state.extractBatchSize || 5);
+    const nextBatch = extractState.queue.splice(0, batchSize);
+    extractState.inFlight = nextBatch;
+    extractState.batchStartedAt = Date.now();
+    setExtractState(extractState);
+
+    nextBatch.forEach((url) => {
+      GM_openInTab(withScrapeFlag(url), {
+        active: false,
+        insert: true,
+      });
+    });
+    updateExtractStatus();
+  }
+
+  function finishExtraction(extractState) {
+    extractState.active = false;
+    state.extractRunning = false;
+    extractController = false;
+    setExtractState(extractState);
+    updateExtractStatus();
+    if (state.mode === 'extract') renderPanel();
+  }
+
+  function tickExtraction() {
+    if (!extractController) return;
+
+    const extractState = getExtractState();
+    if (!extractState.active || extractState.mode !== 'batch') return;
+
+    if (extractState.inFlight.length > 0) {
+      const batchStartedAt = extractState.batchStartedAt || 0;
+      if (Date.now() - batchStartedAt > BATCH_TIMEOUT_MS) {
+        extractState.inFlight.forEach((url) => {
+          extractState.failed.push({ url, error: 'batch timeout' });
+        });
+        extractState.inFlight = [];
+        extractState.batchStartedAt = null;
+        setExtractState(extractState);
+        updateExtractStatus();
+      }
+      return;
+    }
+
+    if (extractState.queue && extractState.queue.length > 0) {
+      launchNextBatch();
+      return;
+    }
+
+    finishExtraction(extractState);
   }
 
   function startExtraction() {
@@ -2479,34 +2986,71 @@
     if (!urls.length) return;
 
     state.extractRunning = true;
-    setExtractState({
+    const startedAt = new Date().toISOString();
+    const baseState = {
       active: true,
-      inFlight: [...urls],
       completed: [],
       failed: [],
       total: urls.length,
       host: state.host,
-      startedAt: new Date().toISOString(),
-    });
+      startedAt,
+    };
 
-    launchExtractTabs(urls);
+    if (state.extractMode === 'batch') {
+      const batchSize = Math.max(1, state.extractBatchSize || 5);
+      extractController = true;
+      setExtractState({
+        ...baseState,
+        mode: 'batch',
+        batchSize,
+        queue: [...urls],
+        inFlight: [],
+        batchStartedAt: null,
+      });
+      launchNextBatch();
+    } else {
+      setExtractState({
+        ...baseState,
+        mode: 'all',
+        batchSize: 0,
+        queue: [],
+        inFlight: [...urls],
+        batchStartedAt: null,
+      });
+      launchExtractTabs(urls);
+    }
+
     renderPanel();
   }
 
   function markExtractResult(url, ok, errorMessage) {
+    const normalizedUrl = stripScrapeFlag(url);
     const extractState = getExtractState();
-    extractState.inFlight = extractState.inFlight.filter((item) => item !== url);
+    extractState.inFlight = extractState.inFlight.filter(
+      (item) => stripScrapeFlag(item) !== normalizedUrl,
+    );
 
-    if (ok) extractState.completed.push(url);
-    else extractState.failed.push({ url, error: errorMessage || 'unknown error' });
-
-    if (extractState.inFlight.length === 0) {
-      extractState.active = false;
-      state.extractRunning = false;
-    }
+    if (ok) extractState.completed.push(normalizedUrl);
+    else extractState.failed.push({ url: normalizedUrl, error: errorMessage || 'unknown error' });
 
     setExtractState(extractState);
     updateExtractStatus();
+
+    if (extractState.mode === 'batch' && extractController && extractState.inFlight.length === 0) {
+      tickExtraction();
+      if (state.mode === 'extract') renderPanel();
+      return;
+    }
+
+    if (extractState.inFlight.length === 0
+      && (!extractState.queue || extractState.queue.length === 0)) {
+      extractState.active = false;
+      state.extractRunning = false;
+      extractController = false;
+      setExtractState(extractState);
+      updateExtractStatus();
+      if (state.mode === 'extract') renderPanel();
+    }
   }
 
   async function blobToBase64(blob) {
@@ -2545,46 +3089,25 @@
     const data = {
       source_url: stripScrapeFlag(location.href),
       scrapedAt: new Date().toISOString(),
+      fields: {},
     };
 
-    const sizeBucket = {};
-
+    // Each tagged field captures raw text/attribute from one or more locators.
+    // No structuring (notes/accords/sizes splitting) happens here; that is the
+    // job of the later LLM step. Cardinality is intentionally ignored: a single
+    // tag yields a string, multiple tags yield an array of raw strings.
     fields.forEach((field) => {
-      const el = findLocator(field.locator);
-      const value = extractValue(el, field.extraction);
-      if (value == null || value === '') return;
-
-      if (field.scope === 'size') {
-        const key = field.fieldKey === 'size_source_url' ? 'source_url' : field.fieldKey;
-        sizeBucket[key] = value;
-        return;
-      }
-
-      if (field.scope === 'note') {
-        data.notes = data.notes || [];
-        data.notes.push({
-          name: field.fieldKey === 'note_name' ? value : undefined,
-          note_slug: field.fieldKey === 'note_slug' ? value : undefined,
-          pyramid_stage: field.fieldKey === 'note_pyramid_stage' ? value : undefined,
-        });
-        return;
-      }
-
-      if (field.scope === 'accord') {
-        data.accords = data.accords || [];
-        data.accords.push({
-          name: field.fieldKey === 'accord_name' ? value : undefined,
-          accord_slug: field.fieldKey === 'accord_slug' ? value : undefined,
-        });
-        return;
-      }
-
-      data[field.fieldKey] = value;
+      const locators = getFieldLocators(field);
+      const values = [];
+      locators.forEach((locator) => {
+        const el = findLocator(locator);
+        const value = extractValue(el, locator?.extraction);
+        if (value == null || value === '') return;
+        if (!values.includes(value)) values.push(value);
+      });
+      if (!values.length) return;
+      data.fields[field.fieldKey] = values.length === 1 ? values[0] : values;
     });
-
-    if (Object.keys(sizeBucket).length) {
-      data.sizes = [sizeBucket];
-    }
 
     const images = [];
     (state.config?.images || []).forEach((imageSel) => {
@@ -2606,7 +3129,7 @@
   async function runAutoScrapeTab() {
     const cleanUrl = stripScrapeFlag(location.href);
     const requiredLocators = [
-      ...(state.config?.product?.fields || []).map((field) => field.locator),
+      ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
       ...(state.config?.images || []).map((image) => image.locator),
     ].filter(Boolean);
 
@@ -2668,6 +3191,7 @@
       return;
     }
 
+    loadExtractPrefs();
     await loadSchemaAndConfig();
     renderPanel();
 
@@ -2679,6 +3203,7 @@
     });
 
     setInterval(() => {
+      tickExtraction();
       if (state.mode === 'extract') updateExtractStatus();
     }, 1000);
   }
