@@ -8,11 +8,23 @@ type NoteColumnsProps = {
   scentType?: string | null
 }
 
-const STAGES = [
+const PYRAMID_STAGES = [
   { key: 'top', label: 'Top notes' },
   { key: 'middle', label: 'Middle notes' },
   { key: 'base', label: 'Base notes' },
 ] as const
+
+type PyramidStageKey = (typeof PYRAMID_STAGES)[number]['key']
+
+const PYRAMID_STAGE_KEYS = new Set<string>(PYRAMID_STAGES.map((stage) => stage.key))
+
+function isPyramidStaged(stage: string | null): stage is PyramidStageKey {
+  return stage !== null && PYRAMID_STAGE_KEYS.has(stage)
+}
+
+function sortByPosition(notes: ScentProfileNote[]) {
+  return [...notes].sort((a, b) => (a.position_index ?? 0) - (b.position_index ?? 0))
+}
 
 function NoteSwatch({ note }: { note: ScentProfileNote['note'] }) {
   return (
@@ -33,17 +45,35 @@ function NoteItem({ note }: { note: ScentProfileNote }) {
   )
 }
 
+function NoteList({ notes }: { notes: ScentProfileNote[] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      {notes.map((item) => (
+        <NoteItem key={item.note.slug} note={item} />
+      ))}
+    </div>
+  )
+}
+
 export function NoteColumns({ notes, accords, scentType }: NoteColumnsProps) {
-  const stagesWithNotes = STAGES.map((stage) => ({
+  const stagedNotes = notes.filter((item) => isPyramidStaged(item.pyramid_stage))
+  const unstagedNotes = sortByPosition(notes.filter((item) => !isPyramidStaged(item.pyramid_stage)))
+
+  const stagesWithNotes = PYRAMID_STAGES.map((stage) => ({
     ...stage,
-    items: notes.filter((item) => item.pyramid_stage === stage.key),
+    items: sortByPosition(stagedNotes.filter((item) => item.pyramid_stage === stage.key)),
   })).filter((stage) => stage.items.length > 0)
 
   const sortedAccords = [...accords].sort(
     (a, b) => (a.position_index ?? 0) - (b.position_index ?? 0),
   )
 
-  if (stagesWithNotes.length === 0 && sortedAccords.length === 0 && !scentType) {
+  if (
+    stagesWithNotes.length === 0 &&
+    unstagedNotes.length === 0 &&
+    sortedAccords.length === 0 &&
+    !scentType
+  ) {
     return null
   }
 
@@ -71,16 +101,19 @@ export function NoteColumns({ notes, accords, scentType }: NoteColumnsProps) {
                   <Label>{stage.label}</Label>
                 </th>
                 <td className="py-4 align-top">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                    {stage.items.map((item) => (
-                      <NoteItem key={item.note.slug} note={item} />
-                    ))}
-                  </div>
+                  <NoteList notes={stage.items} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      ) : null}
+
+      {unstagedNotes.length > 0 ? (
+        <div>
+          <Label className="mb-3 block">Notes</Label>
+          <NoteList notes={unstagedNotes} />
+        </div>
       ) : null}
 
       {sortedAccords.length > 0 ? (

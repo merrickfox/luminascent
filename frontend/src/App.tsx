@@ -6,6 +6,7 @@ import { BrandsPage } from './pages/BrandsPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProductPage } from './pages/ProductPage'
+import { ProductPageV2 } from './pages/ProductPageV2'
 
 export default function App() {
   return (
@@ -14,7 +15,8 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="brands" element={<BrandsPage />} />
         <Route path="brands/:slug" element={<BrandPage />} />
-        <Route path="products/:slug" element={<ProductPage />} />
+        <Route path="products/:slug" element={<ProductPageV2 />} />
+        <Route path="products/:slug/v1" element={<ProductPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

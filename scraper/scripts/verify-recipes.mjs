@@ -37,6 +37,7 @@ function normalizeText(value) {
 
 const INSTANCE_ATTR_PATTERNS = [
   /^id$/i, /^data-id$/i, /^data-product-id$/i, /^data-price-amount$/i,
+  /^data-product-base-price$/i, /^data-price$/i,
   /^data-option-selected$/i, /^data-attribute-id$/i, /^href$/i, /^src$/i,
   /^title$/i, /^alt$/i,
 ];
@@ -48,8 +49,24 @@ function isLumiscrapeToken(token) {
 function isInstanceSpecificAttr(name, value) {
   if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
   if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
+  if (/^data-.*price/i.test(name) && /^[\d.]+$/.test(String(value || '').trim())) return true;
   if (name === 'class' && /\d{3,}/.test(String(value || ''))) return true;
   return false;
+}
+
+function isMainContentRegion(el) {
+  if (!el) return false;
+  return !!el.closest('main, [role="main"], #contentarea, #content, .page-main, .main-content');
+}
+
+function isRecommendationRegion(el) {
+  if (!el) return false;
+  return !!el.closest('.tile-pricing-wrapper, .product-tile, .swiper-recommendations, [class*="recommendation"]');
+}
+
+function isProductDetailPrice(el) {
+  if (!el) return false;
+  return !!el.closest('.product-detail, .prices-add-to-cart-actions, .add-to-cart-sticky-wrapper, .price-and-qty-wrapper');
 }
 
 function filterRecipeAttrs(attrs) {
@@ -301,6 +318,21 @@ function scoreLocatorMatch(candidate, locator) {
     if (overlap >= 2) evidence += Math.min(overlap, 5);
   }
 
+  if (locator.relativePathFromAnchor && locator.anchorAttrs) {
+    const resolved = resolveFromAnchorPath(document, {
+      anchorAttrs: locator.anchorAttrs,
+      relativePathFromAnchor: locator.relativePathFromAnchor,
+    }, locator.tag);
+    if (resolved === candidate) {
+      score += 10;
+      evidence += 8;
+    }
+  }
+
+  if (isMainContentRegion(candidate)) score += 5;
+  if (isProductDetailPrice(candidate)) score += 8;
+  if (isRecommendationRegion(candidate)) score -= 10;
+
   return { score, evidence };
 }
 
@@ -520,5 +552,27 @@ if (adpNoteText.startsWith('Diffuse enchanting scents')) {
 }
 
 console.log('PASS: acquadiparma accordion description and tasting notes resolve independently');
+
+loadDom('sites/acquadiparma_com/example-pages/product.html', 'www.acquadiparma.com');
+const adpPrice71El = findLocator(adpFieldByKey('price_amount')?.locators[0]);
+const adpPrice71Text = normalizeText(adpPrice71El?.textContent || '');
+if (!adpPrice71El || !adpPrice71Text.includes('71')) {
+  fail('acquadiparma price_amount did not resolve on £71 product page', adpPrice71Text);
+}
+if (isRecommendationRegion(adpPrice71El)) {
+  fail('acquadiparma price_amount on £71 product page resolved to recommendation tile', adpPrice71Text);
+}
+console.log('PASS: acquadiparma price_amount resolves to main PDP price on £71 product');
+
+loadDom('sites/acquadiparma_com/example-pages/acropora.html', 'www.acquadiparma.com');
+const adpPriceHighEl = findLocator(adpFieldByKey('price_amount')?.locators[0]);
+const adpPriceHighText = normalizeText(adpPriceHighEl?.textContent || '');
+if (!adpPriceHighEl || !adpPriceHighText.includes('1,383')) {
+  fail('acquadiparma price_amount resolved to recommendation tile instead of PDP price', adpPriceHighText);
+}
+if (isRecommendationRegion(adpPriceHighEl)) {
+  fail('acquadiparma price_amount on acropora resolved to recommendation tile', adpPriceHighText);
+}
+console.log('PASS: acquadiparma price_amount resolves to main PDP price on high-price product');
 
 console.log('\nAll recipe checks passed.');

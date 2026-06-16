@@ -1,0 +1,16 @@
+{
+  "provider": "ollama",
+  "model": "granite4:micro",
+  "baseUrl": "http://localhost:11434",
+  "schema": "candle",
+  "concurrency": 2,
+  "numCtx": 8192,
+  "numPredict": 2048,
+  "defaults": {
+    "category_slug": "candle"
+  },
+  "push": {
+    "backendUrl": "http://localhost:8023",
+    "apiKey": "dev-admin-key"
+  }
+}

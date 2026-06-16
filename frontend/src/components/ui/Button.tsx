@@ -10,6 +10,8 @@ type ButtonProps = {
   type?: 'button' | 'submit'
   onClick?: () => void
   disabled?: boolean
+  iconOnly?: boolean
+  'aria-label'?: string
 }
 
 type ButtonLinkProps = {
@@ -27,7 +29,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 }
 
 const baseClasses =
-  'inline-flex h-12 items-center justify-center rounded-[var(--radius-button)] px-6 text-sm tracking-wide transition-all duration-300 ease-out'
+  'inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-button)] text-sm tracking-wide transition-all duration-300 ease-out'
 
 export function Button({
   children,
@@ -36,13 +38,22 @@ export function Button({
   type = 'button',
   onClick,
   disabled,
+  iconOnly,
+  'aria-label': ariaLabel,
 }: ButtonProps) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={cn(baseClasses, variantClasses[variant], disabled && 'opacity-50', className)}
+      aria-label={ariaLabel}
+      className={cn(
+        baseClasses,
+        iconOnly ? 'w-12 px-0' : 'px-6',
+        variantClasses[variant],
+        disabled && 'opacity-50',
+        className,
+      )}
     >
       {children}
     </button>
@@ -51,7 +62,7 @@ export function Button({
 
 export function ButtonLink({ children, to, variant = 'primary', className }: ButtonLinkProps) {
   return (
-    <Link to={to} className={cn(baseClasses, variantClasses[variant], className)}>
+    <Link to={to} className={cn(baseClasses, 'px-6', variantClasses[variant], className)}>
       {children}
     </Link>
   )

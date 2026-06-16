@@ -30,11 +30,17 @@ const scrapedAccordSchema = z.object({
 	color_gradient: z.string().optional(),
 });
 
-const scrapedImageSchema = z.object({
-	source_url: z.string().url(),
-	position: z.number().int().min(0),
-	is_primary: z.boolean(),
-});
+const scrapedImageSchema = z
+	.object({
+		source_url: z.string().url().optional(),
+		data_base64: z.string().min(1).optional(),
+		content_type: z.string().optional(),
+		position: z.number().int().min(0),
+		is_primary: z.boolean(),
+	})
+	.refine((image) => Boolean(image.source_url || image.data_base64), {
+		message: 'Image must include source_url or data_base64',
+	});
 
 export const scrapedProductSchema = z
 	.object({

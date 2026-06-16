@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.3.1
+// @version      1.3.2
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -198,6 +198,8 @@
     /^data-guid$/i,
     /^data-key$/i,
     /^data-price-amount$/i,
+    /^data-product-base-price$/i,
+    /^data-price$/i,
     /^data-option-selected$/i,
     /^data-attribute-id$/i,
     /^aria-controls$/i,
@@ -218,6 +220,7 @@
   function isInstanceSpecificAttr(name, value) {
     if (INSTANCE_ATTR_PATTERNS.some((pattern) => pattern.test(name))) return true;
     if (name.startsWith('data-') && /^\d+$/.test(String(value || '').trim())) return true;
+    if (/^data-.*price/i.test(name) && /^[\d.]+$/.test(String(value || '').trim())) return true;
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ''))) {
       return true;
     }
@@ -361,6 +364,16 @@
   function isMainContentRegion(el) {
     if (!el) return false;
     return !!el.closest('main, [role="main"], #contentarea, #content, .page-main, .main-content');
+  }
+
+  function isRecommendationRegion(el) {
+    if (!el) return false;
+    return !!el.closest('.tile-pricing-wrapper, .product-tile, .swiper-recommendations, [class*="recommendation"]');
+  }
+
+  function isProductDetailPrice(el) {
+    if (!el) return false;
+    return !!el.closest('.product-detail, .prices-add-to-cart-actions, .add-to-cart-sticky-wrapper, .price-and-qty-wrapper');
   }
 
   function getMemberLinks(member) {
@@ -888,6 +901,8 @@
     if (recipeMode) {
       if (isMainContentRegion(candidate)) score += 5;
       if (isChromeRegion(candidate)) score -= 8;
+      if (isProductDetailPrice(candidate)) score += 8;
+      if (isRecommendationRegion(candidate)) score -= 10;
     }
 
     if (isVisible(candidate)) score += 1;
@@ -2898,12 +2913,20 @@
     }
   }
 
+  function openExtractTab(url) {
+    const tab = GM_openInTab(withScrapeFlag(url), {
+      active: false,
+      insert: true,
+    });
+    tab.onclose = () => {
+      markExtractResult(url, false, 'skipped');
+    };
+    return tab;
+  }
+
   function launchExtractTabs(urls) {
     urls.forEach((url) => {
-      GM_openInTab(withScrapeFlag(url), {
-        active: false,
-        insert: true,
-      });
+      openExtractTab(url);
     });
     updateExtractStatus();
   }
@@ -2936,10 +2959,7 @@
     setExtractState(extractState);
 
     nextBatch.forEach((url) => {
-      GM_openInTab(withScrapeFlag(url), {
-        active: false,
-        insert: true,
-      });
+      openExtractTab(url);
     });
     updateExtractStatus();
   }
@@ -3026,6 +3046,11 @@
   function markExtractResult(url, ok, errorMessage) {
     const normalizedUrl = stripScrapeFlag(url);
     const extractState = getExtractState();
+    const wasInFlight = extractState.inFlight.some(
+      (item) => stripScrapeFlag(item) === normalizedUrl,
+    );
+    if (!wasInFlight) return;
+
     extractState.inFlight = extractState.inFlight.filter(
       (item) => stripScrapeFlag(item) !== normalizedUrl,
     );
@@ -3175,6 +3200,10 @@
     ensureUi();
 
     if (location.hash.includes('lumiscrape=1')) {
+      window.addEventListener('pagehide', () => {
+        markExtractResult(location.href, false, 'skipped');
+      });
+
       await loadSchemaAndConfig();
       if (!state.config) {
         console.warn('[Luminascent] No config for auto scrape tab');

@@ -1,9 +1,10 @@
-'use strict';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = Number(process.env.PORT || 8777);
 const ROOT = path.resolve(__dirname, '..');
@@ -351,15 +352,13 @@ const server = http.createServer((req, res) => {
   });
 });
 
-if (require.main === module) {
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isMain) {
   server.listen(PORT, '127.0.0.1', () => {
     console.log(`Luminascent scraper server listening on http://127.0.0.1:${PORT}`);
     console.log(`Sites directory: ${SITES_DIR}`);
   });
 }
 
-module.exports = {
-  hostSlug,
-  urlSlug,
-  buildLlmInput,
-};
+export { hostSlug, urlSlug, buildLlmInput };

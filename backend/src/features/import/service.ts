@@ -103,6 +103,28 @@ async function fetchImageResponse(sourceUrl: string): Promise<{ response: Respon
 	throw new Error(`All fetch attempts failed (${attemptSummaries.join(', ')})`);
 }
 
+async function uploadImageBytes(
+	bucket: R2Bucket,
+	productId: string,
+	buffer: ArrayBuffer,
+	contentType: string,
+): Promise<{ r2Key: string; contentType: string; bytes: number }> {
+	if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
+		throw new Error(`Unsupported content type: ${contentType}`);
+	}
+
+	if (buffer.byteLength > MAX_IMAGE_BYTES) {
+		throw new Error('Image exceeds maximum size of 10MB');
+	}
+
+	const r2Key = buildImageKey(productId, contentType);
+	await bucket.put(r2Key, buffer, {
+		httpMetadata: { contentType },
+	});
+
+	return { r2Key, contentType, bytes: buffer.byteLength };
+}
+
 async function fetchAndUploadImage(
 	bucket: R2Bucket,
 	productId: string,
@@ -121,16 +143,29 @@ async function fetchAndUploadImage(
 	}
 
 	const buffer = await response.arrayBuffer();
-	if (buffer.byteLength > MAX_IMAGE_BYTES) {
-		throw new Error('Image exceeds maximum size of 10MB');
+	const uploaded = await uploadImageBytes(bucket, productId, buffer, contentType);
+
+	return { ...uploaded, userAgent };
+}
+
+async function uploadInlineImage(
+	bucket: R2Bucket,
+	productId: string,
+	dataBase64: string,
+	contentTypeHint?: string,
+): Promise<{ r2Key: string; contentType: string; bytes: number }> {
+	let contentType = contentTypeHint?.split(';')[0]?.trim() ?? '';
+	if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
+		contentType = 'image/jpeg';
 	}
 
-	const r2Key = buildImageKey(productId, contentType);
-	await bucket.put(r2Key, buffer, {
-		httpMetadata: { contentType },
-	});
+	const binary = atob(dataBase64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
 
-	return { r2Key, contentType, bytes: buffer.byteLength, userAgent };
+	return uploadImageBytes(bucket, productId, bytes.buffer, contentType);
 }
 
 async function ensureNotes(db: D1Database, notes: NonNullable<ScrapedProduct['notes']>): Promise<RefEnsureCounts> {
@@ -219,8 +254,42 @@ async function importImagesForProduct(
 	const sortedImages = [...images].sort((a, b) => a.position - b.position);
 
 	for (const image of sortedImages) {
+		const imageLabel = image.source_url ?? `inline@${image.position}`;
 		try {
-			const { r2Key, contentType, bytes, userAgent } = await fetchAndUploadImage(env.BUCKET, productId, image.source_url);
+			if (image.data_base64) {
+				const { r2Key, contentType, bytes } = await uploadInlineImage(
+					env.BUCKET,
+					productId,
+					image.data_base64,
+					image.content_type,
+				);
+				uploaded.push({
+					r2_key: r2Key,
+					position: image.position,
+					is_primary: image.is_primary,
+				});
+				details.push({
+					url: imageLabel,
+					outcome: 'uploaded',
+					r2_key: r2Key,
+					content_type: contentType,
+					bytes,
+				});
+				console.log(
+					`[import:image] product=${productId} uploaded inline image @${image.position} -> ${r2Key} (${bytes} bytes, ${contentType})`,
+				);
+				continue;
+			}
+
+			if (!image.source_url) {
+				throw new Error('Image missing source_url and data_base64');
+			}
+
+			const { r2Key, contentType, bytes, userAgent } = await fetchAndUploadImage(
+				env.BUCKET,
+				productId,
+				image.source_url,
+			);
 			uploaded.push({
 				r2_key: r2Key,
 				position: image.position,
@@ -237,9 +306,9 @@ async function importImagesForProduct(
 			console.log(`[import:image] product=${productId} uploaded ${image.source_url} -> ${r2Key} (${bytes} bytes, ${contentType})`);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Unknown error';
-			failed.push({ url: image.source_url, error: message });
-			details.push({ url: image.source_url, outcome: 'failed', error: message });
-			console.error(`[import:image] product=${productId} FAILED ${image.source_url}: ${message}`);
+			failed.push({ url: imageLabel, error: message });
+			details.push({ url: imageLabel, outcome: 'failed', error: message });
+			console.error(`[import:image] product=${productId} FAILED ${imageLabel}: ${message}`);
 		}
 	}
 

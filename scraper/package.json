@@ -2,14 +2,24 @@
   "name": "scraper",
   "version": "1.0.0",
   "description": "Blueprint-driven visual scraper using Tampermonkey + a local Node server. Teach the system once per host where product lists, fields, and images live, then extract every product automatically.",
+  "type": "module",
   "main": "index.js",
+  "bin": {
+    "scraper-pipeline": "./pipeline/cli.ts"
+  },
   "scripts": {
+    "pipeline": "tsx pipeline/cli.ts",
+    "pipeline:run": "tsx pipeline/cli.ts run",
+    "pipeline:push": "tsx pipeline/cli.ts push",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "linkedom": "^0.18.12"
+    "@types/node": "^22.15.21",
+    "linkedom": "^0.18.12",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

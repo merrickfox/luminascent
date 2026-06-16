@@ -8,7 +8,12 @@
       "label": "Source URL",
       "scope": "product",
       "cardinality": "single",
-      "type": "url"
+      "type": "url",
+      "mapsTo": "source_url",
+      "llm": {
+        "instruction": "Return the product page URL unchanged.",
+        "deterministic": true
+      }
     },
     {
       "key": "category_slug",
@@ -16,21 +21,36 @@
       "scope": "product",
       "cardinality": "single",
       "type": "text",
-      "required": true
+      "required": true,
+      "mapsTo": "category_slug",
+      "llm": {
+        "instruction": "Return the category slug (e.g. candle). Usually injected from site defaults, not extracted from page text.",
+        "optional": true
+      }
     },
     {
       "key": "brand_name",
       "label": "Brand Name",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "brand_name",
+      "llm": {
+        "instruction": "Return the brand display name. Usually injected from site defaults, not extracted from page text.",
+        "optional": true
+      }
     },
     {
       "key": "brand_slug",
       "label": "Brand Slug",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "brand_slug",
+      "llm": {
+        "instruction": "Return a URL-safe slug for the brand. Usually derived from brand_name.",
+        "deterministic": true
+      }
     },
     {
       "key": "name",
@@ -38,112 +58,186 @@
       "scope": "product",
       "cardinality": "single",
       "type": "text",
-      "required": true
+      "required": true,
+      "mapsTo": "name",
+      "llm": {
+        "instruction": "Extract the clean product title. Remove category prefixes, size suffixes, and navigation noise. Title-case appropriately."
+      }
     },
     {
       "key": "slug",
       "label": "Product Slug",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "slug",
+      "llm": {
+        "instruction": "Return a URL-safe slug derived from the product name.",
+        "deterministic": true
+      }
     },
     {
       "key": "description",
       "label": "Description",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "description",
+      "llm": {
+        "instruction": "Extract clean marketing copy in full sentences. Exclude dimensions, weight, burn time, packaging, safety warnings, navigation, prices, and SKUs."
+      }
     },
     {
       "key": "scent_summary",
       "label": "Scent Summary",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "scent_summary",
+      "llm": {
+        "instruction": "Return a short phrase describing the overall scent character (e.g. from 'Olfactive Family: Woody Aromatic' extract 'Woody Aromatic'). Not the accord list or note list.",
+        "optional": true
+      }
     },
     {
       "key": "release_year",
       "label": "Release Year",
       "scope": "product",
       "cardinality": "single",
-      "type": "number"
+      "type": "number",
+      "mapsTo": "release_year",
+      "llm": {
+        "instruction": "Extract the release year as a 4-digit integer, or null if not stated.",
+        "optional": true
+      }
     },
     {
       "key": "wax_type",
       "label": "Wax Type",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "wax_type",
+      "llm": {
+        "instruction": "Return exactly one of: soy, paraffin, beeswax, coconut, palm, blend, other — or null if not stated. Use blend for unspecified wax mixtures.",
+        "optional": true
+      }
     },
     {
       "key": "vessel_material",
       "label": "Vessel Material",
       "scope": "product",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "vessel_material",
+      "llm": {
+        "instruction": "Return the vessel/container material (glass, ceramic, tin, metal, concrete, porcelain, wood) or null if not stated.",
+        "optional": true
+      }
     },
     {
       "key": "is_discontinued",
       "label": "Is Discontinued",
       "scope": "product",
       "cardinality": "single",
-      "type": "boolean"
+      "type": "boolean",
+      "mapsTo": "is_discontinued",
+      "llm": {
+        "instruction": "Return true only if the product is explicitly marked discontinued or out of production. Otherwise false.",
+        "optional": true
+      }
     },
     {
       "key": "size_value",
       "label": "Size Value",
       "scope": "size",
       "cardinality": "single",
-      "type": "number"
+      "type": "number",
+      "mapsTo": "sizes[].size_value",
+      "llm": {
+        "instruction": "Extract numeric size value(s). For multiple variants (e.g. 200G 500G), return a JSON array of numbers."
+      }
     },
     {
       "key": "size_unit",
       "label": "Size Unit",
       "scope": "size",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "sizes[].size_unit",
+      "llm": {
+        "instruction": "Extract the size unit (g, oz, etc.) it should be one unit only, do not return multiple units"
+      }
     },
     {
       "key": "size_grams",
       "label": "Size (grams)",
       "scope": "size",
       "cardinality": "single",
-      "type": "number"
+      "type": "number",
+      "mapsTo": "sizes[].size_grams",
+      "llm": {
+        "instruction": "Extract size in grams as integer(s). Convert from oz if needed (1 oz ≈ 28.35g). Return a number or array aligned with size variants.",
+        "optional": true
+      }
     },
     {
       "key": "price_amount",
       "label": "Price",
       "scope": "size",
       "cardinality": "single",
-      "type": "currency"
+      "type": "currency",
+      "mapsTo": "sizes[].price_amount",
+      "llm": {
+        "instruction": "Extract price as integer minor units (pence/cents). Example: £71.00 -> 7100, $24.50 -> 2450. Return a number or array aligned with size variants."
+      }
     },
     {
       "key": "price_currency",
       "label": "Price Currency",
       "scope": "size",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "sizes[].price_currency",
+      "llm": {
+        "instruction": "Return ISO 4217 currency code(s). Example: £ -> GBP, $ -> USD, € -> EUR. Return a string or array aligned with size variants."
+      }
     },
     {
       "key": "burn_time_hours",
       "label": "Burn Time (hours)",
       "scope": "size",
       "cardinality": "single",
-      "type": "number"
+      "type": "number",
+      "mapsTo": "sizes[].burn_time_hours",
+      "llm": {
+        "instruction": "Extract burn time in whole hours (e.g. 'up to 50 hours' -> 50). Return a number or array aligned with size variants.",
+        "optional": true
+      }
     },
     {
       "key": "sku",
       "label": "SKU",
       "scope": "size",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "sizes[].sku",
+      "llm": {
+        "instruction": "Extract SKU or product code if present. Return a string or array aligned with size variants.",
+        "optional": true
+      }
     },
     {
       "key": "availability",
       "label": "Availability",
       "scope": "size",
       "cardinality": "single",
-      "type": "text"
+      "type": "text",
+      "mapsTo": "sizes[].availability",
+      "llm": {
+        "instruction": "Extract availability status (InStock, OutOfStock, PreOrder, etc.) or null.",
+        "optional": true
+      }
     },
     {
       "key": "size_source_url",
@@ -151,7 +245,11 @@
       "scope": "size",
       "cardinality": "single",
       "type": "url",
-      "mapsTo": "source_url"
+      "mapsTo": "sizes[].source_url",
+      "llm": {
+        "instruction": "Extract variant-specific URL if present, otherwise null.",
+        "optional": true
+      }
     },
     {
       "key": "note_name",
@@ -159,7 +257,10 @@
       "scope": "note",
       "cardinality": "multiple",
       "type": "text",
-      "mapsTo": "notes[].name"
+      "mapsTo": "notes[].name",
+      "llm": {
+        "instruction": "Extract individual fragrance notes/ingredients as a JSON array (e.g. ['Italian lemon', 'Mint leaves']). Do NOT include olfactive family lines or broad accords."
+      }
     },
     {
       "key": "note_slug",
@@ -167,7 +268,11 @@
       "scope": "note",
       "cardinality": "multiple",
       "type": "text",
-      "mapsTo": "notes[].note_slug"
+      "mapsTo": "notes[].note_slug",
+      "llm": {
+        "instruction": "Derived from note_name slugs.",
+        "deterministic": true
+      }
     },
     {
       "key": "note_pyramid_stage",
@@ -175,7 +280,11 @@
       "scope": "note",
       "cardinality": "multiple",
       "type": "text",
-      "mapsTo": "notes[].pyramid_stage"
+      "mapsTo": "notes[].pyramid_stage",
+      "llm": {
+        "instruction": "For each note, assign pyramid stage: top, middle, base, general, or unknown. Map Top->top, Heart/Middle->middle, Base->base. Return a JSON array aligned with note_name.",
+        "optional": true
+      }
     },
     {
       "key": "accord_name",
@@ -183,7 +292,10 @@
       "scope": "accord",
       "cardinality": "multiple",
       "type": "text",
-      "mapsTo": "accords[].name"
+      "mapsTo": "accords[].name",
+      "llm": {
+        "instruction": "Extract broad fragrance accords/families as a JSON array (woody, citrus, floral, gourmand, amber, green, aromatic, etc.). Infer from copy when an explicit accord list exists."
+      }
     },
     {
       "key": "accord_slug",
@@ -191,14 +303,23 @@
       "scope": "accord",
       "cardinality": "multiple",
       "type": "text",
-      "mapsTo": "accords[].accord_slug"
+      "mapsTo": "accords[].accord_slug",
+      "llm": {
+        "instruction": "Derived from accord_name slugs.",
+        "deterministic": true
+      }
     },
     {
       "key": "image",
       "label": "Product Image",
       "scope": "image",
       "cardinality": "multiple",
-      "type": "url"
+      "type": "url",
+      "mapsTo": "images[].source_url",
+      "llm": {
+        "instruction": "Images are assembled from scraped files, not LLM.",
+        "deterministic": true
+      }
     }
   ],
   "containmentModes": ["also_contains", "sometimes_contains"]
