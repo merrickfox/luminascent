@@ -1,6 +1,9 @@
 import type { ProductV2View } from '../../../lib/productViewV2'
 import { DataCard } from '../../ui/DataCard'
 import { SectionTitle } from '../../ui/SectionTitle'
+import { AwaitingVotes } from './AwaitingVotes'
+import { ContributeLink } from './ContributeLink'
+import { GHOST_DAY_NIGHT, GHOST_SEASONS } from './ghostData'
 import { SeasonBars } from './SeasonBars'
 
 type SeasonalityCardProps = {
@@ -9,13 +12,25 @@ type SeasonalityCardProps = {
 }
 
 export function SeasonalityCard({ seasons, dayNight }: SeasonalityCardProps) {
+  const hasVotes = seasons.length > 0
+
   return (
     <DataCard>
-      <SectionTitle hint="When members burn it">Seasonality</SectionTitle>
-      {seasons.length > 0 ? (
+      <SectionTitle
+        hint={hasVotes ? 'When members burn it' : 'No votes yet'}
+        cta={hasVotes ? <ContributeLink label="Add yours" /> : undefined}
+      >
+        Seasonality
+      </SectionTitle>
+
+      {hasVotes ? (
         <SeasonBars seasons={seasons} dayNight={dayNight} />
       ) : (
-        <p className="text-sm text-text-secondary">Not enough seasonal votes yet.</p>
+        <AwaitingVotes
+          title="When do you reach for it?"
+          body="Tell us the seasons and time of day this candle suits best."
+          ghost={<SeasonBars seasons={GHOST_SEASONS} dayNight={GHOST_DAY_NIGHT} />}
+        />
       )}
     </DataCard>
   )

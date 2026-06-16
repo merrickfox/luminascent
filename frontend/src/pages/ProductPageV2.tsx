@@ -72,7 +72,7 @@ export function ProductPageV2() {
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
           <CompositionCard pyramid={view.pyramid} accords={view.accords} />
           <div className="flex flex-col gap-8">
-            <CommunityProfileCard votes={view.votes} memberCount={view.rating.count} />
+            <CommunityProfileCard votes={view.votes} />
             <SeasonalityCard seasons={view.seasons} dayNight={view.dayNight} />
           </div>
         </div>

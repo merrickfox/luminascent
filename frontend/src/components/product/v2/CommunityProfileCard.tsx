@@ -1,27 +1,45 @@
 import type { ProductV2View } from '../../../lib/productViewV2'
 import { DataCard } from '../../ui/DataCard'
 import { SectionTitle } from '../../ui/SectionTitle'
+import { AwaitingVotes } from './AwaitingVotes'
+import { ContributeLink } from './ContributeLink'
+import { GHOST_VOTES } from './ghostData'
 import { VoteDimension } from './VoteDimension'
 
 type CommunityProfileCardProps = {
   votes: ProductV2View['votes']
-  memberCount: number
 }
 
-export function CommunityProfileCard({ votes, memberCount }: CommunityProfileCardProps) {
+export function CommunityProfileCard({ votes }: CommunityProfileCardProps) {
+  const hasVotes = votes.length > 0
+
   return (
     <DataCard>
-      <SectionTitle hint={memberCount > 0 ? `${memberCount} members` : undefined}>
+      <SectionTitle
+        hint={hasVotes ? undefined : 'No votes yet'}
+        cta={hasVotes ? <ContributeLink label="Add your vote" /> : undefined}
+      >
         Community profile
       </SectionTitle>
-      {votes.length > 0 ? (
+
+      {hasVotes ? (
         <div className="-mt-[1.1rem]">
           {votes.map((d) => (
             <VoteDimension key={d.dimension} dim={d} />
           ))}
         </div>
       ) : (
-        <p className="text-sm text-text-secondary">No community votes yet — be the first to weigh in.</p>
+        <AwaitingVotes
+          title="How does it perform?"
+          body="Share how this candle throws, burns, and lasts. Your vote builds the profile."
+          ghost={
+            <div className="-mt-[1.1rem]">
+              {GHOST_VOTES.map((d) => (
+                <VoteDimension key={d.dimension} dim={d} />
+              ))}
+            </div>
+          }
+        />
       )}
     </DataCard>
   )
