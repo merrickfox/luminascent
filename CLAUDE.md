@@ -102,6 +102,7 @@ LLM providers are pluggable (`pipeline/providers/`): `ollama` is the working def
 - **Cloudflare specifics** — read `backend/AGENTS.md` before touching Workers, bindings, or wrangler config; Workers runtime APIs/limits change, so verify against current Cloudflare docs.
 - **Naming** — worker `luminascent-backend`; Pages projects `luminascent-admin-panel` and `luminascent-frontend`.
 - **Typecheck** for frontend packages is `npm run build` (`tsc -b`); there is no separate typecheck script.
+- **Commit after completing work** — once a task is done and verified, commit the changes with a clear, scoped message (stage only the files for that task; don't `git add -A` unrelated work into the same commit). Do not push unless asked.
 
 ## Undecided (confirm with the user before baking in)
 
