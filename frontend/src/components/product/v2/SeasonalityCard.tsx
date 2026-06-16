@@ -1,7 +1,7 @@
 import type { ProductV2View } from '../../../lib/productViewV2'
 import { DataCard } from '../../ui/DataCard'
 import { SectionTitle } from '../../ui/SectionTitle'
-import { AwaitingVotes } from './AwaitingVotes'
+import { ContributeInvite } from './ContributeInvite'
 import { ContributeLink } from './ContributeLink'
 import { GHOST_DAY_NIGHT, GHOST_SEASONS } from './ghostData'
 import { SeasonBars } from './SeasonBars'
@@ -26,7 +26,7 @@ export function SeasonalityCard({ seasons, dayNight }: SeasonalityCardProps) {
       {hasVotes ? (
         <SeasonBars seasons={seasons} dayNight={dayNight} />
       ) : (
-        <AwaitingVotes
+        <ContributeInvite
           title="When do you reach for it?"
           body="Tell us the seasons and time of day this candle suits best."
           ghost={<SeasonBars seasons={GHOST_SEASONS} dayNight={GHOST_DAY_NIGHT} />}

@@ -1,7 +1,7 @@
 import type { ProductV2View } from '../../../lib/productViewV2'
 import { DataCard } from '../../ui/DataCard'
 import { SectionTitle } from '../../ui/SectionTitle'
-import { AwaitingVotes } from './AwaitingVotes'
+import { ContributeInvite } from './ContributeInvite'
 import { ContributeLink } from './ContributeLink'
 import { GHOST_VOTES } from './ghostData'
 import { VoteDimension } from './VoteDimension'
@@ -29,7 +29,7 @@ export function CommunityProfileCard({ votes }: CommunityProfileCardProps) {
           ))}
         </div>
       ) : (
-        <AwaitingVotes
+        <ContributeInvite
           title="How does it perform?"
           body="Share how this candle throws, burns, and lasts. Your vote builds the profile."
           ghost={

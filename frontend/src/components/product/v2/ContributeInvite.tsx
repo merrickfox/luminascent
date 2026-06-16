@@ -1,22 +1,34 @@
 import { Button } from '../../ui/Button'
 
-type AwaitingVotesProps = {
-  /** Decorative chart markup rendered as a faint, blurred backdrop. */
+type ContributeInviteProps = {
+  /** Decorative chart/content markup rendered as a faint, blurred backdrop. */
   ghost: React.ReactNode
+  eyebrow?: string
   title: string
   body: string
+  ctaLabel?: string
+  /** Minimum body height so sibling empty cards line up. */
+  minHeight?: number
 }
 
 // Denser behind the headline for legibility, fading at the edges so the ghost
-// bars read through — mirrors the design's radial scrim.
+// content reads through — the shared "awaiting data" scrim.
 const scrim =
   'radial-gradient(115% 85% at 50% 50%, color-mix(in srgb, var(--color-surface) 82%, transparent) 32%, color-mix(in srgb, var(--color-surface) 32%, transparent) 100%)'
 
-/** No-vote empty state: an invitation floated over abstract ghost data.
- *  Voting submission isn't wired yet — the button is a visual CTA for now. */
-export function AwaitingVotes({ ghost, title, body }: AwaitingVotesProps) {
+/** Empty-data invitation floated over abstract ghost content. Used wherever a
+ *  product is awaiting community contributions (votes, seasonality, reviews).
+ *  Submission UIs aren't wired yet — the button is a visual CTA for now. */
+export function ContributeInvite({
+  ghost,
+  eyebrow = 'Awaiting votes',
+  title,
+  body,
+  ctaLabel = 'Be the first to vote',
+  minHeight = 300,
+}: ContributeInviteProps) {
   return (
-    <div className="relative min-h-[300px]">
+    <div className="relative" style={{ minHeight }}>
       <div
         aria-hidden
         className="select-none"
@@ -30,7 +42,7 @@ export function AwaitingVotes({ ghost, title, body }: AwaitingVotesProps) {
         style={{ background: scrim }}
       >
         <span className="mb-3.5 text-xs font-medium uppercase tracking-[0.12em] text-accent">
-          Awaiting votes
+          {eyebrow}
         </span>
         <p className="m-0 max-w-[320px] font-display text-[1.625rem] font-normal leading-tight text-text">
           {title}
@@ -38,7 +50,7 @@ export function AwaitingVotes({ ghost, title, body }: AwaitingVotesProps) {
         <p className="mx-0 mb-7 mt-3 max-w-[300px] text-sm leading-relaxed text-text-secondary">
           {body}
         </p>
-        <Button variant="primary">Be the first to vote</Button>
+        <Button variant="primary">{ctaLabel}</Button>
       </div>
     </div>
   )
