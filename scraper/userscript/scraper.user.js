@@ -2408,7 +2408,6 @@
     });
 
     panelEl.querySelector('#lumiscrape-exclude')?.addEventListener('click', () => {
-      if (!window.confirm(`Exclude ${state.host} from scraping? The scraper UI will no longer appear on this site.`)) return;
       excludeHost(state.host);
       shadowRoot?.host?.remove();
       shadowRoot = null;
