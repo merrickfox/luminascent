@@ -88,7 +88,10 @@ function coerceScalar(value: unknown, type: FieldType): unknown {
 function coerceValue(value: unknown, field: SchemaField): unknown {
   if (field.cardinality === 'multiple') {
     const arr = Array.isArray(value) ? value : value == null ? [] : [value];
-    return arr.map((item) => coerceScalar(item, field.type)).filter((item) => item != null && item !== '');
+    const cleaned = arr
+      .map((item) => coerceScalar(item, field.type))
+      .filter((item) => item != null && item !== '');
+    return field.maxItems != null ? cleaned.slice(0, field.maxItems) : cleaned;
   }
   return coerceScalar(value, field.type);
 }
@@ -134,6 +137,51 @@ function buildDerivedPrompt(
     'Parent raw value:',
     '"""',
     parentValue.slice(0, 12000),
+    '"""',
+    '',
+    'Return JSON: {"value": ...}',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Prompt for a field that may live in more than one place. Sites are
+ * inconsistent about where they put data (accords in the blurb on one page, in
+ * a tasting-notes block on the next), so when a field is derived from several
+ * sources we hand the LLM every candidate section in one pass and let it find
+ * the value wherever it is — or union the matches for multi-value fields.
+ */
+function buildMultiSourceDerivedPrompt(
+  field: SchemaField,
+  sources: Array<{ label: string; value: string }>,
+  confidence: 'also' | 'sometimes',
+): string {
+  const instruction = field.llm?.instruction ?? `Extract ${field.label} from the sections below.`;
+  const optionalNote =
+    confidence === 'sometimes'
+      ? 'This field may be absent from every section. Return {"value": null} (or {"value": []}) if not found.'
+      : '';
+  const combineNote =
+    field.cardinality === 'multiple'
+      ? 'The value may appear in one section or be split across several — merge all matches into a single de-duplicated array.'
+      : 'The value may appear in any one of the sections — return the single best value found.';
+  const sections = sources.map((source) =>
+    [`--- Source: ${source.label} ---`, source.value.slice(0, 8000)].join('\n'),
+  );
+
+  return [
+    `Extract one field that may appear in ANY of the sections below.`,
+    `Target field: ${field.label} (${field.key})`,
+    `Type: ${field.type}`,
+    `Cardinality: ${field.cardinality}`,
+    `Instruction: ${instruction}`,
+    combineNote,
+    optionalNote,
+    '',
+    'Sections:',
+    '"""',
+    sections.join('\n\n'),
     '"""',
     '',
     'Return JSON: {"value": ...}',
@@ -389,34 +437,58 @@ export async function extractProduct(options: {
     }
   }
 
+  // Group derived targets by the field they populate. A field can be tagged as
+  // contained in several parents (e.g. accords that some pages put in the blurb
+  // and others in a tasting-notes block); resolving it in one pass over all
+  // candidate sources beats the old first-source-wins, which silently dropped
+  // every source after the first to return anything.
+  const derivedByField = new Map<string, LlmInputDerivedTarget[]>();
   for (const target of llmInput.derived_targets) {
-    const schemaField = fieldMap.get(target.fieldKey);
+    const list = derivedByField.get(target.fieldKey);
+    if (list) list.push(target);
+    else derivedByField.set(target.fieldKey, [target]);
+  }
+
+  for (const [fieldKey, targets] of derivedByField) {
+    const schemaField = fieldMap.get(fieldKey);
     if (!schemaField || shouldSkipLlm(schemaField)) continue;
-    if (scopedKeys.has(target.fieldKey)) continue;
+    if (scopedKeys.has(fieldKey)) continue;
 
-    const parentValue = parentValues.get(target.derive_from);
-    if (!parentValue?.trim()) continue;
+    // An explicit direct tag wins; derived inference only fills gaps.
+    if (fields[fieldKey] != null && fields[fieldKey] !== '') continue;
 
-    if (fields[target.fieldKey] != null && fields[target.fieldKey] !== '') {
-      continue;
+    // Collect distinct, non-empty candidate sources for this field.
+    const sources: Array<{ label: string; value: string }> = [];
+    const seenText = new Set<string>();
+    let anyAlso = false;
+    for (const target of targets) {
+      const parentValue = parentValues.get(target.derive_from);
+      if (!parentValue?.trim() || seenText.has(parentValue)) continue;
+      seenText.add(parentValue);
+      sources.push({
+        label: fieldMap.get(target.derive_from)?.label ?? target.derive_from,
+        value: parentValue,
+      });
+      if (target.confidence === 'also') anyAlso = true;
     }
+    if (sources.length === 0) continue;
+
+    const confidence = anyAlso ? 'also' : 'sometimes';
 
     try {
-      const prompt = buildDerivedPrompt(
-        schemaField,
-        target.derive_from,
-        parentValue,
-        target.confidence,
-      );
+      const prompt =
+        sources.length === 1
+          ? buildDerivedPrompt(schemaField, targets[0].derive_from, sources[0].value, confidence)
+          : buildMultiSourceDerivedPrompt(schemaField, sources, confidence);
       passes += 1;
       const llmValue = await callFieldLlm(options.provider, prompt);
       const coerced = coerceValue(llmValue, schemaField);
       if (coerced != null && coerced !== '' && !(Array.isArray(coerced) && coerced.length === 0)) {
-        fields[target.fieldKey] = coerced;
+        fields[fieldKey] = coerced;
       }
     } catch (error) {
       errors.push({
-        fieldKey: target.fieldKey,
+        fieldKey,
         error: error instanceof Error ? error.message : String(error),
       });
     }

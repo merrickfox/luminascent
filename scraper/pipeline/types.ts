@@ -17,6 +17,8 @@ export interface SchemaField {
   type: FieldType;
   required?: boolean;
   mapsTo?: string;
+  /** Hard cap on emitted values for multiple-cardinality fields (extra values are dropped). */
+  maxItems?: number;
   llm?: SchemaLlmConfig;
 }
 
