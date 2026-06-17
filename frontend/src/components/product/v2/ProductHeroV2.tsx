@@ -49,9 +49,9 @@ export function ProductHeroV2({ view, images, fallbackUrl }: ProductHeroV2Props)
             label={view.rating.count > 0 ? `${view.rating.count} ratings` : 'No ratings yet'}
             icon="star"
           />
-          <Stat value={burnValue} unit="hrs" label="Burn time" />
-          <Stat value={view.year != null ? String(view.year) : null} label="Released" />
-          <Stat value={view.perfumer} label="Perfumer" wide />
+          {burnValue ? <Stat value={burnValue} unit="hrs" label="Burn time" /> : null}
+          {view.year != null ? <Stat value={String(view.year)} label="Released" /> : null}
+          {view.perfumer ? <Stat value={view.perfumer} label="Perfumer" wide /> : null}
         </div>
 
         {view.accordChips.length > 0 ? (

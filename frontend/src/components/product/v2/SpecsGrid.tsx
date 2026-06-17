@@ -1,4 +1,5 @@
 import type { ProductV2View } from '../../../lib/productViewV2'
+import { cn } from '../../../lib/utils'
 import { DataCard } from '../../ui/DataCard'
 import { Label } from '../../ui/Label'
 
@@ -6,25 +7,34 @@ type SpecsGridProps = {
   specs: ProductV2View['specs']
 }
 
-/** 4-up specification grid. Hairlines come from a 1px gap over a border-tinted
- *  background, so cells stay clean as they wrap. Unbacked cells show a dash. */
+// Column count tracks how many cells actually have data, so the row fills out
+// cleanly whether there's one field or eight (indexed by count, capped at 4).
+const COL_CLASS = [
+  'grid-cols-1',
+  'grid-cols-1',
+  'grid-cols-2',
+  'grid-cols-2 md:grid-cols-3',
+  'grid-cols-2 md:grid-cols-4',
+] as const
+
+/** Specification grid — only cells with data are shown. Hairlines are drawn per
+ *  cell (top/left) with a 1px negative offset so they tuck under the card border;
+ *  this keeps partial rows clean and looks good at any count, even a single field. */
 export function SpecsGrid({ specs }: SpecsGridProps) {
+  const filled = specs.filter((s) => s.value)
+  if (filled.length === 0) return null
+
+  const colClass = COL_CLASS[Math.min(filled.length, 4)]
+
   return (
     <DataCard flush>
-      <div className="grid grid-cols-2 gap-px bg-border md:grid-cols-4">
-        {specs.map((s) => (
-          <div key={s.label} className="bg-surface p-6">
+      <div className={cn('-ml-px -mt-px grid', colClass)}>
+        {filled.map((s) => (
+          <div key={s.label} className="border-l border-t border-border bg-surface p-6">
             <Label className="mb-2 block">{s.label}</Label>
-            {s.value ? (
-              <span className="font-display text-xl text-text">{s.value}</span>
-            ) : (
-              <span
-                className="font-display text-xl text-text-secondary/50"
-                title="Not recorded yet"
-              >
-                —
-              </span>
-            )}
+            <span className={cn('font-display text-xl text-text', s.lowercase && 'lowercase')}>
+              {s.value}
+            </span>
           </div>
         ))}
       </div>

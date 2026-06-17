@@ -1,5 +1,5 @@
 import type { ProductSize } from '../../types/api'
-import { formatPrice, formatSize } from '../../lib/utils'
+import { cn, formatPrice, formatSize } from '../../lib/utils'
 import { Label } from '../ui/Label'
 
 type SizeListProps = {
@@ -25,7 +25,7 @@ export function SizeList({ sizes }: SizeListProps) {
               className="flex flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5"
             >
               <div className="min-w-0">
-                <p className="text-text">{sizeLabel ?? 'Standard'}</p>
+                <p className={cn('text-text', sizeLabel && 'lowercase')}>{sizeLabel ?? 'Standard'}</p>
                 {size.burn_time_hours ? (
                   <p className="mt-1 text-sm text-text-secondary">
                     {size.burn_time_hours} hour burn

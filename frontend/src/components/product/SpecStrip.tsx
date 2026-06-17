@@ -1,7 +1,7 @@
 import { Clock, MapPin, Ruler, Scale } from 'lucide-react'
 import type { Brand, ProductSize } from '../../types/api'
 import { iconMd } from '../../lib/icons'
-import { formatSize } from '../../lib/utils'
+import { cn, formatSize } from '../../lib/utils'
 import { Container } from '../layout/Container'
 
 type SpecStripProps = {
@@ -13,16 +13,17 @@ type SpecItem = {
   icon: React.ReactNode
   label: string
   value: string
+  lowercase?: boolean
 }
 
-function SpecCell({ icon, label, value }: SpecItem) {
+function SpecCell({ icon, label, value, lowercase }: SpecItem) {
   return (
     <div className="flex flex-1 flex-col items-center gap-2 px-4 py-6 text-center sm:px-6">
       <div className="text-text-secondary">{icon}</div>
       <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-secondary">
         {label}
       </span>
-      <span className="text-sm text-text">{value}</span>
+      <span className={cn('text-sm text-text', lowercase && 'lowercase')}>{value}</span>
     </div>
   )
 }
@@ -38,7 +39,7 @@ export function SpecStrip({ primarySize, brand }: SpecStripProps) {
 
   const specs: SpecItem[] = [
     { icon: <Clock {...iconMd} />, label: 'Burn time', value: burnTime },
-    { icon: <Scale {...iconMd} />, label: 'Wax weight', value: waxWeight },
+    { icon: <Scale {...iconMd} />, label: 'Wax weight', value: waxWeight, lowercase: true },
     { icon: <Ruler {...iconMd} />, label: 'Dimensions', value: '—' },
     { icon: <MapPin {...iconMd} />, label: 'Made in', value: brand?.country ?? '—' },
   ]
