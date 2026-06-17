@@ -11,6 +11,8 @@
     "pipeline": "tsx pipeline/cli.ts",
     "pipeline:run": "tsx pipeline/cli.ts run",
     "pipeline:push": "tsx pipeline/cli.ts push",
+    "server": "node server/server.js",
+    "build:userscript": "node userscript/build.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

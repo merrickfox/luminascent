@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { buildBundle } from '../userscript/bundle.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +34,15 @@ function sendText(res, status, text) {
   res.writeHead(status, {
     ...corsHeaders(),
     'Content-Type': 'text/plain; charset=utf-8',
+  });
+  res.end(text);
+}
+
+function sendJs(res, status, text) {
+  res.writeHead(status, {
+    ...corsHeaders(),
+    'Content-Type': 'application/javascript; charset=utf-8',
+    'Cache-Control': 'no-store',
   });
   res.end(text);
 }
@@ -210,6 +220,18 @@ async function handleRequest(req, res) {
   try {
     if (req.method === 'GET' && pathname === '/health') {
       sendJson(res, 200, { ok: true, port: PORT });
+      return;
+    }
+
+    if (req.method === 'GET' && pathname === '/userscript/bundle.js') {
+      // Assembled fresh on every request so editing a src/ module is picked up
+      // on the next page reload — no Tampermonkey re-paste. The thin loader
+      // userscript fetches this and direct-evals it.
+      try {
+        sendJs(res, 200, buildBundle());
+      } catch (err) {
+        sendJs(res, 500, `/* Luminascent bundle build failed: ${err.message} */`);
+      }
       return;
     }
 

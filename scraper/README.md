@@ -56,7 +56,13 @@ scraper/
 ├── server/
 │   └── server.js             # local HTTP API + file writer
 ├── userscript/
-│   └── scraper.user.js       # Tampermonkey script (v1.3.2)
+│   ├── src/                  # the scraper code, split into ordered edit-units
+│   │   ├── manifest.json     # concat order (single source of truth)
+│   │   └── 00-constants.js … 07-init.js
+│   ├── bundle.mjs            # assembles src/* into one IIFE bundle
+│   ├── build.mjs             # regenerates the standalone scraper.user.js
+│   ├── scraper.loader.user.js # thin loader — install this in Tampermonkey
+│   └── scraper.user.js       # generated standalone fallback (CSP/offline)
 ├── scripts/
 │   └── verify-recipes.mjs    # offline locator regression checks
 └── sites/                    # generated at runtime (gitignored)
@@ -80,16 +86,39 @@ node server.js
 
 Server listens on `http://127.0.0.1:8777` by default. Override with `PORT=8787 node server.js` if needed — the userscript hardcodes `8777`, so change both if you use a custom port.
 
-### 2. Install the Tampermonkey userscript
+### 2. Install the Tampermonkey loader
 
 1. Open Tampermonkey → **Create a new script**
-2. Replace the template with the contents of `userscript/scraper.user.js`
+2. Replace the template with the contents of `userscript/scraper.loader.user.js`
 3. Save and enable the script
+
+The loader is a thin shim: on every page it fetches the real code from the
+server (`GET /userscript/bundle.js`) and runs it. The actual scraper lives in
+`userscript/src/*` — **edit a file there and reload the page; the change is live
+with no Tampermonkey re-paste.** The server assembles the bundle fresh on each
+request, so no build step is needed during development.
 
 Required grants: `GM_xmlhttpRequest`, `GM_setValue`, `GM_getValue`, `GM_openInTab`, `GM_addStyle`.  
 Required connect hosts: `localhost`, `127.0.0.1` (bypasses https → http mixed-content restrictions).
 
 The script matches `*://*/*` and injects a draggable overlay panel on every page.
+
+**How the code is organised:** `src/` holds the original single IIFE split into
+ordered edit-units (`00-constants.js` … `07-init.js`, order set by
+`src/manifest.json`). They are concatenated back into one scope at runtime —
+behaviour is byte-identical to the old single file; the files are purely for
+editing convenience. `bundle.mjs` is the shared assembler used by both the
+server endpoint and the build script.
+
+**Standalone fallback:** on sites whose Content-Security-Policy blocks `eval`
+(the loader uses a direct `eval`), or when the server isn't running, install the
+self-contained `userscript/scraper.user.js` instead. Regenerate it from `src/`
+with:
+
+```bash
+cd scraper
+npm run build:userscript
+```
 
 ### 3. Configure a host
 
