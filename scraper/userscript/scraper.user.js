@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.3.2
+// @version      1.4.0
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -22,6 +22,7 @@
   const SCRAPE_HASH = '#lumiscrape=1';
   const EXTRACT_KEY = 'lumiscrape_extract_state';
   const EXTRACT_PREFS_KEY = 'lumiscrape_extract_prefs';
+  const EXCLUDED_HOSTS_KEY = 'lumiscrape_excluded_hosts';
   const BATCH_TIMEOUT_MS = 90000;
 
   const state = {
@@ -2180,6 +2181,8 @@
         return `
           <button class="btn primary" id="lumiscrape-configure">Configure for scraping</button>
           <div class="subtle">Creates a host folder on the local scraper server.</div>
+          <button class="btn" id="lumiscrape-exclude">Exclude this site</button>
+          <div class="subtle">Hides the scraper on this site permanently. Re-enable by clearing the userscript's stored values.</div>
         `;
       }
 
@@ -2191,6 +2194,8 @@
           <button class="btn" data-mode="extract">Extract mode</button>
         </div>
         <div class="subtle">Workflow: browse → product → images → extract</div>
+        <button class="btn" id="lumiscrape-exclude">Exclude this site</button>
+        <div class="subtle">Hides the scraper on this site permanently. Re-enable by clearing the userscript's stored values.</div>
       `;
     }
 
@@ -2400,6 +2405,14 @@
         images: [],
       });
       setMode('start');
+    });
+
+    panelEl.querySelector('#lumiscrape-exclude')?.addEventListener('click', () => {
+      if (!window.confirm(`Exclude ${state.host} from scraping? The scraper UI will no longer appear on this site.`)) return;
+      excludeHost(state.host);
+      shadowRoot?.host?.remove();
+      shadowRoot = null;
+      panelEl = null;
     });
 
     panelEl.querySelectorAll('[data-mode]').forEach((btn) => {
@@ -2838,6 +2851,23 @@
     if (el) el.classList.add('lumiscrape-selectable-hover');
   }
 
+  function getExcludedHosts() {
+    const raw = GM_getValue(EXCLUDED_HOSTS_KEY, []);
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  function isHostExcluded(host) {
+    return getExcludedHosts().includes(host);
+  }
+
+  function excludeHost(host) {
+    const hosts = getExcludedHosts();
+    if (!hosts.includes(host)) {
+      hosts.push(host);
+      GM_setValue(EXCLUDED_HOSTS_KEY, hosts);
+    }
+  }
+
   function loadExtractPrefs() {
     const prefs = GM_getValue(EXTRACT_PREFS_KEY, null);
     if (!prefs) return;
@@ -3197,6 +3227,8 @@
   }
 
   async function init() {
+    if (isHostExcluded(state.host)) return;
+
     ensureUi();
 
     if (location.hash.includes('lumiscrape=1')) {
