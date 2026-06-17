@@ -1,6 +1,6 @@
 {
   "provider": "ollama",
-  "model": "granite4:micro",
+  "model": "qwen3-coder:30b",
   "baseUrl": "http://localhost:11434",
   "schema": "candle",
   "concurrency": 2,
