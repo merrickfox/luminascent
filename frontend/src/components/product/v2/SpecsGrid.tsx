@@ -32,7 +32,13 @@ export function SpecsGrid({ specs }: SpecsGridProps) {
         {filled.map((s) => (
           <div key={s.label} className="border-l border-t border-border bg-surface p-6">
             <Label className="mb-2 block">{s.label}</Label>
-            <span className={cn('font-display text-xl text-text', s.lowercase && 'lowercase')}>
+            <span
+              className={cn(
+                'font-display text-xl text-text',
+                s.lowercase && 'lowercase',
+                s.capitalize && 'capitalize',
+              )}
+            >
               {s.value}
             </span>
           </div>

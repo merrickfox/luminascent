@@ -14,8 +14,11 @@ export type VoteOptionView = { label: string; pct: number }
 export type VoteDimensionView = { dimension: string; total: number; options: VoteOptionView[] }
 export type SeasonBar = { name: string; pct: number }
 export type DayNightView = { label: 'Day' | 'Night'; pct: number }
-/** lowercase => render the value with a CSS lowercase transform (for unit-bearing cells). */
-export type SpecCell = { label: string; value: string | null; lowercase?: boolean }
+/**
+ * lowercase => render with a CSS lowercase transform (unit-bearing cells).
+ * capitalize => title-case each word via CSS (free-text wording cells).
+ */
+export type SpecCell = { label: string; value: string | null; lowercase?: boolean; capitalize?: boolean }
 export type StockistView = { name: string; kind: string; price: string | null; url: string | null }
 export type SimilarView = { name: string; brand: string | null; tone: string; match: number | null; url: string | null }
 export type ReviewView = { author: string; rating: number | null; title: string | null; body: string }
@@ -187,9 +190,9 @@ export function toProductV2View(detail: ProductDetail): ProductV2View {
     { label: 'Burn time', value: primarySize?.burn_time_hours != null ? `${primarySize.burn_time_hours} hrs` : null },
     { label: 'Wax weight', value: primarySize ? formatSize(primarySize) : null, lowercase: true },
     { label: 'Dimensions', value: null },
-    { label: 'Wax type', value: product.wax_type },
-    { label: 'Vessel', value: product.vessel_material },
-    { label: 'Wick', value: null },
+    { label: 'Wax type', value: product.wax_type, capitalize: true },
+    { label: 'Vessel', value: product.vessel_material, capitalize: true },
+    { label: 'Wick', value: null, capitalize: true },
     { label: 'Released', value: product.release_year != null ? String(product.release_year) : null },
     { label: 'Made in', value: brand?.country ?? null },
   ]
