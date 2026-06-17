@@ -847,10 +847,20 @@
 
     const candidateAttrs = recipeMode ? getRecipeAttributes(candidate) : getStableAttributes(candidate);
     const targetAttrs = locator.attrs || {};
+    // A class identifies an element; relational/structural attributes shared by siblings
+    // (e.g. data-parent pointing at a common container) do not. When a recipe specifies a
+    // class, only let other attribute matches count as identity *evidence* if the candidate
+    // also matches that class — otherwise, when the real target is absent, a sibling that
+    // merely shares a container pointer can clear the evidence gate and impersonate it.
+    const targetClass = targetAttrs.class;
+    const classGatePasses =
+      !targetClass ||
+      candidateAttrs.class === targetClass ||
+      classTokensOverlap(candidateAttrs.class, targetClass);
     for (const [key, value] of Object.entries(targetAttrs)) {
       if (candidateAttrs[key] === value) {
         score += recipeMode ? 6 : 4;
-        evidence += 5;
+        if (key === 'class' || classGatePasses) evidence += 5;
       } else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) {
         score += recipeMode ? 4 : 2;
         evidence += 2;

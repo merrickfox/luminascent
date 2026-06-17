@@ -291,10 +291,17 @@ function scoreLocatorMatch(candidate, locator) {
   if (locator.tag && candidate.tagName.toLowerCase() === locator.tag) score += 2;
 
   const candidateAttrs = getRecipeAttributes(candidate);
+  // Mirror userscript: a non-class attribute (e.g. a shared data-parent container pointer)
+  // is only identity evidence when the recipe's class also matches the candidate.
+  const targetClass = (locator.attrs || {}).class;
+  const classGatePasses =
+    !targetClass ||
+    candidateAttrs.class === targetClass ||
+    classTokensOverlap(candidateAttrs.class, targetClass);
   for (const [key, value] of Object.entries(locator.attrs || {})) {
     if (candidateAttrs[key] === value) {
       score += 6;
-      evidence += 5;
+      if (key === 'class' || classGatePasses) evidence += 5;
     } else if (key === 'class' && classTokensOverlap(candidateAttrs[key], value)) {
       score += 4;
       evidence += 2;
@@ -520,21 +527,42 @@ if (!items.length || items.length !== urls.length || new Set(urls).size !== urls
 }
 console.log(`PASS: browse recipe enumerates ${urls.length} unique product URLs`);
 
-// --- Acqua di Parma: accordion panels share data-parent; only one tab open at a time ---
-const adpConfig = JSON.parse(fs.readFileSync(path.join(rootDir, 'sites/acquadiparma_com/config.json'), 'utf8'));
-const adpFields = adpConfig.product.fields.map((field) => ({
-  ...field,
-  locators: getFieldLocators(field).map((locator) => normalizeLocatorRecipe(locator)),
-}));
+// --- Acqua di Parma accordion: sibling panels share data-parent="#productInfoSection",
+// distinguished only by class (tab-more-information vs tab-tasting-notes). Self-contained
+// (the live config lives under the gitignored sites/, so the recipes are inlined here).
+const adpDescLocator = normalizeLocatorRecipe({
+  version: 1,
+  tag: 'div',
+  attrs: { class: 'collapse-content tab-more-information text-m longDescription', 'data-parent': '#productInfoSection' },
+  anchorAttrs: { class: 'collapse-content tab-more-information text-m longDescription', 'data-parent': '#productInfoSection' },
+  relativePathFromAnchor: '',
+  textSample: 'Diffuse enchanting scents for a sensuous yet fresh awakening to your day.',
+});
+const adpNoteLocator = normalizeLocatorRecipe({
+  version: 1,
+  tag: 'div',
+  attrs: { class: 'collapse-content tab-tasting-notes text-m collapse', 'data-parent': '#productInfoSection' },
+  anchorAttrs: { class: 'collapse-content tab-tasting-notes text-m collapse', 'data-parent': '#productInfoSection' },
+  relativePathFromAnchor: '',
+  textSample: 'Olfactive family: Aromatic green Tasting Notes: Italian lemon, mint leaves, rosemary.',
+});
 
-loadDom('sites/acquadiparma_com/example-pages/product.html', 'www.acquadiparma.com');
+// Product WITH both panels: description and tasting notes must resolve independently,
+// even though the tasting-notes panel is collapsed (display:none in the live DOM).
+setDom(
+  `<main><div id="productInfoSection">
+    <div class="accordion-item">
+      <div class="collapse-content tab-more-information text-m longDescription" data-parent="#productInfoSection">Diffuse enchanting scents for a sensuous yet fresh awakening to your day. As the first rays of the morning light filter through, this candle fills your home with a luminous fragrance.</div>
+    </div>
+    <div class="accordion-item">
+      <div class="collapse-content tab-tasting-notes text-m collapse" data-parent="#productInfoSection" style="display:none">Olfactive family: Aromatic green Tasting Notes: Italian lemon, mint leaves, rosemary, lavandin, jasmine, cedarwood, musk.</div>
+    </div>
+  </div></main>`,
+  'www.acquadiparma.com',
+);
 
-function adpFieldByKey(key) {
-  return adpFields.find((field) => field.fieldKey === key);
-}
-
-const adpDescEl = findLocator(adpFieldByKey('description')?.locators[0]);
-const adpNoteEl = findLocator(adpFieldByKey('note_name')?.locators[0]);
+const adpDescEl = findLocator(adpDescLocator);
+const adpNoteEl = findLocator(adpNoteLocator);
 const adpDescText = normalizeText(adpDescEl?.textContent || '');
 const adpNoteText = normalizeText(adpNoteEl?.textContent || '');
 
@@ -550,29 +578,28 @@ if (adpDescText === adpNoteText) {
 if (adpNoteText.startsWith('Diffuse enchanting scents')) {
   fail('acquadiparma note_name resolved to description accordion panel');
 }
-
 console.log('PASS: acquadiparma accordion description and tasting notes resolve independently');
 
-loadDom('sites/acquadiparma_com/example-pages/product.html', 'www.acquadiparma.com');
-const adpPrice71El = findLocator(adpFieldByKey('price_amount')?.locators[0]);
-const adpPrice71Text = normalizeText(adpPrice71El?.textContent || '');
-if (!adpPrice71El || !adpPrice71Text.includes('71')) {
-  fail('acquadiparma price_amount did not resolve on £71 product page', adpPrice71Text);
-}
-if (isRecommendationRegion(adpPrice71El)) {
-  fail('acquadiparma price_amount on £71 product page resolved to recommendation tile', adpPrice71Text);
-}
-console.log('PASS: acquadiparma price_amount resolves to main PDP price on £71 product');
+// Product WITHOUT a tasting-notes panel (decorative cubes, sets, bases): note_name must
+// NOT fall back to the description panel just because it shares data-parent. This is the
+// regression that duplicated the description into note_name across ~8 products.
+setDom(
+  `<main><div id="productInfoSection">
+    <div class="accordion-item">
+      <div class="collapse-content tab-more-information text-m longDescription" data-parent="#productInfoSection">A unique candle entirely hand crafted. The sophisticated black wax cube candle is delicately embossed with the Acqua di Parma logo.</div>
+    </div>
+  </div></main>`,
+  'www.acquadiparma.com',
+);
 
-loadDom('sites/acquadiparma_com/example-pages/acropora.html', 'www.acquadiparma.com');
-const adpPriceHighEl = findLocator(adpFieldByKey('price_amount')?.locators[0]);
-const adpPriceHighText = normalizeText(adpPriceHighEl?.textContent || '');
-if (!adpPriceHighEl || !adpPriceHighText.includes('1,383')) {
-  fail('acquadiparma price_amount resolved to recommendation tile instead of PDP price', adpPriceHighText);
+const adpDescOnlyEl = findLocator(adpDescLocator);
+const adpNoteAbsentEl = findLocator(adpNoteLocator);
+if (!adpDescOnlyEl || !normalizeText(adpDescOnlyEl.textContent).startsWith('A unique candle')) {
+  fail('acquadiparma description recipe did not resolve on notes-less product', normalizeText(adpDescOnlyEl?.textContent || '').slice(0, 60));
 }
-if (isRecommendationRegion(adpPriceHighEl)) {
-  fail('acquadiparma price_amount on acropora resolved to recommendation tile', adpPriceHighText);
+if (adpNoteAbsentEl) {
+  fail('acquadiparma note_name fell back to a sibling panel when tasting notes were absent', normalizeText(adpNoteAbsentEl.textContent).slice(0, 60));
 }
-console.log('PASS: acquadiparma price_amount resolves to main PDP price on high-price product');
+console.log('PASS: acquadiparma note_name stays empty when the tasting-notes panel is absent');
 
 console.log('\nAll recipe checks passed.');
