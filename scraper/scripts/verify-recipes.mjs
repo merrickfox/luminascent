@@ -425,8 +425,7 @@ function findLocator(locator, root = document) {
 
 function enumerateBrowseItems(browse) {
   if (browse.itemSignature) {
-    const scope = resolveFromAnchorPath(document, browse.container, browse.container?.tag) || document;
-    return Array.from(scope.querySelectorAll('*')).filter(
+    return Array.from(document.querySelectorAll('*')).filter(
       (el) => isVisible(el) && elementItemSignature(el) === browse.itemSignature,
     );
   }

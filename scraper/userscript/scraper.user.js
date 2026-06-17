@@ -779,14 +779,15 @@
   function enumerateBrowseItems(browse) {
     if (!browse) return [];
 
-    // Signature-based configs match members page-wide so a grid fragmented across
-    // sibling layout blocks still enumerates whole. The container, when it resolves,
-    // only scopes the search (and bounds it if the same signature recurs elsewhere on
-    // the page); a missing container falls back to the whole document, since the
-    // signature is specific enough to stand alone.
+    // Signature-based configs match members page-wide, mirroring how detection found
+    // them. We deliberately do NOT scope to the saved container: a listing page can
+    // hold several containers with the same anchor class (Zara renders a hidden
+    // `--is-template` grid alongside the live one), and resolving to the first match
+    // could trap the search inside an empty/hidden subtree and enumerate nothing. The
+    // signature is specific enough to stand alone, and the visibility filter drops any
+    // hidden template tiles that share it.
     if (browse.itemSignature) {
-      const scope = resolveBrowseContainer(browse) || document;
-      return Array.from(scope.querySelectorAll('*')).filter(
+      return Array.from(document.querySelectorAll('*')).filter(
         (el) => isVisible(el) && elementItemSignature(el) === browse.itemSignature,
       );
     }
