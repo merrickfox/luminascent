@@ -22,7 +22,7 @@ function RatingCard({
     <DataCard>
       <div className="flex items-baseline gap-3">
         <span className="font-display text-[3.5rem] leading-none">
-          {rating.avg != null ? rating.avg.toFixed(1) : '—'}
+          {rating.avg != null ? rating.avg.toFixed(1) : '-'}
         </span>
         <span className="text-sm text-text-secondary">/ 5</span>
       </div>
@@ -87,8 +87,8 @@ function ReviewsLayout({ rating, ratingDist, reviews }: ReviewsSectionV2Props) {
       ) : (
         <ContributeInvite
           eyebrow="No reviews yet"
-          title="Have you burned this?"
-          body="Share how it performs in your space — your review helps the next member decide."
+          title="Have you tried this one?"
+          body="Share how it performs in your space, your review helps the next member decide."
           ctaLabel="Write a review"
           minHeight={260}
           ghost={<ReviewList reviews={GHOST_REVIEWS} />}
@@ -110,8 +110,8 @@ export function ReviewsSectionV2({ rating, ratingDist, reviews }: ReviewsSection
         <SectionTitle>What members say</SectionTitle>
         <ContributeInvite
           eyebrow="No reviews yet"
-          title="Have you burned this?"
-          body="Share how it performs in your space — your review helps the next member decide."
+          title="Have you tried this one?"
+          body="Share how it performs in your space, your review helps the next member decide."
           ctaLabel="Write a review"
           minHeight={340}
           ghost={

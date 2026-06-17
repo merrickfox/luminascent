@@ -39,7 +39,7 @@ export function SpecStrip({ primarySize, brand }: SpecStripProps) {
 
   const specs: SpecItem[] = [
     { icon: <Clock {...iconMd} />, label: 'Burn time', value: burnTime },
-    { icon: <Scale {...iconMd} />, label: 'Wax weight', value: waxWeight, lowercase: true },
+    { icon: <Scale {...iconMd} />, label: 'Weight', value: waxWeight, lowercase: true },
     { icon: <Ruler {...iconMd} />, label: 'Dimensions', value: '—' },
     { icon: <MapPin {...iconMd} />, label: 'Made in', value: brand?.country ?? '—' },
   ]
