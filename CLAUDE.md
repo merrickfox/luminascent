@@ -25,6 +25,11 @@ Each package is independent — run commands from its own directory, not the rep
 
 ## Commands
 
+NOTE!!
+the frontend is likely already running on http://localhost:5173/
+and backend on http://localhost:8023
+check first before running in your tools and killing my session
+
 ### backend (Cloudflare Worker)
 ```bash
 cd backend
@@ -90,6 +95,8 @@ Shared helpers in `backend/src/lib/`:
 ## Scraper architecture
 
 Two-stage, fully local. Output (`scraper/sites/`) is gitignored.
+
+IMPORTANT!! regarding scraping, remember issues might affect just one site of 1000s do not put custom code in just for one site, we must fix things at a conceptual level while maintaining it working for sites it might already work for. Genericism and modularity is the goal here
 
 1. **Capture** — a Tampermonkey userscript (`userscript/scraper.user.js`) authors a per-host blueprint (`sites/<host>/config.json`), discovers product URLs, extracts raw DOM values, and posts them to the local Node server (`server/server.js`), which writes `data.json`, assembles `llm_input.json`, and downloads images.
 2. **Pipeline** (`pipeline/`, run via `tsx`) — reads `llm_input.json`, runs a per-field LLM extraction pass, and assembles `products.json` matching the backend's `scrapedProductSchema` (`backend/src/features/import/schema.ts`). `push` sends each product to `POST /admin/import/product`.

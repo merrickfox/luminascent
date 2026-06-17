@@ -17,4 +17,4 @@ Part 1:
 - notes
 - - sometimes information might be part of other information, so imagine a page that has a description section and description is part of our schema, however in the description it also normally contains a sentence about the fragrance notes, then we should have a way to tag as `descroption` but some kind of "also contains", "sometimes contains" etc then add other tags like `notes`
 - - put this system in /scraper
-- - IMPORTANT!! remember this is just one site of 1000s do not put custom code in just for one site, we must fix things at a conceptual level while maintaining it working for sites it might already work for
+- - IMPORTANT!! regarding scraping, remember issues might affect just one site of 1000s do not put custom code in just for one site, we must fix things at a conceptual level while maintaining it working for sites it might already work for
