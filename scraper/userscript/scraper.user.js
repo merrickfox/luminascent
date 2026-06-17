@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.4.0
+// @version      1.5.0
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -10,6 +10,8 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
 // @grant        GM_openInTab
 // @grant        GM_addStyle
 // @run-at       document-idle
@@ -23,7 +25,21 @@
   const EXTRACT_KEY = 'lumiscrape_extract_state';
   const EXTRACT_PREFS_KEY = 'lumiscrape_extract_prefs';
   const EXCLUDED_HOSTS_KEY = 'lumiscrape_excluded_hosts';
+  // Child tabs report their outcome to a unique per-URL key under this prefix.
+  // The controller tab is the sole writer of EXTRACT_KEY; it drains these keys
+  // each tick. Unique keys mean two tabs never clobber each other's result.
+  const RESULT_PREFIX = 'lumiscrape_result:';
   const BATCH_TIMEOUT_MS = 90000;
+  // Grace after a tab closes with no result written before we call it failed,
+  // instead of waiting out the full batch timeout.
+  const CLOSE_GRACE_MS = 5000;
+  const LOG_MAX = 50;
+
+  // Controller-tab-local: when each opened tab fires onclose, in ms. Used to
+  // detect tabs that vanished without reporting (crash, navigation, hibernation).
+  const closedAtByUrl = new Map();
+  // Child-tab-local: guards against double-reporting (success + pagehide).
+  let childReported = false;
 
   const state = {
     mode: 'start',
@@ -1620,6 +1636,21 @@
         overflow-wrap: anywhere;
         word-break: break-word;
       }
+      .run-log {
+        margin: 6px 0 0;
+        padding: 8px;
+        background: #0b1120;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        max-height: 160px;
+        overflow-y: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #94a3b8;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
       .field-picker { display: grid; gap: 10px; max-height: 200px; overflow-x: hidden; overflow-y: auto; }
       .field-scope .row { margin-top: 4px; }
       .field-tag-btn { font-size: 12px; padding: 6px 8px; flex: 1 1 calc(50% - 4px); min-width: 0; max-width: 100%; }
@@ -2391,6 +2422,7 @@
         </div>
         ${batchControls}
         <div class="status" id="lumiscrape-extract-status">${extractionActive ? 'Running…' : 'Idle'}</div>
+        ${renderRunLog(extractState)}
         <div class="panel-actions">
           <button class="btn primary" id="lumiscrape-run-extract" ${urls.length && !extractionActive ? '' : 'disabled'}>
             Start extraction
@@ -2402,6 +2434,13 @@
     }
 
     return '';
+  }
+
+  function renderRunLog(extractState) {
+    const log = extractState?.log || [];
+    if (!log.length) return '';
+    const lines = log.slice(-15).reverse().map((line) => escapeHtml(line)).join('\n');
+    return `<pre class="run-log" id="lumiscrape-run-log">${lines}</pre>`;
   }
 
   function bindPanelEvents() {
@@ -2910,6 +2949,7 @@
       completed: [],
       failed: [],
       total: 0,
+      log: [],
     };
   }
 
@@ -2927,6 +2967,8 @@
   function stopExtraction() {
     state.extractRunning = false;
     extractController = false;
+    clearResultKeys();
+    closedAtByUrl.clear();
     setExtractState(getDefaultExtractState());
     renderPanel();
   }
@@ -2952,21 +2994,66 @@
     }
   }
 
+  function shortUrl(url) {
+    try {
+      const parsed = new URL(stripScrapeFlag(url));
+      const seg = parsed.pathname.split('/').filter(Boolean).pop();
+      return seg ? decodeURIComponent(seg) : parsed.hostname;
+    } catch {
+      return String(url).slice(-40);
+    }
+  }
+
+  function nowClock() {
+    return new Date().toTimeString().slice(0, 8);
+  }
+
+  /** Append a line to the run log (controller is the sole writer of extractState). */
+  function logEvent(extractState, message) {
+    const line = `${nowClock()} ${message}`;
+    extractState.log = [...(extractState.log || []), line].slice(-LOG_MAX);
+    console.log('[Luminascent]', message);
+  }
+
+  /**
+   * Child tab → controller hand-off. Writes a unique per-URL key rather than
+   * mutating the shared extractState, so concurrent finishers never clobber
+   * each other. The controller drains these in drainResults().
+   */
+  function reportResult(url, ok, error, ms) {
+    if (childReported) return;
+    childReported = true;
+    const cleanUrl = stripScrapeFlag(url);
+    GM_setValue(RESULT_PREFIX + cleanUrl, {
+      url: cleanUrl,
+      ok: !!ok,
+      error: error || null,
+      ms: ms || null,
+      ts: Date.now(),
+    });
+    console.log('[Luminascent]', ok ? `scraped ${shortUrl(cleanUrl)}` : `failed ${shortUrl(cleanUrl)}: ${error || 'error'}`);
+  }
+
+  function clearResultKeys() {
+    if (typeof GM_listValues !== 'function') return;
+    GM_listValues()
+      .filter((key) => key.indexOf(RESULT_PREFIX) === 0)
+      .forEach((key) => GM_deleteValue(key));
+  }
+
   function openExtractTab(url) {
     const tab = GM_openInTab(withScrapeFlag(url), {
       active: false,
       insert: true,
     });
-    tab.onclose = () => {
-      markExtractResult(url, false, 'skipped');
-    };
+    // Runs in the controller tab; just record when the tab vanished. The tick
+    // decides (after a grace) whether it closed cleanly or died silently.
+    if (tab) tab.onclose = () => closedAtByUrl.set(stripScrapeFlag(url), Date.now());
     return tab;
   }
 
   function launchExtractTabs(urls) {
-    urls.forEach((url) => {
-      openExtractTab(url);
-    });
+    urls.forEach((url) => openExtractTab(url));
     updateExtractStatus();
   }
 
@@ -2985,30 +3072,96 @@
     statusEl.textContent = `Running · open ${extractState.inFlight.length}${queuePart} · done ${extractState.completed.length} · failed ${extractState.failed.length} · total ${extractState.total}`;
   }
 
-  function launchNextBatch() {
-    const extractState = getExtractState();
-    if (!extractState.active || extractState.mode !== 'batch') return;
-    if (extractState.inFlight.length > 0) return;
-    if (!extractState.queue || extractState.queue.length === 0) return;
+  /** Drain child-written result keys into extractState. Mutates in place. */
+  function drainResults(extractState) {
+    if (typeof GM_listValues !== 'function') return false;
+    let changed = false;
 
+    GM_listValues()
+      .filter((key) => key.indexOf(RESULT_PREFIX) === 0)
+      .forEach((key) => {
+        const payload = GM_getValue(key, null);
+        GM_deleteValue(key);
+        if (!payload) return;
+
+        const url = stripScrapeFlag(payload.url || key.slice(RESULT_PREFIX.length));
+        const idx = extractState.inFlight.findIndex((item) => stripScrapeFlag(item) === url);
+        if (idx === -1) return; // already resolved or not part of this run
+
+        extractState.inFlight.splice(idx, 1);
+        closedAtByUrl.delete(url);
+        if (payload.ok) {
+          extractState.completed.push(url);
+          const secs = payload.ms ? ` (${(payload.ms / 1000).toFixed(1)}s)` : '';
+          logEvent(extractState, `done ${shortUrl(url)}${secs}`);
+        } else {
+          extractState.failed.push({ url, error: payload.error || 'error' });
+          logEvent(extractState, `fail ${shortUrl(url)}: ${payload.error || 'error'}`);
+        }
+        changed = true;
+      });
+
+    return changed;
+  }
+
+  /** Fail tabs that closed without a result (after a grace) and batch timeouts. */
+  function handleTimeouts(extractState) {
+    let changed = false;
+    const now = Date.now();
+
+    for (const item of [...extractState.inFlight]) {
+      const url = stripScrapeFlag(item);
+      const closedAt = closedAtByUrl.get(url);
+      if (closedAt && now - closedAt > CLOSE_GRACE_MS) {
+        extractState.inFlight = extractState.inFlight.filter((u) => stripScrapeFlag(u) !== url);
+        extractState.failed.push({ url, error: 'closed without result' });
+        closedAtByUrl.delete(url);
+        logEvent(extractState, `fail ${shortUrl(url)}: closed without result`);
+        changed = true;
+      }
+    }
+
+    if (
+      extractState.inFlight.length > 0 &&
+      extractState.batchStartedAt &&
+      now - extractState.batchStartedAt > BATCH_TIMEOUT_MS
+    ) {
+      for (const item of extractState.inFlight) {
+        const url = stripScrapeFlag(item);
+        extractState.failed.push({ url, error: 'batch timeout' });
+        logEvent(extractState, `timeout ${shortUrl(url)}`);
+      }
+      extractState.inFlight = [];
+      extractState.batchStartedAt = null;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  /** Open the next batch of tabs. Mutates + persists extractState. */
+  function launchNextBatch(extractState) {
     const batchSize = Math.max(1, extractState.batchSize || state.extractBatchSize || 5);
-    const nextBatch = extractState.queue.splice(0, batchSize);
+    const nextBatch = (extractState.queue || []).splice(0, batchSize);
     extractState.inFlight = nextBatch;
     extractState.batchStartedAt = Date.now();
+    logEvent(extractState, `open ×${nextBatch.length} (${extractState.queue.length} queued)`);
     setExtractState(extractState);
 
-    nextBatch.forEach((url) => {
-      openExtractTab(url);
-    });
+    nextBatch.forEach((url) => openExtractTab(url));
     updateExtractStatus();
+    if (state.mode === 'extract') renderPanel();
   }
 
   function finishExtraction(extractState) {
     extractState.active = false;
     state.extractRunning = false;
     extractController = false;
+    logEvent(extractState, `done · ${extractState.completed.length} ok · ${extractState.failed.length} failed`);
     setExtractState(extractState);
     updateExtractStatus();
+    clearResultKeys();
+    closedAtByUrl.clear();
     if (state.mode === 'extract') renderPanel();
   }
 
@@ -3016,34 +3169,35 @@
     if (!extractController) return;
 
     const extractState = getExtractState();
-    if (!extractState.active || extractState.mode !== 'batch') return;
+    if (!extractState.active) return;
 
-    if (extractState.inFlight.length > 0) {
-      const batchStartedAt = extractState.batchStartedAt || 0;
-      if (Date.now() - batchStartedAt > BATCH_TIMEOUT_MS) {
-        extractState.inFlight.forEach((url) => {
-          extractState.failed.push({ url, error: 'batch timeout' });
-        });
-        extractState.inFlight = [];
-        extractState.batchStartedAt = null;
-        setExtractState(extractState);
-        updateExtractStatus();
+    let changed = drainResults(extractState);
+    changed = handleTimeouts(extractState) || changed;
+
+    if (extractState.inFlight.length === 0) {
+      if (extractState.mode === 'batch' && extractState.queue && extractState.queue.length > 0) {
+        launchNextBatch(extractState);
+        return;
       }
+      finishExtraction(extractState);
       return;
     }
 
-    if (extractState.queue && extractState.queue.length > 0) {
-      launchNextBatch();
-      return;
+    if (changed) {
+      setExtractState(extractState);
+      updateExtractStatus();
+      if (state.mode === 'extract') renderPanel();
     }
-
-    finishExtraction(extractState);
   }
 
   function startExtraction() {
     const urls = collectProductUrls();
     if (!urls.length) return;
 
+    // Fresh run: drop any leftover result keys / close markers from a prior run.
+    clearResultKeys();
+    closedAtByUrl.clear();
+    extractController = true;
     state.extractRunning = true;
     const startedAt = new Date().toISOString();
     const baseState = {
@@ -3053,21 +3207,23 @@
       total: urls.length,
       host: state.host,
       startedAt,
+      log: [`${nowClock()} start · ${urls.length} URLs · ${state.extractMode}`],
     };
 
     if (state.extractMode === 'batch') {
       const batchSize = Math.max(1, state.extractBatchSize || 5);
-      extractController = true;
-      setExtractState({
+      const extractState = {
         ...baseState,
         mode: 'batch',
         batchSize,
         queue: [...urls],
         inFlight: [],
         batchStartedAt: null,
-      });
-      launchNextBatch();
+      };
+      // launchNextBatch persists state and opens the first batch.
+      launchNextBatch(extractState);
     } else {
+      // 'all' mode has no batch deadline; close-grace + result keys resolve tabs.
       setExtractState({
         ...baseState,
         mode: 'all',
@@ -3080,41 +3236,6 @@
     }
 
     renderPanel();
-  }
-
-  function markExtractResult(url, ok, errorMessage) {
-    const normalizedUrl = stripScrapeFlag(url);
-    const extractState = getExtractState();
-    const wasInFlight = extractState.inFlight.some(
-      (item) => stripScrapeFlag(item) === normalizedUrl,
-    );
-    if (!wasInFlight) return;
-
-    extractState.inFlight = extractState.inFlight.filter(
-      (item) => stripScrapeFlag(item) !== normalizedUrl,
-    );
-
-    if (ok) extractState.completed.push(normalizedUrl);
-    else extractState.failed.push({ url: normalizedUrl, error: errorMessage || 'unknown error' });
-
-    setExtractState(extractState);
-    updateExtractStatus();
-
-    if (extractState.mode === 'batch' && extractController && extractState.inFlight.length === 0) {
-      tickExtraction();
-      if (state.mode === 'extract') renderPanel();
-      return;
-    }
-
-    if (extractState.inFlight.length === 0
-      && (!extractState.queue || extractState.queue.length === 0)) {
-      extractState.active = false;
-      state.extractRunning = false;
-      extractController = false;
-      setExtractState(extractState);
-      updateExtractStatus();
-      if (state.mode === 'extract') renderPanel();
-    }
   }
 
   async function blobToBase64(blob) {
@@ -3191,6 +3312,7 @@
   }
 
   async function runAutoScrapeTab() {
+    const tabStartedAt = Date.now();
     const cleanUrl = stripScrapeFlag(location.href);
     const requiredLocators = [
       ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
@@ -3231,7 +3353,7 @@
       }
     }
 
-    markExtractResult(cleanUrl, true);
+    reportResult(cleanUrl, true, null, Date.now() - tabStartedAt);
     window.close();
   }
 
@@ -3241,14 +3363,16 @@
     ensureUi();
 
     if (location.hash.includes('lumiscrape=1')) {
+      // If the tab is torn down before it reports (navigation, manual close),
+      // emit a skip so the controller doesn't wait out the grace/timeout.
       window.addEventListener('pagehide', () => {
-        markExtractResult(location.href, false, 'skipped');
+        reportResult(location.href, false, 'skipped');
       });
 
       await loadSchemaAndConfig();
       if (!state.config) {
         console.warn('[Luminascent] No config for auto scrape tab');
-        markExtractResult(location.href, false, 'missing config');
+        reportResult(location.href, false, 'missing config');
         return;
       }
 
@@ -3256,7 +3380,7 @@
         await runAutoScrapeTab();
       } catch (err) {
         console.error('[Luminascent] Auto scrape failed', err);
-        markExtractResult(location.href, false, err.message);
+        reportResult(location.href, false, err.message);
       }
       return;
     }
