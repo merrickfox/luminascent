@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.5.0
+// @version      1.6.0
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
@@ -373,6 +373,88 @@
     return `${tag}[${typeAttrs.slice(0, 8).join('|')}]{${childTags}}@${childCount}`;
   }
 
+  // A "type fingerprint" keys an element on its full structure (tag, attrs, child
+  // tags AND child count). That over-splits a grid: two visually identical tiles
+  // fragment apart when one carries an extra badge/swatch/sold-out node, and tiles
+  // in different layout blocks (carousel vs grid) never merge. The item *signature*
+  // keys only on the stable identity an element advertises — its non-instance class
+  // tokens and type-level data/role/itemprop attrs — so repeated members of the same
+  // logical grid share a signature regardless of where they sit or minor per-tile DOM
+  // differences. Structural shape is used only as a fallback for class-less items.
+  function elementItemSignature(el) {
+    if (!el || el.nodeType !== 1) return '';
+
+    const tag = el.tagName.toLowerCase();
+    const tokens = [];
+
+    if (el.classList?.length) {
+      Array.from(el.classList)
+        .filter((token) => !/\d{3,}/.test(token))
+        .filter((token) => !isLumiscrapeToken(token))
+        .filter((token) => !/\b(?:active|current|selected|hover|focus|cloned|slick-|swiper-)\b/i.test(token))
+        .map((token) => normalizeTypeAttrValue(token))
+        .filter(Boolean)
+        .forEach((token) => tokens.push(`c~${token}`));
+    }
+
+    for (const attr of el.attributes) {
+      const { name, value } = attr;
+      if (name === 'class') continue;
+      if (isInstanceSpecificAttr(name, value)) continue;
+      if (name.startsWith('data-') || name === 'role' || name === 'itemprop') {
+        if (!value || value === name) {
+          tokens.push(name);
+          continue;
+        }
+        // A value carrying digits is an instance identifier (product key, index,
+        // price) whose exact shape varies per item — even normalized, the digit
+        // pattern can differ and split otherwise-identical tiles apart. Keep the
+        // attribute *name* as a type signal, but drop its varying value.
+        const normalized = normalizeTypeAttrValue(value);
+        tokens.push(normalized.includes('#') ? name : `${name}~${normalized}`);
+      }
+    }
+
+    if (tokens.length) {
+      tokens.sort();
+      return `${tag}[${tokens.join('|')}]`;
+    }
+
+    // Class-less / attr-less items: fall back to structural shape, but drop the child
+    // count so a stray extra/missing child doesn't split otherwise-identical members.
+    const childTags = Array.from(el.children)
+      .slice(0, 6)
+      .map((child) => child.tagName.toLowerCase())
+      .join(',');
+    if (!childTags) return '';
+    return `${tag}{${childTags}}`;
+  }
+
+  function pairLowestCommonAncestor(a, b) {
+    if (!a || !b) return null;
+    const ancestors = new Set();
+    let cur = a;
+    while (cur) {
+      ancestors.add(cur);
+      cur = cur.parentElement;
+    }
+    cur = b;
+    while (cur) {
+      if (ancestors.has(cur)) return cur;
+      cur = cur.parentElement;
+    }
+    return null;
+  }
+
+  function lowestCommonAncestor(elements) {
+    if (!elements || !elements.length) return null;
+    let lca = elements[0];
+    for (let i = 1; i < elements.length && lca; i += 1) {
+      lca = pairLowestCommonAncestor(lca, elements[i]);
+    }
+    return lca || document.body;
+  }
+
   function isChromeRegion(el) {
     if (!el) return false;
     return !!el.closest('nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]');
@@ -697,6 +779,19 @@
   function enumerateBrowseItems(browse) {
     if (!browse) return [];
 
+    // Signature-based configs match members page-wide so a grid fragmented across
+    // sibling layout blocks still enumerates whole. The container, when it resolves,
+    // only scopes the search (and bounds it if the same signature recurs elsewhere on
+    // the page); a missing container falls back to the whole document, since the
+    // signature is specific enough to stand alone.
+    if (browse.itemSignature) {
+      const scope = resolveBrowseContainer(browse) || document;
+      return Array.from(scope.querySelectorAll('*')).filter(
+        (el) => isVisible(el) && elementItemSignature(el) === browse.itemSignature,
+      );
+    }
+
+    // Legacy configs: items are the same-fingerprint direct children of the container.
     const container = resolveBrowseContainer(browse);
     if (!container) return [];
 
@@ -730,6 +825,8 @@
         anchorAttrs: filterRecipeAttrs(normalized.container.anchorAttrs),
       };
     }
+
+    normalized.itemSignature = normalized.itemSignature || null;
 
     normalized.itemFingerprint = normalized.itemFingerprint
       || normalized.typeFingerprint
@@ -1030,8 +1127,16 @@
   }
 
   function detectRepeatedGroups() {
-    const groups = new Map();
     const skipTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH', 'IFRAME']);
+
+    // Collect members by signature, but only admit an element when it appears as one
+    // of >=3 same-signature siblings under some container. That sibling gate is what
+    // keeps inner parts (a single figure/link per tile) from forming their own group —
+    // they never repeat >=3 times under one parent. Keying on the signature then merges
+    // those members page-wide, so a grid split across many layout blocks (Zara's
+    // carousel + secondary + dynamic-grid blocks) collapses into one group instead of
+    // one per block.
+    const bySignature = new Map();
 
     document.querySelectorAll('*').forEach((container) => {
       if (skipTags.has(container.tagName)) return;
@@ -1040,42 +1145,54 @@
       const children = Array.from(container.children).filter((child) => isVisible(child));
       if (children.length < 3) return;
 
-      const fingerprintCounts = new Map();
+      const signatureCounts = new Map();
       children.forEach((child) => {
-        const fp = elementTypeFingerprint(child);
-        if (!fp) return;
-        fingerprintCounts.set(fp, (fingerprintCounts.get(fp) || 0) + 1);
+        const sig = elementItemSignature(child);
+        if (!sig) return;
+        signatureCounts.set(sig, (signatureCounts.get(sig) || 0) + 1);
       });
 
-      for (const [fp, count] of fingerprintCounts.entries()) {
+      for (const [sig, count] of signatureCounts.entries()) {
         if (count < 3) continue;
-
-        const members = children.filter((child) => elementTypeFingerprint(child) === fp);
-        const score = scoreRepeatedGroup(container, members);
-        if (score < 4) continue;
-
-        const sampleText = normalizeText(members[0]?.textContent || '').slice(0, 60);
-        const key = `${buildStructuralPath(container)}::${fp}`;
-
-        const existing = groups.get(key);
-        if (existing && existing.score >= score) continue;
-
-        groups.set(key, {
-          id: key,
-          container,
-          members,
-          typeFingerprint: fp,
-          fingerprint: fp,
-          count: members.length,
-          score,
-          sampleText,
-          containerRecipe: buildContainerRecipe(container),
-          linkRule: buildLinkRule(members),
+        let set = bySignature.get(sig);
+        if (!set) {
+          set = new Set();
+          bySignature.set(sig, set);
+        }
+        children.forEach((child) => {
+          if (elementItemSignature(child) === sig) set.add(child);
         });
       }
     });
 
-    return Array.from(groups.values()).sort((a, b) => b.score - a.score).slice(0, 15);
+    const groups = [];
+
+    for (const [sig, set] of bySignature.entries()) {
+      const members = Array.from(set);
+      if (members.length < 3) continue;
+
+      const container = lowestCommonAncestor(members) || document.body;
+      const score = scoreRepeatedGroup(container, members);
+      if (score < 4) continue;
+
+      const sampleText = normalizeText(members[0]?.textContent || '').slice(0, 60);
+
+      groups.push({
+        id: sig,
+        container,
+        members,
+        itemSignature: sig,
+        typeFingerprint: sig,
+        fingerprint: sig,
+        count: members.length,
+        score,
+        sampleText,
+        containerRecipe: buildContainerRecipe(container),
+        linkRule: buildLinkRule(members),
+      });
+    }
+
+    return groups.sort((a, b) => b.score - a.score).slice(0, 15);
   }
 
   function getBrowseGroupById(groupId) {
@@ -2501,6 +2618,7 @@
       await saveConfig({
         browse: {
           container: group.containerRecipe || buildContainerRecipe(group.container),
+          itemSignature: group.itemSignature || group.typeFingerprint,
           itemFingerprint: group.typeFingerprint,
           linkRule: {
             ...linkRule,

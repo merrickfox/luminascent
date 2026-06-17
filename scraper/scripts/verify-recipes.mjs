@@ -117,6 +117,57 @@ function elementTypeFingerprint(el) {
   return `${tag}[${typeAttrs.slice(0, 8).join('|')}]{${childTags}}@${childCount}`;
 }
 
+function elementItemSignature(el) {
+  if (!el || el.nodeType !== 1) return '';
+  const tag = el.tagName.toLowerCase();
+  const tokens = [];
+  if (el.classList?.length) {
+    Array.from(el.classList)
+      .filter((token) => !/\d{3,}/.test(token))
+      .filter((token) => !isLumiscrapeToken(token))
+      .filter((token) => !/\b(?:active|current|selected|hover|focus|cloned|slick-|swiper-)\b/i.test(token))
+      .map((token) => normalizeTypeAttrValue(token))
+      .filter(Boolean)
+      .forEach((token) => tokens.push(`c~${token}`));
+  }
+  for (const attr of el.attributes || []) {
+    const { name, value } = attr;
+    if (name === 'class') continue;
+    if (isInstanceSpecificAttr(name, value)) continue;
+    if (name.startsWith('data-') || name === 'role' || name === 'itemprop') {
+      if (!value || value === name) { tokens.push(name); continue; }
+      const normalized = normalizeTypeAttrValue(value);
+      tokens.push(normalized.includes('#') ? name : `${name}~${normalized}`);
+    }
+  }
+  if (tokens.length) {
+    tokens.sort();
+    return `${tag}[${tokens.join('|')}]`;
+  }
+  const childTags = Array.from(el.children).slice(0, 6).map((child) => child.tagName.toLowerCase()).join(',');
+  if (!childTags) return '';
+  return `${tag}{${childTags}}`;
+}
+
+function pairLowestCommonAncestor(a, b) {
+  if (!a || !b) return null;
+  const ancestors = new Set();
+  let cur = a;
+  while (cur) { ancestors.add(cur); cur = cur.parentElement; }
+  cur = b;
+  while (cur) { if (ancestors.has(cur)) return cur; cur = cur.parentElement; }
+  return null;
+}
+
+function lowestCommonAncestor(elements) {
+  if (!elements || !elements.length) return null;
+  let lca = elements[0];
+  for (let i = 1; i < elements.length && lca; i += 1) {
+    lca = pairLowestCommonAncestor(lca, elements[i]);
+  }
+  return lca || document.body;
+}
+
 function queryByAttrs(root, attrs) {
   if (!attrs || !Object.keys(attrs).length) return [];
 
@@ -201,6 +252,7 @@ function normalizeBrowseConfig(browse) {
       anchorAttrs: filterRecipeAttrs(normalized.container.anchorAttrs),
     };
   }
+  normalized.itemSignature = normalized.itemSignature || null;
   normalized.itemFingerprint = normalized.itemFingerprint || normalized.typeFingerprint || normalized.fingerprint;
   if (!normalized.linkRule) {
     normalized.linkRule = { version: 1, selector: 'a.klevuProductClick[href]', strategy: 'href' };
@@ -372,6 +424,12 @@ function findLocator(locator, root = document) {
 }
 
 function enumerateBrowseItems(browse) {
+  if (browse.itemSignature) {
+    const scope = resolveFromAnchorPath(document, browse.container, browse.container?.tag) || document;
+    return Array.from(scope.querySelectorAll('*')).filter(
+      (el) => isVisible(el) && elementItemSignature(el) === browse.itemSignature,
+    );
+  }
   const container = resolveFromAnchorPath(document, browse.container, browse.container?.tag);
   if (!container) return [];
   return Array.from(container.children).filter(
@@ -526,6 +584,77 @@ if (!items.length || items.length !== urls.length || new Set(urls).size !== urls
   fail('browse recipe did not enumerate unique product URLs', { items: items.length, urls: urls.length });
 }
 console.log(`PASS: browse recipe enumerates ${urls.length} unique product URLs`);
+
+// --- Fragmented grid (Zara-style): product tiles are NOT direct siblings under one
+// container. They are scattered across many sibling "block" containers, sit at varying
+// depth, and a couple carry an extra badge node. A signature-based browse config must
+// still enumerate every tile across all blocks (the bug was getting only one block's
+// worth), while NOT pulling in an adjacent carousel block that uses a different tile class.
+function tile(href, extraBadge = false) {
+  return `
+    <li class="product-grid-product _product secondary-product zoom1-columns" data-productkey="123-456-e1">
+      <div class="product-grid-product__figure">
+        <a class="product-link" href="${href}"><img src="x.jpg"></a>
+        <div class="product-grid-product-info">Scented Candle 200 G 15.99 GBP</div>
+        ${extraBadge ? '<div class="product-badge">New</div>' : ''}
+      </div>
+    </li>`;
+}
+function carouselTile(href) {
+  return `
+    <div class="zds-carousel-item">
+      <div class="product-grid-product _product carousel__product zoom1-columns" data-productkey="789-111-e1">
+        <a class="product-link" href="${href}"><img src="y.jpg"></a>
+        <div class="product-grid-product-info">Carousel Candle 100 G 9.99 GBP</div>
+      </div>
+    </div>`;
+}
+// 13 secondary blocks (8 + 8 + ... + 6 tiles), each block a separate <ul> container.
+const blockSizes = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 7, 6];
+let tileIndex = 0;
+const blocks = blockSizes
+  .map((n) => {
+    const lis = Array.from({ length: n }, () => {
+      tileIndex += 1;
+      // every ~10th tile carries the extra badge node
+      return tile(`https://shop.example.com/p/candle-${tileIndex}`, tileIndex % 10 === 0);
+    }).join('');
+    return `<li class="product-grid-block"><ul class="secondary-products-container">${lis}</ul></li>`;
+  })
+  .join('');
+const totalSecondary = blockSizes.reduce((a, b) => a + b, 0);
+const carousel = `<li class="dynamic-carousel">${Array.from({ length: 5 }, (_, i) => carouselTile(`https://shop.example.com/p/carousel-${i}`)).join('')}</li>`;
+
+setDom(
+  `<main><div class="products-category-grid"><ul class="product-grid__product-list">${blocks}${carousel}</ul></div></main>`,
+  'shop.example.com',
+);
+
+const sampleTile = document.querySelector('li.secondary-product');
+const fragSignature = elementItemSignature(sampleTile);
+const fragBrowse = normalizeBrowseConfig({
+  itemSignature: fragSignature,
+  container: { version: 1, tag: 'ul', anchorAttrs: { class: 'product-grid__product-list' }, relativePathFromAnchor: '' },
+  linkRule: { version: 1, selector: 'a[href]', strategy: 'href' },
+});
+
+const fragItems = enumerateBrowseItems(fragBrowse);
+const fragUrls = collectProductUrls(fragBrowse);
+const largestBlock = Math.max(...blockSizes);
+
+if (fragItems.length !== totalSecondary) {
+  fail('fragmented grid did not enumerate every tile across blocks', { got: fragItems.length, expected: totalSecondary });
+}
+if (fragItems.length <= largestBlock) {
+  fail('fragmented grid only saw a single block (the original bug)', { got: fragItems.length, largestBlock });
+}
+if (fragItems.some((el) => el.className.includes('carousel__product'))) {
+  fail('fragmented grid pulled in the adjacent carousel block (different tile class)');
+}
+if (new Set(fragUrls).size !== totalSecondary) {
+  fail('fragmented grid produced wrong unique URL count', { urls: new Set(fragUrls).size, expected: totalSecondary });
+}
+console.log(`PASS: fragmented grid merges ${fragItems.length} tiles across ${blockSizes.length} blocks (largest block: ${largestBlock}), excludes carousel`);
 
 // --- Acqua di Parma accordion: sibling panels share data-parent="#productInfoSection",
 // distinguished only by class (tab-more-information vs tab-tasting-notes). Self-contained
