@@ -149,6 +149,36 @@ function elementItemSignature(el) {
   return `${tag}{${childTags}}`;
 }
 
+function extractImageSrc(el) {
+  if (!el) return null;
+  const tag = el.tagName?.toLowerCase();
+  if (tag === 'img') return el.currentSrc || el.src || el.getAttribute('src') || null;
+  const firstFromSrcset = (srcset) => {
+    if (!srcset) return null;
+    const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
+    return first || null;
+  };
+  if (tag === 'source') return firstFromSrcset(el.getAttribute('srcset')) || el.getAttribute('src') || null;
+  const img = el.querySelector?.('img');
+  if (img) {
+    const fromImg = img.currentSrc || img.src || img.getAttribute('src');
+    if (fromImg) return fromImg;
+  }
+  const source = el.querySelector?.('source[srcset]');
+  if (source) {
+    const fromSource = firstFromSrcset(source.getAttribute('srcset'));
+    if (fromSource) return fromSource;
+  }
+  try {
+    const bg = window.getComputedStyle(el).backgroundImage;
+    const match = bg && bg !== 'none' ? bg.match(/url\(["']?(.*?)["']?\)/) : null;
+    if (match && match[1]) return match[1];
+  } catch {
+    /* getComputedStyle unavailable */
+  }
+  return el.currentSrc || el.src || el.getAttribute?.('src') || null;
+}
+
 function pairLowestCommonAncestor(a, b) {
   if (!a || !b) return null;
   const ancestors = new Set();
@@ -654,6 +684,31 @@ if (new Set(fragUrls).size !== totalSecondary) {
   fail('fragmented grid produced wrong unique URL count', { urls: new Set(fragUrls).size, expected: totalSecondary });
 }
 console.log(`PASS: fragmented grid merges ${fragItems.length} tiles across ${blockSizes.length} blocks (largest block: ${largestBlock}), excludes carousel`);
+
+// --- Image extraction reads the live src per element carrier. A saved image selection
+// frequently anchors on a <picture> or <source> (which have no `src`); a naive attribute
+// read returns null, which previously fell back to the stale config-time URL and stamped
+// one product's image onto every product. extractImageSrc must resolve a real URL from
+// each carrier so each product yields its own image.
+setDom(
+  `<main>
+    <img class="hero" src="https://cdn.example.com/p1/main.jpg">
+    <picture class="media-image"><source srcset="https://cdn.example.com/p1/alt.webp 1x"><img src="https://cdn.example.com/p1/alt.jpg"></picture>
+    <picture class="srcset-only"><source srcset="https://cdn.example.com/p1/only.webp 1x, https://cdn.example.com/p1/only-2x.webp 2x"></picture>
+    <source class="bare" srcset="https://cdn.example.com/p1/bare.webp 1x">
+  </main>`,
+  'shop.example.com',
+);
+const imgSrc = extractImageSrc(document.querySelector('img.hero'));
+if (imgSrc !== 'https://cdn.example.com/p1/main.jpg') fail('extractImageSrc did not read <img> src', imgSrc);
+const pictureSrc = extractImageSrc(document.querySelector('picture.media-image'));
+if (pictureSrc !== 'https://cdn.example.com/p1/alt.jpg') fail('extractImageSrc did not read descendant <img> of <picture>', pictureSrc);
+const srcsetSrc = extractImageSrc(document.querySelector('picture.srcset-only'));
+if (srcsetSrc !== 'https://cdn.example.com/p1/only.webp') fail('extractImageSrc did not fall back to <source> srcset', srcsetSrc);
+const bareSource = extractImageSrc(document.querySelector('source.bare'));
+if (bareSource !== 'https://cdn.example.com/p1/bare.webp') fail('extractImageSrc did not read <source> srcset', bareSource);
+if (extractImageSrc(null) !== null) fail('extractImageSrc(null) should be null');
+console.log('PASS: extractImageSrc resolves a live URL from <img>, <picture>, and <source> carriers');
 
 // --- Acqua di Parma accordion: sibling panels share data-parent="#productInfoSection",
 // distinguished only by class (tab-more-information vs tab-tasting-notes). Self-contained

@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Luminascent Scraper
 // @namespace    https://luminascent.local/scraper
-// @version      1.6.0
+// @version      1.7.0
 // @description  Blueprint-driven visual scraper for product sites
 // @author       Luminascent
 // @match        *://*/*
 // @connect      localhost
 // @connect      127.0.0.1
+// @connect      *
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -1108,6 +1109,52 @@
     }
 
     return normalizeText(el.textContent);
+  }
+
+  // Resolve the live image URL from whatever element the image locator matched on the
+  // current product page. A saved selection often anchors on a <picture> (or a wrapper)
+  // rather than the <img> itself — those carry no `src`, so a plain attribute read
+  // returns null and the caller would fall back to the stale config-time URL, stamping
+  // the same image onto every product. Handle each carrier explicitly instead.
+  function extractImageSrc(el) {
+    if (!el) return null;
+    const tag = el.tagName?.toLowerCase();
+
+    if (tag === 'img') {
+      return el.currentSrc || el.src || el.getAttribute('src') || null;
+    }
+
+    const firstFromSrcset = (srcset) => {
+      if (!srcset) return null;
+      const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
+      return first || null;
+    };
+
+    if (tag === 'source') {
+      return firstFromSrcset(el.getAttribute('srcset')) || el.getAttribute('src') || null;
+    }
+
+    // <picture> or a generic wrapper: prefer a descendant <img>, then a <source> srcset.
+    const img = el.querySelector?.('img');
+    if (img) {
+      const fromImg = img.currentSrc || img.src || img.getAttribute('src');
+      if (fromImg) return fromImg;
+    }
+    const source = el.querySelector?.('source[srcset]');
+    if (source) {
+      const fromSource = firstFromSrcset(source.getAttribute('srcset'));
+      if (fromSource) return fromSource;
+    }
+
+    try {
+      const bg = window.getComputedStyle(el).backgroundImage;
+      const match = bg && bg !== 'none' ? bg.match(/url\(["']?(.*?)["']?\)/) : null;
+      if (match && match[1]) return match[1];
+    } catch {
+      /* getComputedStyle unavailable (e.g. headless verify) */
+    }
+
+    return el.currentSrc || el.src || el.getAttribute?.('src') || null;
   }
 
   function clearHighlights() {
@@ -3416,7 +3463,7 @@
     const images = [];
     (state.config?.images || []).forEach((imageSel) => {
       const el = findLocator(imageSel.locator);
-      const src = extractValue(el, { type: 'attribute', attribute: 'src' }) || imageSel.src;
+      const src = extractImageSrc(el);
       if (!src) return;
       images.push({
         source_url: src,
@@ -3454,7 +3501,7 @@
 
     for (const imageSel of state.config?.images || []) {
       const el = findLocator(imageSel.locator);
-      const src = extractValue(el, { type: 'attribute', attribute: 'src' }) || imageSel.src;
+      const src = extractImageSrc(el);
       if (!src) continue;
 
       try {
