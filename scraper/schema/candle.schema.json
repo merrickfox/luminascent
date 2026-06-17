@@ -259,7 +259,7 @@
       "type": "text",
       "mapsTo": "notes[].name",
       "llm": {
-        "instruction": "Extract individual fragrance notes/ingredients as a JSON array (e.g. ['Italian lemon', 'Mint leaves']). Do NOT include olfactive family lines or broad accords."
+        "instruction": "A single fragrance note/ingredient name (e.g. 'Italian Lemon', 'Mint Leaves'). Do NOT include olfactive family lines or broad accords."
       }
     },
     {
@@ -282,7 +282,7 @@
       "type": "text",
       "mapsTo": "notes[].pyramid_stage",
       "llm": {
-        "instruction": "For each note, assign pyramid stage: top, middle, base, general, or unknown. Map Top->top, Heart/Middle->middle, Base->base. Return a JSON array aligned with note_name.",
+        "instruction": "The pyramid stage this note belongs to: top, middle, base, general, or unknown. Map Top/Head->top, Heart/Middle->middle, Base/Dry-down->base. Use 'unknown' when the note is given without any stage grouping.",
         "optional": true
       }
     },
@@ -322,5 +322,28 @@
       }
     }
   ],
-  "containmentModes": ["also_contains", "sometimes_contains"]
+  "containmentModes": ["also_contains", "sometimes_contains"],
+  "structuredScopes": [
+    {
+      "scope": "note",
+      "source": "note_name",
+      "instruction": "Extract each fragrance note from the source text as its own object. The source may be a plain sentence or list of notes, OR it may group notes under pyramid headings (Top/Head, Heart/Middle, Base/Dry-down). When a grouping is present, set pyramid_stage for each note from its heading; when the notes are just listed in prose with no grouping, set pyramid_stage to 'unknown'. Never invent stages. Exclude olfactive-family lines and broad accords.",
+      "items": [
+        { "fieldKey": "note_name", "as": "name" },
+        {
+          "fieldKey": "note_pyramid_stage",
+          "as": "pyramid_stage",
+          "enum": ["top", "middle", "base", "general", "unknown"],
+          "synonyms": {
+            "head": "top",
+            "heart": "middle",
+            "mid": "middle",
+            "dry-down": "base",
+            "drydown": "base",
+            "dry down": "base"
+          }
+        }
+      ]
+    }
+  ]
 }

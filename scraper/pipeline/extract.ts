@@ -5,9 +5,11 @@ import type {
   ExtractProductStats,
   FieldType,
   LlmInput,
+  LlmInputDerivedTarget,
   LlmOutput,
   SchemaDefinition,
   SchemaField,
+  SchemaStructuredScope,
 } from './types.js';
 import { elapsedMs } from './timing.js';
 import { hashContent } from './hash.js';
@@ -140,6 +142,113 @@ function buildDerivedPrompt(
     .join('\n');
 }
 
+/** Field keys owned by a structured scope — extracted together, not field-by-field. */
+function structuredScopeFieldKeys(schema: SchemaDefinition): Set<string> {
+  const keys = new Set<string>();
+  for (const scope of schema.structuredScopes ?? []) {
+    for (const item of scope.items) keys.add(item.fieldKey);
+  }
+  return keys;
+}
+
+/**
+ * Find the raw text holding a scope's items: the directly-tagged source field,
+ * or — when the items are only ever embedded in another field (containment) —
+ * the parent text that field derives from.
+ */
+function resolveScopeSource(
+  scope: SchemaStructuredScope,
+  parentValues: Map<string, string>,
+  derivedTargets: LlmInputDerivedTarget[],
+): string | null {
+  const direct = parentValues.get(scope.source);
+  if (direct && direct.trim()) return direct;
+
+  for (const target of derivedTargets) {
+    if (target.fieldKey !== scope.source) continue;
+    const parent = parentValues.get(target.derive_from);
+    if (parent && parent.trim()) return parent;
+  }
+  return null;
+}
+
+function buildStructuredScopePrompt(
+  scope: SchemaStructuredScope,
+  fieldMap: Map<string, SchemaField>,
+  sourceText: string,
+): string {
+  const itemLines = scope.items.map((item) => {
+    const field = fieldMap.get(item.fieldKey);
+    const enumNote = item.enum ? ` (one of: ${item.enum.join(', ')})` : '';
+    const guidance = field?.llm?.instruction ?? field?.label ?? item.as;
+    return `- "${item.as}" (${field?.type ?? 'text'})${enumNote}: ${guidance}`;
+  });
+
+  return [
+    `Extract the "${scope.scope}" items from the source text as a JSON array of objects.`,
+    `Each object MUST have exactly these keys:`,
+    ...itemLines,
+    '',
+    scope.instruction,
+    '',
+    'Source text:',
+    '"""',
+    sourceText.slice(0, 12000),
+    '"""',
+    '',
+    'Return JSON: {"value": [ { ... }, ... ]}',
+  ].join('\n');
+}
+
+/**
+ * Split one array of objects into aligned per-field arrays. The scope's `source`
+ * field is the anchor: rows without an anchor value are dropped, and every other
+ * attribute keeps the dropped/empty slots as null so indexes stay aligned with
+ * the anchor (assemble.ts zips these by index).
+ */
+function applyStructuredScope(
+  scope: SchemaStructuredScope,
+  fieldMap: Map<string, SchemaField>,
+  llmValue: unknown,
+  fields: Record<string, unknown>,
+): void {
+  const rows = (Array.isArray(llmValue) ? llmValue : []).filter(
+    (row): row is Record<string, unknown> => row != null && typeof row === 'object',
+  );
+  const anchor = scope.items.find((item) => item.fieldKey === scope.source) ?? scope.items[0];
+  if (!anchor) return;
+
+  const coerceItem = (item: SchemaStructuredScope['items'][number], raw: unknown): unknown => {
+    const field = fieldMap.get(item.fieldKey);
+    const value = coerceScalar(raw, field?.type ?? 'text');
+    if (value == null) return null;
+    if (item.enum) {
+      const lowered = String(value).toLowerCase();
+      const normalized = item.synonyms?.[lowered] ?? lowered;
+      return item.enum.includes(normalized) ? normalized : null;
+    }
+    return value;
+  };
+
+  const byField: Record<string, unknown[]> = {};
+  for (const item of scope.items) byField[item.fieldKey] = [];
+
+  for (const row of rows) {
+    const anchorValue = coerceItem(anchor, row[anchor.as]);
+    if (anchorValue == null || anchorValue === '') continue;
+    for (const item of scope.items) {
+      byField[item.fieldKey].push(coerceItem(item, row[item.as]));
+    }
+  }
+
+  for (const item of scope.items) {
+    const values = byField[item.fieldKey];
+    if (values.some((value) => value != null)) {
+      fields[item.fieldKey] = values;
+    }
+  }
+}
+
 async function callFieldLlm(
   provider: LlmProvider,
   prompt: string,
@@ -256,10 +365,12 @@ export async function extractProduct(options: {
   }
 
   const derivedKeys = new Set(llmInput.derived_targets.map((t) => t.fieldKey));
+  const scopedKeys = structuredScopeFieldKeys(options.schema);
 
   for (const entry of llmInput.fields) {
     const schemaField = fieldMap.get(entry.fieldKey);
     if (!schemaField || shouldSkipLlm(schemaField)) continue;
+    if (scopedKeys.has(entry.fieldKey)) continue;
     if (derivedKeys.has(entry.fieldKey) && schemaField.scope !== entry.scope) continue;
 
     try {
@@ -281,6 +392,7 @@ export async function extractProduct(options: {
   for (const target of llmInput.derived_targets) {
     const schemaField = fieldMap.get(target.fieldKey);
     if (!schemaField || shouldSkipLlm(schemaField)) continue;
+    if (scopedKeys.has(target.fieldKey)) continue;
 
     const parentValue = parentValues.get(target.derive_from);
     if (!parentValue?.trim()) continue;
@@ -305,6 +417,23 @@ export async function extractProduct(options: {
     } catch (error) {
       errors.push({
         fieldKey: target.fieldKey,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  for (const scope of options.schema.structuredScopes ?? []) {
+    const sourceText = resolveScopeSource(scope, parentValues, llmInput.derived_targets);
+    if (!sourceText?.trim()) continue;
+
+    try {
+      const prompt = buildStructuredScopePrompt(scope, fieldMap, sourceText);
+      passes += 1;
+      const llmValue = await callFieldLlm(options.provider, prompt);
+      applyStructuredScope(scope, fieldMap, llmValue, fields);
+    } catch (error) {
+      errors.push({
+        fieldKey: scope.source,
         error: error instanceof Error ? error.message : String(error),
       });
     }

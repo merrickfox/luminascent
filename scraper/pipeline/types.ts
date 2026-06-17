@@ -20,12 +20,38 @@ export interface SchemaField {
   llm?: SchemaLlmConfig;
 }
 
+export interface SchemaStructuredScopeItem {
+  /** Schema field this object key feeds into (e.g. note_name, note_pyramid_stage). */
+  fieldKey: string;
+  /** JSON key the LLM returns for this attribute on each object. */
+  as: string;
+  /** Optional allowed values; out-of-set values are dropped to null. */
+  enum?: string[];
+  /** Optional lowercase synonym -> canonical value, applied before the enum check. */
+  synonyms?: Record<string, string>;
+}
+
+/**
+ * A scope extracted as a single LLM pass returning an array of objects, instead
+ * of independent parallel-array fields. Keeps per-item attributes (e.g. a note's
+ * pyramid stage) aligned with their owner, since they come from one call.
+ */
+export interface SchemaStructuredScope {
+  scope: FieldScope;
+  /** Field key whose tagged/contained raw text holds the items. */
+  source: string;
+  /** Shared guidance for the whole extraction. */
+  instruction: string;
+  items: SchemaStructuredScopeItem[];
+}
+
 export interface SchemaDefinition {
   name: string;
   version: number;
   description?: string;
   fields: SchemaField[];
   containmentModes?: string[];
+  structuredScopes?: SchemaStructuredScope[];
 }
 
 export interface PipelineConfig {
