@@ -12,6 +12,17 @@ import type {
 
 export const GHOST_VOTES: VoteDimensionView[] = [
   {
+    dimension: 'Rating reaction',
+    total: 0,
+    options: [
+      { label: 'Love', pct: 44 },
+      { label: 'Like', pct: 33 },
+      { label: 'OK', pct: 14 },
+      { label: 'Dislike', pct: 6 },
+      { label: 'Hate', pct: 3 },
+    ],
+  },
+  {
     dimension: 'Hot throw',
     total: 0,
     options: [
@@ -25,18 +36,21 @@ export const GHOST_VOTES: VoteDimensionView[] = [
     dimension: 'Longevity',
     total: 0,
     options: [
-      { label: 'Tunnels', pct: 6 },
-      { label: 'Good', pct: 31 },
-      { label: 'Excellent', pct: 63 },
+      { label: 'Fleeting', pct: 6 },
+      { label: 'Brief', pct: 12 },
+      { label: 'Moderate', pct: 28 },
+      { label: 'Long-lasting', pct: 41 },
+      { label: 'Eternal', pct: 13 },
     ],
   },
   {
-    dimension: 'Value',
+    dimension: 'Price value',
     total: 0,
     options: [
       { label: 'Overpriced', pct: 11 },
-      { label: 'Fair', pct: 38 },
-      { label: 'Worth it', pct: 51 },
+      { label: 'OK', pct: 22 },
+      { label: 'Good Value', pct: 41 },
+      { label: 'Great Value', pct: 26 },
     ],
   },
 ]

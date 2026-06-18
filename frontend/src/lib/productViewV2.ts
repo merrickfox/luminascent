@@ -154,17 +154,16 @@ function groupVotesByDimension(votes: VoteAggregate[]): VoteDimensionView[] {
   });
 }
 
-// Dimensions owned by the Seasonality card — excluded from the community card.
-const SEASONALITY_DIMS = new Set(["season", "time_of_day"]);
-// Preferred display order for the community card; unknown dims sort after.
+// The community card shows exactly these dimensions, in this order. Other
+// dimensions (season/time_of_day -> seasonality card; gender/occasion -> not
+// shown) are intentionally excluded.
 const COMMUNITY_DIMENSION_ORDER = [
   "rating_reaction",
   "sillage",
   "longevity",
   "price_value",
-  "gender",
-  "occasion",
 ];
+const COMMUNITY_DIMS = new Set(COMMUNITY_DIMENSION_ORDER);
 
 /**
  * Build the community card's votable dimensions from the catalog (so options
@@ -178,7 +177,7 @@ export function buildCommunityDimensions(
   const counts = new Map<string, Map<string, number>>();
   const names = new Map<string, string>();
   for (const v of votes) {
-    if (SEASONALITY_DIMS.has(v.dimension_slug)) continue;
+    if (!COMMUNITY_DIMS.has(v.dimension_slug)) continue;
     names.set(v.dimension_slug, v.dimension_name);
     const m = counts.get(v.dimension_slug) ?? new Map<string, number>();
     m.set(v.option_slug, v.vote_count);
@@ -188,7 +187,7 @@ export function buildCommunityDimensions(
   const source =
     catalog && catalog.length
       ? catalog
-          .filter((d) => !SEASONALITY_DIMS.has(d.slug))
+          .filter((d) => COMMUNITY_DIMS.has(d.slug))
           .map((d) => ({ slug: d.slug, name: d.name, options: d.options }))
       : [...counts.entries()].map(([slug, m]) => ({
           slug,
@@ -196,10 +195,7 @@ export function buildCommunityDimensions(
           options: [...m.keys()].map((s) => ({ slug: s, label: s })),
         }));
 
-  const rank = (slug: string) => {
-    const i = COMMUNITY_DIMENSION_ORDER.indexOf(slug);
-    return i < 0 ? COMMUNITY_DIMENSION_ORDER.length : i;
-  };
+  const rank = (slug: string) => COMMUNITY_DIMENSION_ORDER.indexOf(slug);
 
   return [...source]
     .sort((a, b) => rank(a.slug) - rank(b.slug))
