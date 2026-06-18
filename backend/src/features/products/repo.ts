@@ -124,7 +124,7 @@ async function getReminds(db: Db, productId: string): Promise<RemindsMeOf[]> {
 async function getReviews(db: Db, productId: string): Promise<Review[]> {
 	return queryAll<Review>(
 		db,
-		`SELECT * FROM reviews WHERE product_id = ? ORDER BY published_at DESC, created_at DESC`,
+		`SELECT * FROM reviews WHERE product_id = ? AND status = 'approved' ORDER BY published_at DESC, created_at DESC`,
 		productId,
 	);
 }

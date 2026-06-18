@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Breadcrumb } from '../components/layout/Breadcrumb'
+import { ReviewFormModal } from '../components/reviews/ReviewFormModal'
 import { Container } from '../components/layout/Container'
 import { PageSection } from '../components/layout/PageSection'
 import { CommunityProfileCard } from '../components/product/v2/CommunityProfileCard'
@@ -31,6 +32,9 @@ export function ProductPageV2() {
     () => new Map((myVotesList ?? []).map((v) => [v.dimension_slug, v.option_slug])),
     [myVotesList],
   )
+
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const onWriteReview = () => (user ? setReviewOpen(true) : openAuthModal())
 
   if (isLoading) return <Spinner />
 
@@ -126,8 +130,16 @@ export function ProductPageV2() {
           rating={view.rating}
           ratingDist={view.ratingDist}
           reviews={view.reviews}
+          onWriteReview={onWriteReview}
         />
       </Container>
+
+      <ReviewFormModal
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        productId={product.id}
+        productName={product.name}
+      />
     </main>
   )
 }

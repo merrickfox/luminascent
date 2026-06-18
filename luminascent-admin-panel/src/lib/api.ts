@@ -1,6 +1,7 @@
 import { ADMIN_API_KEY } from '@/lib/config'
 import type {
   Accord,
+  AdminReview,
   ApiError,
   Brand,
   Category,
@@ -18,8 +19,11 @@ import type {
   Product,
   ProductDetail,
   ProductListFilters,
+  ReviewCounts,
+  ReviewListFilters,
   UpdateColorInput,
   UpdateProductInput,
+  UserReviewProfile,
 } from '@/lib/types'
 
 let apiHost = 'http://localhost:8023'
@@ -183,6 +187,30 @@ export const api = {
         method: 'DELETE',
         body: JSON.stringify({ r2_key: r2Key }),
       }),
+  },
+  reviews: {
+    list: (filters: ReviewListFilters = {}) =>
+      apiFetch<{ reviews: AdminReview[]; counts: ReviewCounts }>(
+        `/reviews${toQueryString({
+          status: filters.status,
+          product_id: filters.product_id,
+          user_id: filters.user_id,
+          limit: filters.limit,
+          offset: filters.offset,
+        })}`,
+      ),
+    get: (id: string) => apiFetch<{ review: AdminReview }>(`/reviews/${id}`),
+    approve: (id: string, note?: string) =>
+      apiFetch<{ review: AdminReview }>(`/reviews/${id}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ note }),
+      }),
+    reject: (id: string, note?: string) =>
+      apiFetch<{ review: AdminReview }>(`/reviews/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ note }),
+      }),
+    userProfile: (userId: string) => apiFetch<UserReviewProfile>(`/reviews/user/${userId}`),
   },
   import: {
     ensureBrand: (input: EnsureBrandInput) =>

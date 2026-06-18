@@ -277,6 +277,43 @@ export type ImportProductResult = {
   error?: string
 }
 
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export type AdminReview = {
+  id: string
+  product_id: string
+  user_id: string | null
+  author_name: string | null
+  rating: number | null
+  title: string | null
+  body: string
+  status: ReviewStatus
+  moderated_at: string | null
+  moderation_note: string | null
+  published_at: string | null
+  created_at: string
+  product_name: string
+  product_slug: string
+  user_username: string | null
+  user_email: string | null
+}
+
+export type ReviewCounts = { pending: number; approved: number; rejected: number }
+
+export type ReviewListFilters = {
+  status?: ReviewStatus
+  product_id?: string
+  user_id?: string
+  limit?: number
+  offset?: number
+}
+
+export type UserReviewProfile = {
+  user: { id: string; username: string; email: string; created_at: string; updated_at: string }
+  stats: ReviewCounts & { total: number }
+  reviews: AdminReview[]
+}
+
 export type ParsedImportFile = {
   products: ImportProductRecord[]
   brandName: string

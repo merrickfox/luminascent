@@ -5,6 +5,7 @@ import type {
   ProductDetail,
   ProductListFilters,
   ProductsResponse,
+  Review,
   User,
   VoteAggregate,
   VoteDimensionCatalog,
@@ -131,4 +132,13 @@ export function removeVote(productId: string, dimensionSlug: string): Promise<Vo
     auth: true,
     body: { dimension_slug: dimensionSlug },
   })
+}
+
+// --- Reviews ---
+
+export function submitReview(
+  productId: string,
+  input: { rating: number; title?: string; body: string },
+): Promise<{ review: Review; status: 'pending' }> {
+  return apiRequest(`/products/${productId}/reviews`, { method: 'POST', auth: true, body: input })
 }

@@ -1,12 +1,22 @@
 import { z } from 'zod';
 
-export const createReviewSchema = z.object({
-	author_name: z.string().optional(),
-	rating: z.number().min(0).max(5).optional(),
-	title: z.string().optional(),
-	body: z.string().min(1),
-	language: z.string().optional(),
-	helpful_count: z.number().int().min(0).optional(),
-	unhelpful_count: z.number().int().min(0).optional(),
-	published_at: z.string().optional(),
+/** A signed-in user's review submission. */
+export const submitReviewSchema = z.object({
+	rating: z.number().int().min(1).max(5),
+	title: z.string().trim().max(120).optional(),
+	body: z.string().trim().min(1).max(5000),
+});
+
+/** Optional moderator note, shared by approve/reject. */
+export const moderateSchema = z.object({
+	note: z.string().trim().max(1000).optional(),
+});
+
+/** Admin queue list filters. */
+export const reviewListQuerySchema = z.object({
+	status: z.enum(['pending', 'approved', 'rejected']).optional(),
+	product_id: z.string().optional(),
+	user_id: z.string().optional(),
+	limit: z.coerce.number().int().min(1).max(200).optional(),
+	offset: z.coerce.number().int().min(0).optional(),
 });

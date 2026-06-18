@@ -117,6 +117,7 @@ export type Review = {
   language: string | null
   helpful_count: number | null
   unhelpful_count: number | null
+  status?: 'pending' | 'approved' | 'rejected'
   published_at: string | null
   created_at: string
 }

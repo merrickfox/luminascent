@@ -7,7 +7,7 @@ import { imageRoutes } from './features/images/handlers';
 import { noteRoutes } from './features/notes/handlers';
 import { productRoutes } from './features/products/handlers';
 import { remindsRoutes } from './features/reminds/handlers';
-import { reviewRoutes } from './features/reviews/handlers';
+import { reviewAdminRoutes, reviewRoutes } from './features/reviews/handlers';
 import { importRoutes } from './features/import/handlers';
 import { userVoteRoutes, voteDimensionRoutes, voteRoutes } from './features/votes/handlers';
 import { meRoutes, userPublicRoutes } from './features/users/handlers';
@@ -43,8 +43,8 @@ admin.route('/accords', accordRoutes);
 admin.route('/products', productRoutes);
 admin.route('/products', imageRoutes);
 admin.route('/products', voteRoutes);
-admin.route('/products', reviewRoutes);
 admin.route('/products', remindsRoutes);
+admin.route('/reviews', reviewAdminRoutes);
 admin.route('/import', importRoutes);
 app.route('/admin', admin);
 

@@ -28,7 +28,7 @@ export async function rebuildProductSearch(db: Db, productId: string): Promise<v
 		LEFT JOIN notes n ON n.id = spn.note_id
 		LEFT JOIN scent_profile_accords spa ON spa.scent_profile_id = sp.id
 		LEFT JOIN accords a ON a.id = spa.accord_id
-		LEFT JOIN reviews r ON r.product_id = p.id
+		LEFT JOIN reviews r ON r.product_id = p.id AND r.status = 'approved'
 		WHERE p.id = ?
 		GROUP BY p.id`,
 		productId,

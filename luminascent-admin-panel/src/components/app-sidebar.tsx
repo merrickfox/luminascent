@@ -18,6 +18,7 @@ import {
   DatabaseZap,
   FolderTree,
   Layers,
+  MessageSquareText,
   Music2,
 } from 'lucide-react'
 
@@ -26,6 +27,7 @@ const catalogItems = [
 ]
 
 const operationsItems = [
+  { title: 'User reviews', href: '/reviews', icon: MessageSquareText },
   { title: 'Import', href: '/import', icon: DatabaseZap },
 ]
 

@@ -9,6 +9,8 @@ type ReviewsSectionV2Props = {
   rating: ProductV2View['rating']
   ratingDist: ProductV2View['ratingDist']
   reviews: ProductV2View['reviews']
+  /** Opens the review form (or the auth modal when logged out). */
+  onWriteReview?: () => void
 }
 
 function RatingCard({
@@ -78,7 +80,7 @@ function ReviewList({ reviews }: { reviews: ProductV2View['reviews'] }) {
 
 /** The populated two-column layout. The reviews column falls back to a compact
  *  contribute invite when there are ratings but no written reviews yet. */
-function ReviewsLayout({ rating, ratingDist, reviews }: ReviewsSectionV2Props) {
+function ReviewsLayout({ rating, ratingDist, reviews, onWriteReview }: ReviewsSectionV2Props) {
   return (
     <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-[5fr_7fr] md:gap-14">
       <RatingCard rating={rating} ratingDist={ratingDist} />
@@ -90,6 +92,7 @@ function ReviewsLayout({ rating, ratingDist, reviews }: ReviewsSectionV2Props) {
           title="Have you tried this one?"
           body="Share how it performs in your space, your review helps the next member decide."
           ctaLabel="Write a review"
+          onCta={onWriteReview}
           minHeight={260}
           ghost={<ReviewList reviews={GHOST_REVIEWS} />}
         />
@@ -98,7 +101,7 @@ function ReviewsLayout({ rating, ratingDist, reviews }: ReviewsSectionV2Props) {
   )
 }
 
-export function ReviewsSectionV2({ rating, ratingDist, reviews }: ReviewsSectionV2Props) {
+export function ReviewsSectionV2({ rating, ratingDist, reviews, onWriteReview }: ReviewsSectionV2Props) {
   const hasReviews = reviews.length > 0
   const hasRating = rating.avg != null
 
@@ -113,6 +116,7 @@ export function ReviewsSectionV2({ rating, ratingDist, reviews }: ReviewsSection
           title="Have you tried this one?"
           body="Share how it performs in your space, your review helps the next member decide."
           ctaLabel="Write a review"
+          onCta={onWriteReview}
           minHeight={340}
           ghost={
             <ReviewsLayout rating={GHOST_RATING} ratingDist={GHOST_RATING_DIST} reviews={GHOST_REVIEWS} />
@@ -126,11 +130,16 @@ export function ReviewsSectionV2({ rating, ratingDist, reviews }: ReviewsSection
     <div>
       <SectionTitle
         hint={rating.count > 0 ? `${rating.count} ratings` : undefined}
-        cta={hasReviews ? <ContributeLink label="Write a review" /> : undefined}
+        cta={<ContributeLink label="Write a review" onClick={onWriteReview} />}
       >
         What members say
       </SectionTitle>
-      <ReviewsLayout rating={rating} ratingDist={ratingDist} reviews={reviews} />
+      <ReviewsLayout
+        rating={rating}
+        ratingDist={ratingDist}
+        reviews={reviews}
+        onWriteReview={onWriteReview}
+      />
     </div>
   )
 }

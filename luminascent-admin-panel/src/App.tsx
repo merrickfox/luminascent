@@ -10,6 +10,7 @@ import { NotesPage } from '@/features/notes/notes-page'
 import { ProductsPage } from '@/features/products/products-page'
 import { ProductDetailPage } from '@/features/products/product-detail-page'
 import { ImportPage } from '@/features/import/import-page'
+import { ReviewsPage } from '@/features/reviews/reviews-page'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/notes" element={<NotesPage />} />
               <Route path="/accords" element={<AccordsPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
