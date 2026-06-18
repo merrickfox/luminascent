@@ -46,9 +46,13 @@
 	"vars": {
 		"ADMIN_API_KEY": "dev-admin-key",
 		"R2_PUBLIC_BASE_URL": "https://pub-45a6fcb80891409e9b5b224fa471a158.r2.dev",
-		// Dev/test fallback only. Override locally via backend/.dev.vars and in
-		// production via `wrangler secret put SUPABASE_JWT_SECRET` (the legacy
-		// Supabase JWT secret, used to verify HS256 access tokens locally).
+		// Supabase project URL. Used to fetch the JWKS (public signing keys) and
+		// to pin the expected token issuer when verifying asymmetric (ES256/RS256)
+		// access tokens.
+		"SUPABASE_URL": "https://cmmwfokhmvcckgtjrekl.supabase.co",
+		// Only used to verify legacy HS256 tokens (e.g. the test suite). Real
+		// Supabase tokens are now asymmetric and verified via JWKS. Override
+		// locally via backend/.dev.vars if you use legacy HS256 signing.
 		"SUPABASE_JWT_SECRET": "dev-supabase-jwt-secret"
 	}
 	/**
