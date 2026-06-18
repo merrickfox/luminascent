@@ -32,7 +32,6 @@ export const productFormDefaults: ProductFormValues = {
   description: '',
   wax_type: '',
   vessel_material: '',
-  price_currency: '',
   scent_summary: '',
   is_discontinued: false,
 }
