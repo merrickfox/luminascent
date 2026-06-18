@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/Button'
@@ -32,8 +33,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  if (!open) return null
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -52,7 +51,9 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     }
   }
 
-  return (
+  if (!open) return null
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
@@ -137,6 +138,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </Button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
