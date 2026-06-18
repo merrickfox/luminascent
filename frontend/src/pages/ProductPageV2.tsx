@@ -96,7 +96,16 @@ export function ProductPageV2() {
               onRemove={(dimensionSlug) => remove.mutate(dimensionSlug)}
               onRequireLogin={openAuthModal}
             />
-            <SeasonalityCard seasons={view.seasons} dayNight={view.dayNight} />
+            <SeasonalityCard
+              seasons={view.seasons}
+              dayNight={view.dayNight}
+              myVotes={myVotes}
+              isLoggedIn={Boolean(user)}
+              disabled={isPending}
+              onVote={(dimensionSlug, optionSlug) => cast.mutate({ dimensionSlug, optionSlug })}
+              onRemove={(dimensionSlug) => remove.mutate(dimensionSlug)}
+              onRequireLogin={openAuthModal}
+            />
           </div>
         </div>
       </Container>

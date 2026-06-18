@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ProductV2View } from '../../../lib/productViewV2'
 import { DataCard } from '../../ui/DataCard'
 import { SectionTitle } from '../../ui/SectionTitle'
@@ -9,26 +10,84 @@ import { SeasonBars } from './SeasonBars'
 type SeasonalityCardProps = {
   seasons: ProductV2View['seasons']
   dayNight: ProductV2View['dayNight']
+  /** The current user's picks, keyed by dimension slug. */
+  myVotes: Map<string, string>
+  isLoggedIn: boolean
+  disabled?: boolean
+  onVote: (dimensionSlug: string, optionSlug: string) => void
+  onRemove: (dimensionSlug: string) => void
+  onRequireLogin: () => void
 }
 
-export function SeasonalityCard({ seasons, dayNight }: SeasonalityCardProps) {
-  const hasVotes = seasons.length > 0
+const DAY_SLUGS = ['morning', 'day']
+
+export function SeasonalityCard({
+  seasons,
+  dayNight,
+  myVotes,
+  isLoggedIn,
+  disabled,
+  onVote,
+  onRemove,
+  onRequireLogin,
+}: SeasonalityCardProps) {
+  const [expanded, setExpanded] = useState(false)
+
+  const hasVotes =
+    seasons.some((s) => (s.count ?? 0) > 0) || dayNight.some((d) => (d.count ?? 0) > 0)
+  const showInteractive = hasVotes || expanded
+
+  const selectedSeason = myVotes.get('season')
+  const timeSlug = myVotes.get('time_of_day')
+  const selectedDayNight = timeSlug
+    ? DAY_SLUGS.includes(timeSlug)
+      ? ('Day' as const)
+      : ('Night' as const)
+    : undefined
+
+  const handleSeason = (optionSlug: string) => {
+    if (!isLoggedIn) return onRequireLogin()
+    if (selectedSeason === optionSlug) onRemove('season')
+    else onVote('season', optionSlug)
+  }
+
+  const handleDayNight = (label: 'Day' | 'Night', optionSlug: string) => {
+    if (!isLoggedIn) return onRequireLogin()
+    if (selectedDayNight === label) onRemove('time_of_day')
+    else onVote('time_of_day', optionSlug)
+  }
 
   return (
     <DataCard>
       <SectionTitle
-        hint={hasVotes ? 'When members burn it' : 'No votes yet'}
-        cta={hasVotes ? <ContributeLink label="Add yours" /> : undefined}
+        hint={
+          !showInteractive ? 'No votes yet' : isLoggedIn ? 'Tap to vote' : 'When members burn it'
+        }
+        cta={
+          showInteractive && !isLoggedIn ? (
+            <ContributeLink label="Log in to vote" onClick={onRequireLogin} />
+          ) : undefined
+        }
       >
         Seasonality
       </SectionTitle>
 
-      {hasVotes ? (
-        <SeasonBars seasons={seasons} dayNight={dayNight} />
+      {showInteractive ? (
+        <SeasonBars
+          seasons={seasons}
+          dayNight={dayNight}
+          selectedSeason={selectedSeason}
+          selectedDayNight={selectedDayNight}
+          disabled={disabled}
+          onSeasonSelect={handleSeason}
+          onDayNightSelect={handleDayNight}
+        />
       ) : (
         <ContributeInvite
           title="When do you reach for it?"
           body="Tell us the seasons and time of day this candle suits best."
+          ctaLabel={isLoggedIn ? 'Be the first to vote' : 'Log in to vote'}
+          onCta={isLoggedIn ? () => setExpanded(true) : onRequireLogin}
           ghost={<SeasonBars seasons={GHOST_SEASONS} dayNight={GHOST_DAY_NIGHT} />}
         />
       )}

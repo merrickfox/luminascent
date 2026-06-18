@@ -1,51 +1,134 @@
 import { Moon, Sun } from 'lucide-react'
 import type { DayNightView, SeasonBar } from '../../../lib/productViewV2'
+import { cn } from '../../../lib/utils'
 
 type SeasonBarsProps = {
   seasons: SeasonBar[]
   dayNight: DayNightView[]
+  /** The season option slug the current user picked, if any. */
+  selectedSeason?: string
+  /** The user's current Day/Night side, if any. */
+  selectedDayNight?: 'Day' | 'Night'
+  /** When provided, seasons/boxes become clickable vote controls. */
+  onSeasonSelect?: (optionSlug: string) => void
+  onDayNightSelect?: (label: 'Day' | 'Night', optionSlug: string) => void
+  disabled?: boolean
 }
 
-/** Vertical season columns + a Day/Night split. */
-export function SeasonBars({ seasons, dayNight }: SeasonBarsProps) {
+/** Vertical season columns + a Day/Night split. Read-only unless select
+ *  handlers are provided. */
+export function SeasonBars({
+  seasons,
+  dayNight,
+  selectedSeason,
+  selectedDayNight,
+  onSeasonSelect,
+  onDayNightSelect,
+  disabled,
+}: SeasonBarsProps) {
   const max = Math.max(1, ...seasons.map((s) => s.pct))
+  const seasonInteractive = Boolean(onSeasonSelect)
+  const dayNightInteractive = Boolean(onDayNightSelect)
 
   return (
     <div>
       <div className="flex h-[120px] items-end gap-3">
-        {seasons.map((s) => (
-          <div key={s.name} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-            <span className="text-xs tabular-nums text-text-secondary">{s.pct}</span>
-            <div
-              className="w-full max-w-[56px] rounded-t"
-              style={{
-                height: `${(s.pct / max) * 88}px`,
-                background: s.pct === max ? 'var(--color-accent)' : 'var(--color-stone)',
-              }}
-            />
-            <span className="text-xs uppercase tracking-[0.06em] text-text-secondary">{s.name}</span>
-          </div>
-        ))}
+        {seasons.map((s) => {
+          const isSelected = s.optionSlug != null && s.optionSlug === selectedSeason
+          const column = (
+            <>
+              <span className="text-xs tabular-nums text-text-secondary">{s.pct}</span>
+              <div
+                className="w-full max-w-[56px] rounded-t"
+                style={{
+                  height: `${(s.pct / max) * 88}px`,
+                  background: s.pct === max && s.pct > 0 ? 'var(--color-accent)' : 'var(--color-stone)',
+                }}
+              />
+              <span
+                className={cn(
+                  'text-xs uppercase tracking-[0.06em]',
+                  isSelected ? 'font-medium text-accent' : 'text-text-secondary',
+                )}
+              >
+                {s.name}
+              </span>
+            </>
+          )
+
+          if (seasonInteractive && s.optionSlug) {
+            return (
+              <button
+                key={s.name}
+                type="button"
+                disabled={disabled}
+                aria-pressed={isSelected}
+                onClick={() => onSeasonSelect?.(s.optionSlug!)}
+                className={cn(
+                  'flex h-full flex-1 flex-col items-center justify-end gap-2 rounded-md border pb-1 pt-1 transition-colors',
+                  isSelected ? 'border-accent bg-accent/5' : 'border-transparent hover:bg-surface',
+                  disabled && 'cursor-not-allowed opacity-60',
+                )}
+              >
+                {column}
+              </button>
+            )
+          }
+
+          return (
+            <div key={s.name} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+              {column}
+            </div>
+          )
+        })}
       </div>
 
       {dayNight.length > 0 ? (
         <div className="mt-6 flex gap-3">
-          {dayNight.map((d) => (
-            <div
-              key={d.label}
-              className="flex flex-1 items-center justify-between rounded-[var(--radius-button)] border border-border px-4 py-3"
-            >
-              <span className="inline-flex items-center gap-2 text-sm">
-                {d.label === 'Day' ? (
-                  <Sun className="h-4 w-4 text-text-secondary" />
-                ) : (
-                  <Moon className="h-4 w-4 text-text-secondary" />
-                )}
-                {d.label}
-              </span>
-              <span className="font-display text-lg">{d.pct}%</span>
-            </div>
-          ))}
+          {dayNight.map((d) => {
+            const isSelected = selectedDayNight === d.label
+            const inner = (
+              <>
+                <span className="inline-flex items-center gap-2 text-sm">
+                  {d.label === 'Day' ? (
+                    <Sun className="h-4 w-4 text-text-secondary" />
+                  ) : (
+                    <Moon className="h-4 w-4 text-text-secondary" />
+                  )}
+                  {d.label}
+                </span>
+                <span className="font-display text-lg">{d.pct}%</span>
+              </>
+            )
+            const boxClass =
+              'flex flex-1 items-center justify-between rounded-[var(--radius-button)] border px-4 py-3'
+
+            if (dayNightInteractive && d.optionSlug) {
+              return (
+                <button
+                  key={d.label}
+                  type="button"
+                  disabled={disabled}
+                  aria-pressed={isSelected}
+                  onClick={() => onDayNightSelect?.(d.label, d.optionSlug!)}
+                  className={cn(
+                    boxClass,
+                    'text-left transition-colors',
+                    isSelected ? 'border-accent bg-accent/10' : 'border-border hover:border-text-secondary',
+                    disabled && 'cursor-not-allowed opacity-60',
+                  )}
+                >
+                  {inner}
+                </button>
+              )
+            }
+
+            return (
+              <div key={d.label} className={cn(boxClass, 'border-border')}>
+                {inner}
+              </div>
+            )
+          })}
         </div>
       ) : null}
     </div>

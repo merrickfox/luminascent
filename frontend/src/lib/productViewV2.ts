@@ -26,8 +26,20 @@ export type VoteDimensionView = {
   total: number;
   options: VoteOptionView[];
 };
-export type SeasonBar = { name: string; pct: number };
-export type DayNightView = { label: "Day" | "Night"; pct: number };
+export type SeasonBar = {
+  name: string;
+  pct: number;
+  /** slug + count present for real (votable) bars; absent for ghosts. */
+  optionSlug?: string;
+  count?: number;
+};
+export type DayNightView = {
+  label: "Day" | "Night";
+  pct: number;
+  /** The vote option a Day/Night click casts ("day" | "night"). */
+  optionSlug?: string;
+  count?: number;
+};
 /**
  * lowercase => render with a CSS lowercase transform (unit-bearing cells).
  * capitalize => title-case each word via CSS (free-text wording cells).
@@ -214,27 +226,31 @@ export function buildCommunityDimensions(
     });
 }
 
+// Always returns all four seasons (counts default to 0) so they're votable even
+// before any votes exist.
 function buildSeasons(votes: VoteAggregate[]): SeasonBar[] {
   const season = votes.filter((v) => v.dimension_slug === "season");
-  if (season.length === 0) return [];
   const total = season.reduce((sum, v) => sum + v.vote_count, 0);
   return SEASON_ORDER.map(({ slug, name }) => {
-    const row = season.find((v) => v.option_slug === slug);
-    return { name, pct: row ? pct(row.vote_count, total) : 0 };
+    const count = season.find((v) => v.option_slug === slug)?.vote_count ?? 0;
+    return { name, optionSlug: slug, count, pct: pct(count, total) };
   });
 }
 
+// Collapses the four time_of_day options into a votable Day/Night split. A Day
+// click casts "day", Night casts "night".
 function buildDayNight(votes: VoteAggregate[]): DayNightView[] {
   const tod = votes.filter((v) => v.dimension_slug === "time_of_day");
-  if (tod.length === 0) return [];
   const total = tod.reduce((sum, v) => sum + v.vote_count, 0);
   const sumOf = (slugs: string[]) =>
     tod
       .filter((v) => slugs.includes(v.option_slug))
       .reduce((sum, v) => sum + v.vote_count, 0);
+  const day = sumOf(["morning", "day"]);
+  const night = sumOf(["evening", "night"]);
   return [
-    { label: "Day", pct: pct(sumOf(["morning", "day"]), total) },
-    { label: "Night", pct: pct(sumOf(["evening", "night"]), total) },
+    { label: "Day", optionSlug: "day", count: day, pct: pct(day, total) },
+    { label: "Night", optionSlug: "night", count: night, pct: pct(night, total) },
   ];
 }
 
