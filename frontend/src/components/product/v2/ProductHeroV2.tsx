@@ -46,7 +46,11 @@ export function ProductHeroV2({ view, images, fallbackUrl }: ProductHeroV2Props)
         <div className="mt-7 flex flex-wrap gap-x-10 gap-y-5 border-t border-border pt-6">
           <Stat
             value={view.rating.avg != null ? view.rating.avg.toFixed(1) : null}
-            label={view.rating.count > 0 ? `${view.rating.count} ratings` : 'No ratings yet'}
+            label={
+              view.rating.count > 0
+                ? `${view.rating.count} ${view.rating.count === 1 ? 'rating' : 'ratings'}`
+                : 'No ratings yet'
+            }
             icon="star"
           />
           {burnValue ? <Stat value={burnValue} unit="hrs" label="Burn time" /> : null}

@@ -118,6 +118,15 @@ function pct(part: number, total: number): number {
   return Math.round((part / total) * 100);
 }
 
+/** Per-star (5→1) distribution from a set of review ratings. */
+function buildRatingDistribution(ratings: number[]): RatingDistRow[] {
+  const total = ratings.length;
+  return [5, 4, 3, 2, 1].map((stars) => {
+    const n = ratings.filter((r) => Math.round(r) === stars).length;
+    return { stars, pct: pct(n, total) };
+  });
+}
+
 function groupNotesByStage(detail: ProductDetail): PyramidGroup[] {
   const buckets = new Map<string, { name: string; color: string }[]>();
   for (const entry of detail.notes) {
@@ -371,6 +380,22 @@ export function toProductV2View(detail: ProductDetail): ProductV2View {
     body: r.body,
   }));
 
+  // Prefer a rating derived from real approved reviews; fall back to the stored
+  // summary (seeded/imported) only when there are no rated reviews yet.
+  const ratedReviews = reviews.filter((r) => r.rating != null);
+  const reviewRatingCount = ratedReviews.length;
+  const ratingView =
+    reviewRatingCount > 0
+      ? {
+          avg: ratedReviews.reduce((sum, r) => sum + (r.rating as number), 0) / reviewRatingCount,
+          count: reviewRatingCount,
+        }
+      : { avg: rating?.rating_avg ?? null, count: rating?.rating_count ?? 0 };
+  const ratingDist =
+    reviewRatingCount > 0
+      ? buildRatingDistribution(ratedReviews.map((r) => r.rating as number))
+      : null;
+
   return {
     name: product.name,
     brand: brand?.name ?? null,
@@ -381,10 +406,7 @@ export function toProductV2View(detail: ProductDetail): ProductV2View {
     perfumer: null,
     fromPrice,
     summary: scent_profile?.summary ?? product.description ?? null,
-    rating: {
-      avg: rating?.rating_avg ?? null,
-      count: rating?.rating_count ?? 0,
-    },
+    rating: ratingView,
     pyramid: groupNotesByStage(detail),
     accords: accordBars,
     accordChips,
@@ -395,6 +417,6 @@ export function toProductV2View(detail: ProductDetail): ProductV2View {
     stockists,
     similar,
     reviews: reviewViews,
-    ratingDist: null,
+    ratingDist,
   };
 }

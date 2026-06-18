@@ -129,7 +129,7 @@ export function ReviewsSectionV2({ rating, ratingDist, reviews, onWriteReview }:
   return (
     <div>
       <SectionTitle
-        hint={rating.count > 0 ? `${rating.count} ratings` : undefined}
+        hint={rating.count > 0 ? `${rating.count} ${rating.count === 1 ? 'rating' : 'ratings'}` : undefined}
         cta={<ContributeLink label="Write a review" onClick={onWriteReview} />}
       >
         What members say
