@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react'
+import { Check, Moon, Sun } from 'lucide-react'
 import type { DayNightView, SeasonBar } from '../../../lib/productViewV2'
 import { cn } from '../../../lib/utils'
 
@@ -39,18 +39,19 @@ export function SeasonBars({
             <>
               <span className="text-xs tabular-nums text-text-secondary">{s.pct}</span>
               <div
-                className="w-full max-w-[56px] rounded-t"
+                className="w-full max-w-[48px] rounded-t"
                 style={{
-                  height: `${(s.pct / max) * 88}px`,
+                  height: `${(s.pct / max) * 80}px`,
                   background: s.pct === max && s.pct > 0 ? 'var(--color-accent)' : 'var(--color-stone)',
                 }}
               />
               <span
                 className={cn(
-                  'text-xs uppercase tracking-[0.06em]',
+                  'flex items-center gap-1 text-xs uppercase tracking-[0.06em]',
                   isSelected ? 'font-medium text-accent' : 'text-text-secondary',
                 )}
               >
+                {isSelected && <Check className="h-3 w-3" strokeWidth={2.5} />}
                 {s.name}
               </span>
             </>
@@ -63,10 +64,13 @@ export function SeasonBars({
                 type="button"
                 disabled={disabled}
                 aria-pressed={isSelected}
+                title={isSelected ? `Remove your ${s.name} vote` : `Vote ${s.name}`}
                 onClick={() => onSeasonSelect?.(s.optionSlug!)}
                 className={cn(
-                  'flex h-full flex-1 flex-col items-center justify-end gap-2 rounded-md border pb-1 pt-1 transition-colors',
-                  isSelected ? 'border-accent bg-accent/5' : 'border-transparent hover:bg-surface',
+                  'flex h-full flex-1 cursor-pointer flex-col items-center justify-end gap-2 rounded-lg border px-1 pb-2 pt-1.5 transition-colors',
+                  isSelected
+                    ? 'border-accent bg-accent/10'
+                    : 'border-border hover:border-text-secondary hover:bg-surface',
                   disabled && 'cursor-not-allowed opacity-60',
                 )}
               >
@@ -91,11 +95,12 @@ export function SeasonBars({
               <>
                 <span className="inline-flex items-center gap-2 text-sm">
                   {d.label === 'Day' ? (
-                    <Sun className="h-4 w-4 text-text-secondary" />
+                    <Sun className={cn('h-4 w-4', isSelected ? 'text-accent' : 'text-text-secondary')} />
                   ) : (
-                    <Moon className="h-4 w-4 text-text-secondary" />
+                    <Moon className={cn('h-4 w-4', isSelected ? 'text-accent' : 'text-text-secondary')} />
                   )}
                   {d.label}
+                  {isSelected && <Check className="h-3.5 w-3.5 text-accent" strokeWidth={2.5} />}
                 </span>
                 <span className="font-display text-lg">{d.pct}%</span>
               </>

@@ -73,15 +73,22 @@ export function SeasonalityCard({
       </SectionTitle>
 
       {showInteractive ? (
-        <SeasonBars
-          seasons={seasons}
-          dayNight={dayNight}
-          selectedSeason={selectedSeason}
-          selectedDayNight={selectedDayNight}
-          disabled={disabled}
-          onSeasonSelect={handleSeason}
-          onDayNightSelect={handleDayNight}
-        />
+        <div>
+          {isLoggedIn && (
+            <p className="-mt-3 mb-5 text-xs leading-relaxed text-text-secondary">
+              Tap a season and a Day/Night you'd burn this in. Tap a highlighted pick to remove it.
+            </p>
+          )}
+          <SeasonBars
+            seasons={seasons}
+            dayNight={dayNight}
+            selectedSeason={selectedSeason}
+            selectedDayNight={selectedDayNight}
+            disabled={disabled}
+            onSeasonSelect={handleSeason}
+            onDayNightSelect={handleDayNight}
+          />
+        </div>
       ) : (
         <ContributeInvite
           title="When do you reach for it?"
