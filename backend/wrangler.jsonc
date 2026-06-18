@@ -29,9 +29,27 @@
 			"remote": true
 		}
 	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "USER_STORE",
+				"class_name": "UserStore"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["UserStore"]
+		}
+	],
 	"vars": {
 		"ADMIN_API_KEY": "dev-admin-key",
-		"R2_PUBLIC_BASE_URL": "https://pub-45a6fcb80891409e9b5b224fa471a158.r2.dev"
+		"R2_PUBLIC_BASE_URL": "https://pub-45a6fcb80891409e9b5b224fa471a158.r2.dev",
+		// Dev/test fallback only. Override locally via backend/.dev.vars and in
+		// production via `wrangler secret put SUPABASE_JWT_SECRET` (the legacy
+		// Supabase JWT secret, used to verify HS256 access tokens locally).
+		"SUPABASE_JWT_SECRET": "dev-supabase-jwt-secret"
 	}
 	/**
 	 * Smart Placement

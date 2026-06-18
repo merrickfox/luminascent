@@ -1,0 +1,8 @@
+# Copy to `.dev.vars` (gitignored) for local development.
+# `wrangler dev` loads these and they OVERRIDE the `vars` in wrangler.jsonc.
+#
+# SUPABASE_JWT_SECRET is the *legacy* Supabase JWT secret
+# (Supabase dashboard → Project Settings → API → JWT Settings → JWT Secret).
+# It verifies HS256 access tokens locally with no network call to Supabase.
+# Use the same real value locally as in production (one Supabase env).
+SUPABASE_JWT_SECRET="your-legacy-supabase-jwt-secret"

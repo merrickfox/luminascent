@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProductPage } from './pages/ProductPage'
 import { ProductPageV2 } from './pages/ProductPageV2'
+import { ProfilePage } from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="products/:slug" element={<ProductPageV2 />} />
         <Route path="products/:slug/v1" element={<ProductPage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

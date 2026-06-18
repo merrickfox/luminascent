@@ -14,6 +14,14 @@ export type Category = {
   slug: string
 }
 
+export type User = {
+  id: string
+  username: string
+  email: string
+  created_at: string
+  updated_at: string
+}
+
 export type Note = {
   id: string
   name: string

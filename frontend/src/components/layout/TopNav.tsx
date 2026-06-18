@@ -1,7 +1,11 @@
 import { Search, ShoppingBag, User } from 'lucide-react'
+import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthProvider'
 import { iconSm } from '../../lib/icons'
 import { cn } from '../../lib/utils'
+import { AccountMenu } from '../auth/AccountMenu'
+import { AuthModal } from '../auth/AuthModal'
 import { Container } from './Container'
 
 const navItems = [
@@ -18,11 +22,20 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     isActive && 'text-text',
   )
 
-function IconButton({ label, children }: { label: string; children: React.ReactNode }) {
+function IconButton({
+  label,
+  children,
+  onClick,
+}: {
+  label: string
+  children: React.ReactNode
+  onClick?: () => void
+}) {
   return (
     <button
       type="button"
       aria-label={label}
+      onClick={onClick}
       className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors duration-300 hover:text-text"
     >
       {children}
@@ -31,6 +44,18 @@ function IconButton({ label, children }: { label: string; children: React.ReactN
 }
 
 export function TopNav() {
+  const { user } = useAuth()
+  const [authOpen, setAuthOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  function handleAccountClick() {
+    if (user) {
+      setMenuOpen((prev) => !prev)
+    } else {
+      setAuthOpen(true)
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/90 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between sm:h-20">
@@ -63,14 +88,19 @@ export function TopNav() {
           <IconButton label="Search">
             <Search {...iconSm} />
           </IconButton>
-          <IconButton label="Account">
-            <User {...iconSm} />
-          </IconButton>
+          <div className="relative">
+            <IconButton label="Account" onClick={handleAccountClick}>
+              <User {...iconSm} />
+            </IconButton>
+            <AccountMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+          </div>
           <IconButton label="Shopping bag">
             <ShoppingBag {...iconSm} />
           </IconButton>
         </div>
       </Container>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }

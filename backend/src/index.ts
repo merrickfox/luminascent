@@ -10,6 +10,7 @@ import { remindsRoutes } from './features/reminds/handlers';
 import { reviewRoutes } from './features/reviews/handlers';
 import { importRoutes } from './features/import/handlers';
 import { voteRoutes } from './features/votes/handlers';
+import { meRoutes, userPublicRoutes } from './features/users/handlers';
 import { apiKeyAuth } from './lib/auth';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -28,6 +29,10 @@ app.route('/products', voteRoutes);
 app.route('/products', reviewRoutes);
 app.route('/products', remindsRoutes);
 
+// User auth-gated routes (self-gated via supabaseAuth, not under /admin).
+app.route('/me', meRoutes);
+app.route('/users', userPublicRoutes);
+
 const admin = new Hono<{ Bindings: Env }>();
 admin.use('*', apiKeyAuth);
 admin.route('/brands', brandRoutes);
@@ -41,5 +46,7 @@ admin.route('/products', reviewRoutes);
 admin.route('/products', remindsRoutes);
 admin.route('/import', importRoutes);
 app.route('/admin', admin);
+
+export { UserStore } from './durable-objects/UserStore';
 
 export default app;

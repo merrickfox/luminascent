@@ -4,20 +4,48 @@ import type {
   ProductDetail,
   ProductListFilters,
   ProductsResponse,
+  User,
 } from '../types/api'
+import { supabase } from './supabase'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8023'
 
-async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`)
+type RequestOptions = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+  body?: unknown
+  /** Attach the current Supabase access token as a Bearer header. */
+  auth?: boolean
+}
+
+async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, auth = false } = options
+  const headers: Record<string, string> = {}
+
+  if (body !== undefined) headers['content-type'] = 'application/json'
+
+  if (auth) {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (token) headers.authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}))
-    const message = typeof body.error === 'string' ? body.error : response.statusText
+    const errorBody = await response.json().catch(() => ({}))
+    const message = typeof errorBody.error === 'string' ? errorBody.error : response.statusText
     throw new Error(message || `Request failed (${response.status})`)
   }
 
   return response.json() as Promise<T>
+}
+
+function fetchJson<T>(path: string): Promise<T> {
+  return apiRequest<T>(path)
 }
 
 function buildQuery(filters: ProductListFilters): string {
@@ -51,4 +79,23 @@ export function getProducts(filters: ProductListFilters = {}): Promise<ProductsR
 
 export function getProduct(slug: string): Promise<ProductDetail> {
   return fetchJson(`/products/${slug}`)
+}
+
+// --- Users (authenticated) ---
+
+/** Current user's registry row. Requires a Supabase session. */
+export function getMe(): Promise<{ user: User }> {
+  return apiRequest('/me', { auth: true })
+}
+
+/**
+ * Create (or refresh) the current user's registry row. Idempotent — call after
+ * sign-up (with the chosen username) and after sign-in (no username needed).
+ */
+export function ensureMe(username?: string): Promise<{ user: User }> {
+  return apiRequest('/me', { method: 'POST', auth: true, body: username ? { username } : {} })
+}
+
+export function updateMe(username: string): Promise<{ user: User }> {
+  return apiRequest('/me', { method: 'PATCH', auth: true, body: { username } })
 }
