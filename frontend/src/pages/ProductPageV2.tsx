@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import { Breadcrumb } from '../components/layout/Breadcrumb'
 import { Container } from '../components/layout/Container'
 import { PageSection } from '../components/layout/PageSection'
@@ -12,11 +14,23 @@ import { SpecsGrid } from '../components/product/v2/SpecsGrid'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Spinner } from '../components/ui/Spinner'
 import { useProduct } from '../hooks/useProduct'
+import { useMyVotes, useVoteDimensions, useVoteMutations } from '../hooks/useVotes'
 import { toProductV2View } from '../lib/productViewV2'
 
 export function ProductPageV2() {
   const { slug } = useParams<{ slug: string }>()
   const { data, isLoading, isError } = useProduct(slug)
+
+  const productId = data?.product.id
+  const { user, openAuthModal } = useAuth()
+  const { data: voteCatalog } = useVoteDimensions()
+  const { data: myVotesList } = useMyVotes(productId)
+  const { cast, remove, isPending } = useVoteMutations(slug, productId)
+
+  const myVotes = useMemo(
+    () => new Map((myVotesList ?? []).map((v) => [v.dimension_slug, v.option_slug])),
+    [myVotesList],
+  )
 
   if (isLoading) return <Spinner />
 
@@ -72,7 +86,16 @@ export function ProductPageV2() {
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
           <CompositionCard pyramid={view.pyramid} accords={view.accords} />
           <div className="flex flex-col gap-8">
-            <CommunityProfileCard votes={view.votes} />
+            <CommunityProfileCard
+              votes={data.votes}
+              dimensions={voteCatalog}
+              myVotes={myVotes}
+              isLoggedIn={Boolean(user)}
+              disabled={isPending}
+              onVote={(dimensionSlug, optionSlug) => cast.mutate({ dimensionSlug, optionSlug })}
+              onRemove={(dimensionSlug) => remove.mutate(dimensionSlug)}
+              onRequireLogin={openAuthModal}
+            />
             <SeasonalityCard seasons={view.seasons} dayNight={view.dayNight} />
           </div>
         </div>

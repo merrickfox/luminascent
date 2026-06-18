@@ -1,4 +1,4 @@
-import type { ProductDetail, VoteAggregate } from "../types/api";
+import type { ProductDetail, VoteAggregate, VoteDimensionCatalog } from "../types/api";
 import { resolveEntityColor } from "./colors";
 import { formatPrice, formatSize } from "./utils";
 
@@ -13,9 +13,16 @@ export type PyramidGroup = {
 /** pct is null when the community strength score is unknown. */
 export type AccordBar = { name: string; color: string; pct: number | null };
 export type AccordChip = { name: string; color: string };
-export type VoteOptionView = { label: string; pct: number };
+export type VoteOptionView = {
+  label: string;
+  pct: number;
+  /** slug + count present for interactive (real) dimensions; absent for ghosts. */
+  optionSlug?: string;
+  count?: number;
+};
 export type VoteDimensionView = {
   dimension: string;
+  dimensionSlug?: string;
   total: number;
   options: VoteOptionView[];
 };
@@ -145,6 +152,70 @@ function groupVotesByDimension(votes: VoteAggregate[]): VoteDimensionView[] {
       })),
     };
   });
+}
+
+// Dimensions owned by the Seasonality card — excluded from the community card.
+const SEASONALITY_DIMS = new Set(["season", "time_of_day"]);
+// Preferred display order for the community card; unknown dims sort after.
+const COMMUNITY_DIMENSION_ORDER = [
+  "rating_reaction",
+  "sillage",
+  "longevity",
+  "price_value",
+  "gender",
+  "occasion",
+];
+
+/**
+ * Build the community card's votable dimensions from the catalog (so options
+ * render even at zero votes) overlaid with real per-option counts. Falls back to
+ * deriving dimensions from the votes themselves when the catalog isn't loaded.
+ */
+export function buildCommunityDimensions(
+  catalog: VoteDimensionCatalog[] | undefined,
+  votes: VoteAggregate[],
+): VoteDimensionView[] {
+  const counts = new Map<string, Map<string, number>>();
+  const names = new Map<string, string>();
+  for (const v of votes) {
+    if (SEASONALITY_DIMS.has(v.dimension_slug)) continue;
+    names.set(v.dimension_slug, v.dimension_name);
+    const m = counts.get(v.dimension_slug) ?? new Map<string, number>();
+    m.set(v.option_slug, v.vote_count);
+    counts.set(v.dimension_slug, m);
+  }
+
+  const source =
+    catalog && catalog.length
+      ? catalog
+          .filter((d) => !SEASONALITY_DIMS.has(d.slug))
+          .map((d) => ({ slug: d.slug, name: d.name, options: d.options }))
+      : [...counts.entries()].map(([slug, m]) => ({
+          slug,
+          name: names.get(slug) ?? slug,
+          options: [...m.keys()].map((s) => ({ slug: s, label: s })),
+        }));
+
+  const rank = (slug: string) => {
+    const i = COMMUNITY_DIMENSION_ORDER.indexOf(slug);
+    return i < 0 ? COMMUNITY_DIMENSION_ORDER.length : i;
+  };
+
+  return [...source]
+    .sort((a, b) => rank(a.slug) - rank(b.slug))
+    .map((d) => {
+      const cmap = counts.get(d.slug);
+      const total = d.options.reduce((sum, o) => sum + (cmap?.get(o.slug) ?? 0), 0);
+      return {
+        dimension: d.name,
+        dimensionSlug: d.slug,
+        total,
+        options: d.options.map((o) => {
+          const count = cmap?.get(o.slug) ?? 0;
+          return { label: o.label, optionSlug: o.slug, count, pct: pct(count, total) };
+        }),
+      };
+    });
 }
 
 function buildSeasons(votes: VoteAggregate[]): SeasonBar[] {

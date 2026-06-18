@@ -7,6 +7,8 @@ type ContributeInviteProps = {
   title: string
   body: string
   ctaLabel?: string
+  /** When set, the CTA becomes an active button (e.g. open login / first vote). */
+  onCta?: () => void
   /** Minimum body height so sibling empty cards line up. */
   minHeight?: number
 }
@@ -25,6 +27,7 @@ export function ContributeInvite({
   title,
   body,
   ctaLabel = 'Be the first to vote',
+  onCta,
   minHeight = 300,
 }: ContributeInviteProps) {
   return (
@@ -50,7 +53,9 @@ export function ContributeInvite({
         <p className="mx-0 mb-7 mt-3 max-w-[300px] text-sm leading-relaxed text-text-secondary">
           {body}
         </p>
-        <Button variant="primary">{ctaLabel}</Button>
+        <Button variant="primary" onClick={onCta}>
+          {ctaLabel}
+        </Button>
       </div>
     </div>
   )

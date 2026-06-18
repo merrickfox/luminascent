@@ -1,10 +1,13 @@
 import type {
   Brand,
   Category,
+  MyVote,
   ProductDetail,
   ProductListFilters,
   ProductsResponse,
   User,
+  VoteAggregate,
+  VoteDimensionCatalog,
 } from '../types/api'
 import { supabase } from './supabase'
 
@@ -98,4 +101,34 @@ export function ensureMe(username?: string): Promise<{ user: User }> {
 
 export function updateMe(username: string): Promise<{ user: User }> {
   return apiRequest('/me', { method: 'PATCH', auth: true, body: { username } })
+}
+
+// --- Community votes ---
+
+type VoteResult = { votes: VoteAggregate[]; my_votes: MyVote[] }
+
+/** The full votable catalog (dimensions + options). Public. */
+export function getVoteDimensions(): Promise<{ dimensions: VoteDimensionCatalog[] }> {
+  return apiRequest('/vote-dimensions')
+}
+
+/** The current user's votes for a product. Requires a session. */
+export function getMyVotes(productId: string): Promise<{ my_votes: MyVote[] }> {
+  return apiRequest(`/products/${productId}/my-votes`, { auth: true })
+}
+
+export function castVote(productId: string, dimensionSlug: string, optionSlug: string): Promise<VoteResult> {
+  return apiRequest(`/products/${productId}/vote`, {
+    method: 'POST',
+    auth: true,
+    body: { dimension_slug: dimensionSlug, option_slug: optionSlug },
+  })
+}
+
+export function removeVote(productId: string, dimensionSlug: string): Promise<VoteResult> {
+  return apiRequest(`/products/${productId}/vote`, {
+    method: 'DELETE',
+    auth: true,
+    body: { dimension_slug: dimensionSlug },
+  })
 }

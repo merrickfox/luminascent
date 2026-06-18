@@ -9,7 +9,7 @@ import { productRoutes } from './features/products/handlers';
 import { remindsRoutes } from './features/reminds/handlers';
 import { reviewRoutes } from './features/reviews/handlers';
 import { importRoutes } from './features/import/handlers';
-import { voteRoutes } from './features/votes/handlers';
+import { userVoteRoutes, voteDimensionRoutes, voteRoutes } from './features/votes/handlers';
 import { meRoutes, userPublicRoutes } from './features/users/handlers';
 import { apiKeyAuth } from './lib/auth';
 
@@ -25,13 +25,14 @@ app.route('/notes', noteRoutes);
 app.route('/accords', accordRoutes);
 app.route('/products', productRoutes);
 app.route('/products', imageRoutes);
-app.route('/products', voteRoutes);
 app.route('/products', reviewRoutes);
 app.route('/products', remindsRoutes);
 
 // User auth-gated routes (self-gated via supabaseAuth, not under /admin).
 app.route('/me', meRoutes);
 app.route('/users', userPublicRoutes);
+app.route('/products', userVoteRoutes);
+app.route('/vote-dimensions', voteDimensionRoutes);
 
 const admin = new Hono<{ Bindings: Env }>();
 admin.use('*', apiKeyAuth);

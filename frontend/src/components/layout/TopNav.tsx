@@ -5,7 +5,6 @@ import { useAuth } from '../../auth/AuthProvider'
 import { iconSm } from '../../lib/icons'
 import { cn } from '../../lib/utils'
 import { AccountMenu } from '../auth/AccountMenu'
-import { AuthModal } from '../auth/AuthModal'
 import { Container } from './Container'
 
 const navItems = [
@@ -44,15 +43,14 @@ function IconButton({
 }
 
 export function TopNav() {
-  const { user } = useAuth()
-  const [authOpen, setAuthOpen] = useState(false)
+  const { user, openAuthModal } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
   function handleAccountClick() {
     if (user) {
       setMenuOpen((prev) => !prev)
     } else {
-      setAuthOpen(true)
+      openAuthModal()
     }
   }
 
@@ -99,8 +97,6 @@ export function TopNav() {
           </IconButton>
         </div>
       </Container>
-
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </header>
   )
 }
