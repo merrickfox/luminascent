@@ -255,6 +255,18 @@
         color: #f9fafb;
         font: inherit;
       }
+      .brand-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #4b5563;
+        background: #1f2937;
+        color: #f9fafb;
+        font: inherit;
+      }
+      .brand-row { display: flex; align-items: center; gap: 8px; }
+      .brand-row .brand-input { flex: 1; min-width: 0; }
     `;
     shadowRoot.appendChild(style);
 
@@ -791,13 +803,16 @@
     if (state.mode === 'start') {
       if (!state.hasConfig) {
         return `
+          <input class="brand-input" id="lumiscrape-brand" type="text" placeholder="Brand (optional)" />
+          <div class="subtle">Names the local data folder and the brand stored in the database. Leave blank for multi-brand retailers — the brand is then derived from the site host.</div>
           <button class="btn primary" id="lumiscrape-configure">Configure for scraping</button>
-          <div class="subtle">Creates a host folder on the local scraper server.</div>
+          <div class="subtle">Creates the site folder on the local scraper server.</div>
           <button class="btn" id="lumiscrape-exclude">Exclude this site</button>
           <div class="subtle">Hides the scraper on this site permanently. Re-enable by clearing the userscript's stored values.</div>
         `;
       }
 
+      const brandName = state.config?.brand?.name || '';
       return `
         <div class="row">
           <button class="btn" data-mode="browse">Browse mode</button>
@@ -806,6 +821,11 @@
           <button class="btn" data-mode="extract">Extract mode</button>
         </div>
         <div class="subtle">Workflow: browse → product → images → extract</div>
+        <div class="brand-row">
+          <input class="brand-input" id="lumiscrape-brand" type="text" placeholder="Brand (optional)" value="${escapeHtml(brandName)}" />
+          <button class="btn" id="lumiscrape-save-brand">Save brand</button>
+        </div>
+        <div class="subtle">${brandName ? `Folder locked to “${escapeHtml(state.config?.siteSlug || state.config?.hostSlug || '')}”. Editing the brand updates the database name only.` : 'Add a brand to set the database name. The data folder keeps its current name.'}</div>
         <button class="btn" id="lumiscrape-exclude">Exclude this site</button>
         <div class="subtle">Hides the scraper on this site permanently. Re-enable by clearing the userscript's stored values.</div>
       `;
@@ -1073,15 +1093,22 @@
 
   function bindPanelEvents() {
     panelEl.querySelector('#lumiscrape-configure')?.addEventListener('click', async () => {
+      const brand = panelEl.querySelector('#lumiscrape-brand')?.value.trim() || null;
       await saveConfig({
         host: state.host,
         version: 1,
         createdAt: new Date().toISOString(),
+        brand,
         browse: null,
         product: { fields: [] },
         images: [],
       });
       setMode('start');
+    });
+
+    panelEl.querySelector('#lumiscrape-save-brand')?.addEventListener('click', async () => {
+      const brand = panelEl.querySelector('#lumiscrape-brand')?.value.trim() || null;
+      await saveConfig({ brand });
     });
 
     panelEl.querySelector('#lumiscrape-exclude')?.addEventListener('click', () => {

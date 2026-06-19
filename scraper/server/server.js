@@ -71,6 +71,62 @@ function hostSlug(host) {
     .replace(/^_+|_+$/g, '') || 'unknown_host';
 }
 
+// DB-style brand slug (hyphenated) — kept in sync with the pipeline's slugify so the
+// local folder name equals the brand_slug stored in the database.
+function brandSlug(name) {
+  return String(name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// www-insensitive host key shared by the host->folder index and its lookups.
+function normalizeHost(host) {
+  return String(host || '').toLowerCase().replace(/^www\./, '');
+}
+
+// Accepts a brand as a raw string (display name) or a {name} object and normalizes it to
+// { name, slug }, or null when empty. The slug is always derived from the name.
+function normalizeBrand(raw) {
+  if (!raw) return null;
+  const name = (typeof raw === 'string' ? raw : raw.name || '').trim();
+  if (!name) return null;
+  const slug = brandSlug(name);
+  if (!slug) return null;
+  return { name, slug };
+}
+
+// A site's folder name is decided once, at creation: brand slug when a brand was given,
+// else host slug. Because later requests arrive keyed only by host, we keep an in-memory
+// index (host -> folder) built from each site's config.json and updated on every save.
+const hostIndex = new Map();
+
+function buildHostIndex() {
+  hostIndex.clear();
+  let entries;
+  try {
+    entries = fs.readdirSync(SITES_DIR, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const cfgPath = path.join(SITES_DIR, entry.name, 'config.json');
+    if (!fs.existsSync(cfgPath)) continue;
+    try {
+      const cfg = readJsonFile(cfgPath);
+      if (cfg.host) hostIndex.set(normalizeHost(cfg.host), entry.name);
+    } catch {
+      // Skip unreadable/partial config — it'll be re-registered on next save.
+    }
+  }
+}
+
+function resolveSiteFolder(host) {
+  return hostIndex.get(normalizeHost(host)) || hostSlug(host);
+}
+
 function urlSlug(urlString) {
   let parsed;
   try {
@@ -99,7 +155,7 @@ function ensureDir(dir) {
 }
 
 function siteDir(host) {
-  return path.join(SITES_DIR, hostSlug(host));
+  return path.join(SITES_DIR, resolveSiteFolder(host));
 }
 
 function configPath(host) {
@@ -123,6 +179,7 @@ function emptyBlueprint(host) {
   return {
     host,
     hostSlug: hostSlug(host),
+    brand: null,
     version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -269,21 +326,36 @@ async function handleRequest(req, res) {
         return;
       }
 
-      const dir = siteDir(host);
+      // Folder is locked at creation: brand slug when a brand is supplied up front,
+      // else host slug. An already-created site keeps its folder even if a brand is
+      // added later (we only update the brand metadata, never migrate the folder).
+      const incomingBrand = Object.prototype.hasOwnProperty.call(body.config || {}, 'brand')
+        ? normalizeBrand(body.config.brand)
+        : undefined;
+      const existingFolder = resolveSiteFolder(host);
+      const isNew = !fs.existsSync(path.join(SITES_DIR, existingFolder, 'config.json'));
+      const folder = isNew ? (incomingBrand ? incomingBrand.slug : hostSlug(host)) : existingFolder;
+
+      const dir = path.join(SITES_DIR, folder);
       ensureDir(dir);
 
-      const filePath = configPath(host);
+      const filePath = path.join(dir, 'config.json');
       const existing = fs.existsSync(filePath) ? readJsonFile(filePath) : emptyBlueprint(host);
       const next = {
         ...existing,
         ...body.config,
         host,
         hostSlug: hostSlug(host),
+        // Only touch brand when the client explicitly sent the key (configure / save-brand);
+        // other saves (browse lock, product tag) leave it untouched.
+        brand: incomingBrand === undefined ? (existing.brand ?? null) : incomingBrand,
+        siteSlug: folder,
         updatedAt: new Date().toISOString(),
       };
 
       writeJsonFile(filePath, next);
-      sendJson(res, 200, { ok: true, hostSlug: hostSlug(host), config: next });
+      hostIndex.set(normalizeHost(host), folder);
+      sendJson(res, 200, { ok: true, hostSlug: hostSlug(host), siteSlug: folder, config: next });
       return;
     }
 
@@ -401,6 +473,7 @@ async function handleRequest(req, res) {
 }
 
 ensureDir(SITES_DIR);
+buildHostIndex();
 
 const server = http.createServer((req, res) => {
   handleRequest(req, res).catch((err) => {
@@ -418,4 +491,4 @@ if (isMain) {
   });
 }
 
-export { hostSlug, urlSlug, buildLlmInput };
+export { hostSlug, brandSlug, urlSlug, buildLlmInput };

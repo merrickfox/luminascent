@@ -26,13 +26,21 @@ export function loadSitePipelineConfig(hostSlug: string): SitePipelineConfig | n
   return JSON.parse(readFileSync(path, 'utf-8')) as SitePipelineConfig;
 }
 
-export function loadHostConfig(hostSlug: string): { host: string; hostSlug: string } | null {
+export function loadHostConfig(
+  hostSlug: string,
+): { host: string; hostSlug: string; brand: { name: string; slug?: string } | null } | null {
   const path = join(SCRAPER_ROOT, 'sites', hostSlug, 'config.json');
   if (!existsSync(path)) return null;
-  const config = JSON.parse(readFileSync(path, 'utf-8')) as { host?: string; hostSlug?: string };
+  const config = JSON.parse(readFileSync(path, 'utf-8')) as {
+    host?: string;
+    hostSlug?: string;
+    brand?: { name?: string; slug?: string } | null;
+  };
+  const brand = config.brand?.name ? { name: config.brand.name, slug: config.brand.slug } : null;
   return {
     host: config.host ?? hostSlug,
     hostSlug: config.hostSlug ?? hostSlug,
+    brand,
   };
 }
 
@@ -59,15 +67,28 @@ function deriveBrandFromHostSlug(hostSlug: string): Pick<SitePipelineConfig, 'br
   };
 }
 
-/** Site brand defaults: pipeline.json > CLI overrides > derived from config host > host slug. */
+/**
+ * Site brand defaults, lowest precedence first:
+ * host slug < derived from config host < explicit blueprint brand < pipeline.json < CLI overrides.
+ * An explicit brand entered at scrape-configure time (stored in config.json) is authoritative
+ * over host-derivation; a blank brand falls back to the historical host-derived behavior.
+ */
 export function resolveSiteBrand(
   hostSlug: string,
   overrides?: Partial<SitePipelineConfig>,
 ): SitePipelineConfig {
   const hostConfig = loadHostConfig(hostSlug);
-  const derived = hostConfig
-    ? deriveBrandFromHost(hostConfig.host)
-    : deriveBrandFromHostSlug(hostSlug);
+  let derived: Pick<SitePipelineConfig, 'brand_name' | 'brand_slug'>;
+  if (hostConfig?.brand) {
+    derived = {
+      brand_name: hostConfig.brand.name,
+      brand_slug: hostConfig.brand.slug ?? slugify(hostConfig.brand.name),
+    };
+  } else if (hostConfig) {
+    derived = deriveBrandFromHost(hostConfig.host);
+  } else {
+    derived = deriveBrandFromHostSlug(hostSlug);
+  }
 
   return {
     category_slug: 'candle',
