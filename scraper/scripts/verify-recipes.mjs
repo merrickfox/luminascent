@@ -167,7 +167,24 @@ function lazyImgUrl(img) {
   return firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
 }
 
+function normalizeImageUrl(raw) {
+  if (!raw) return raw;
+  let url = String(raw).trim();
+  if (!url || url.startsWith('data:')) return url || raw;
+  url = url.replace(/\{width\}/gi, '1024').replace(/\{height\}/gi, '1024');
+  try {
+    return new URL(url, location.href).href;
+  } catch {
+    return url;
+  }
+}
+
 function extractImageSrc(el) {
+  const raw = rawImageSrc(el);
+  return raw == null ? raw : normalizeImageUrl(raw);
+}
+
+function rawImageSrc(el) {
   if (!el) return null;
   const tag = el.tagName?.toLowerCase();
   if (tag === 'img') return lazyImgUrl(el);
@@ -718,6 +735,8 @@ setDom(
     <source class="bare" srcset="https://cdn.example.com/p1/bare.webp 1x">
     <img class="lazy" data-load="false" data-src="https://cdn.example.com/p1/lazy.png" data-image="https://cdn.example.com/p1/lazy.png">
     <img class="lazy-srcset" data-srcset="https://cdn.example.com/p1/lazy-1.png 1x, https://cdn.example.com/p1/lazy-2.png 2x">
+    <img class="shopify-tpl" data-src="//cdn.example.com/p1/IMG_1_{width}x.jpg?v=1">
+    <img class="root-rel" data-src="/cdn/p1/rel.jpg">
   </main>`,
   'shop.example.com',
 );
@@ -734,6 +753,13 @@ const lazySrc = extractImageSrc(document.querySelector('img.lazy'));
 if (lazySrc !== 'https://cdn.example.com/p1/lazy.png') fail('extractImageSrc did not fall back to lazy data-src', lazySrc);
 const lazySrcset = extractImageSrc(document.querySelector('img.lazy-srcset'));
 if (lazySrcset !== 'https://cdn.example.com/p1/lazy-1.png') fail('extractImageSrc did not fall back to lazy data-srcset', lazySrcset);
+// Shopify-style lazy template: protocol-relative + unresolved {width} placeholder.
+// Must become a concrete, absolute URL (the backend rejects both as "Invalid url").
+const tplSrc = extractImageSrc(document.querySelector('img.shopify-tpl'));
+if (tplSrc !== 'https://cdn.example.com/p1/IMG_1_1024x.jpg?v=1') fail('extractImageSrc did not resolve {width} + protocol-relative template', tplSrc);
+// Root-relative lazy URL resolves against the page origin.
+const rootRel = extractImageSrc(document.querySelector('img.root-rel'));
+if (rootRel !== 'https://shop.example.com/cdn/p1/rel.jpg') fail('extractImageSrc did not resolve root-relative URL', rootRel);
 if (extractImageSrc(null) !== null) fail('extractImageSrc(null) should be null');
 console.log('PASS: extractImageSrc resolves a live URL from <img>, <picture>, <source>, and lazy-loaded carriers');
 

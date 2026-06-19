@@ -12,6 +12,7 @@ import type {
 } from './types.js';
 import { getScraperRoot } from './config.js';
 import { slugify } from './slug.js';
+import { normalizeImageSourceUrl } from './image-url.js';
 
 function toArray(value: unknown): unknown[] {
   if (value == null) return [];
@@ -189,7 +190,7 @@ function buildImages(
 
   if (localFiles.length === 0) {
     return inputImages.map((img) => ({
-      source_url: img.source_url,
+      source_url: normalizeImageSourceUrl(img.source_url),
       position: img.position,
       is_primary: img.is_primary,
     }));
@@ -198,7 +199,7 @@ function buildImages(
   return localFiles.map((filename, index) => {
     const inputMatch = inputImages[index];
     return {
-      source_url: inputMatch?.source_url,
+      source_url: normalizeImageSourceUrl(inputMatch?.source_url),
       position: inputMatch?.position ?? index,
       is_primary: inputMatch?.is_primary ?? index === 0,
       file: `products/${productSlug}/images/${filename}`,

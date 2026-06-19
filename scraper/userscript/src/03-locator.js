@@ -492,6 +492,26 @@
     return first || null;
   };
 
+  // CDN image URLs read from lazy-load templates are frequently not usable as-is:
+  // protocol-relative (`//host/...`, no scheme), root-relative (`/path`), or carrying
+  // an unresolved size placeholder — Shopify ships `..._{width}x.jpg` in data-src and
+  // only substitutes a real width once its own loader runs in the foreground. A
+  // background capture tab never runs that loader, so we'd save the raw template and
+  // the backend (which requires a valid absolute URL) rejects it. Resolve placeholders
+  // to a concrete size and make the URL absolute against the page. Generic across CDNs:
+  // a normal loaded `src` is already absolute and placeholder-free, so this is a no-op.
+  function normalizeImageUrl(raw) {
+    if (!raw) return raw;
+    let url = String(raw).trim();
+    if (!url || url.startsWith('data:')) return url || raw;
+    url = url.replace(/\{width\}/gi, '1024').replace(/\{height\}/gi, '1024');
+    try {
+      return new URL(url, location.href).href;
+    } catch {
+      return url;
+    }
+  }
+
   // Lazy-loading sites (Squarespace, lazysizes, etc.) ship the real URL in a
   // data-* attribute and only populate `src` once the image scrolls into view.
   // Product pages captured in background child tabs often never trigger that
@@ -511,6 +531,11 @@
   }
 
   function extractImageSrc(el) {
+    const raw = rawImageSrc(el);
+    return raw == null ? raw : normalizeImageUrl(raw);
+  }
+
+  function rawImageSrc(el) {
     if (!el) return null;
     const tag = el.tagName?.toLowerCase();
 

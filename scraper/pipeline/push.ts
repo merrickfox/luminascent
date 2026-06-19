@@ -3,6 +3,7 @@ import { join, extname } from 'node:path';
 import type { PipelineConfig, ScrapedImageRecord, ScrapedProductRecord, SitePipelineConfig } from './types.js';
 import { getScraperRoot, resolveSiteBrand } from './config.js';
 import { formatApiError } from './format-error.js';
+import { normalizeImageSourceUrl } from './image-url.js';
 
 const EXT_TO_MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -25,7 +26,8 @@ function hydrateImages(hostSlug: string, images: ScrapedImageRecord[] | undefine
   if (!images?.length) return [];
 
   return images.map((image) => {
-    if (!image.file) return image;
+    const source_url = normalizeImageSourceUrl(image.source_url);
+    if (!image.file) return { ...image, source_url };
 
     const absolutePath = resolveImageFile(hostSlug, image.file);
     if (!existsSync(absolutePath)) {
@@ -36,7 +38,7 @@ function hydrateImages(hostSlug: string, images: ScrapedImageRecord[] | undefine
     return {
       position: image.position,
       is_primary: image.is_primary,
-      source_url: image.source_url,
+      source_url,
       data_base64: buffer.toString('base64'),
       content_type: contentTypeFromPath(absolutePath),
     };
