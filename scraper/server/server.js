@@ -348,6 +348,41 @@ async function handleRequest(req, res) {
       return;
     }
 
+    if (req.method === 'POST' && pathname === '/page') {
+      const body = await readBody(req);
+      const { host, scope, url: pageUrl, urlSlug: providedSlug, html } = body;
+
+      if (!host || !html) {
+        sendJson(res, 400, { error: 'host and html required' });
+        return;
+      }
+
+      // Offline DOM snapshots. Product pages land in the product's own folder so
+      // they sit alongside data.json / images; browse pages aren't tied to a
+      // single product, so they go in a site-level scraped-pages folder.
+      let baseDir;
+      if (scope === 'browse') {
+        baseDir = path.join(siteDir(host), 'scraped-pages');
+      } else {
+        const slug = providedSlug || urlSlug(pageUrl || '');
+        baseDir = path.join(productDir(host, slug), 'scraped-pages');
+      }
+      ensureDir(baseDir);
+
+      const fileSlug = urlSlug(pageUrl || 'page');
+      const filePath = path.join(baseDir, `${fileSlug}.html`);
+      fs.writeFileSync(filePath, String(html), 'utf8');
+
+      sendJson(res, 200, {
+        ok: true,
+        hostSlug: hostSlug(host),
+        scope: scope === 'browse' ? 'browse' : 'product',
+        path: filePath,
+        bytes: Buffer.byteLength(String(html)),
+      });
+      return;
+    }
+
     if (req.method === 'GET' && pathname === '/slug') {
       const productUrl = url.searchParams.get('url');
       if (!productUrl) {

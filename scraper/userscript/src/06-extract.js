@@ -302,6 +302,10 @@
     const urls = collectProductUrls();
     if (!urls.length) return;
 
+    // Snapshot the browse page DOM as an offline backup of where these URLs came
+    // from. Best-effort: don't block the run on it.
+    savePageSnapshot({ scope: 'browse', url: stripScrapeFlag(location.href) });
+
     // Fresh run: drop any leftover result keys / close markers from a prior run.
     clearResultKeys();
     closedAtByUrl.clear();
@@ -377,6 +381,42 @@
     return 'jpg';
   }
 
+  /**
+   * Serialize the live, fully-rendered DOM as the scraper sees it, minus the
+   * scraper's own UI. Saved as an offline backup so later passes can work
+   * against captured pages instead of re-hitting the site.
+   */
+  function captureRenderedHtml() {
+    const root = document.documentElement.cloneNode(true);
+    // Drop the scraper's injected host element (its UI lives in a shadow root,
+    // which outerHTML doesn't serialize, but the host div would still appear).
+    root.querySelectorAll('#lumiscrape-root').forEach((el) => el.remove());
+    // Strip the transient highlight classes the scraper paints onto page nodes.
+    root.querySelectorAll('[class*="lumiscrape-"]').forEach((el) => {
+      ['lumiscrape-highlight', 'lumiscrape-highlight-strong', 'lumiscrape-selectable-hover']
+        .forEach((cls) => el.classList.remove(cls));
+      if (el.getAttribute('class') === '') el.removeAttribute('class');
+    });
+
+    const doctype = document.doctype ? `<!DOCTYPE ${document.doctype.name}>\n` : '<!DOCTYPE html>\n';
+    return doctype + root.outerHTML;
+  }
+
+  /** Best-effort POST of the rendered DOM to the local server. Never throws. */
+  async function savePageSnapshot(options) {
+    try {
+      await apiPost('/page', {
+        host: state.host,
+        scope: options.scope,
+        url: options.url,
+        urlSlug: options.urlSlug || null,
+        html: captureRenderedHtml(),
+      });
+    } catch (err) {
+      console.warn('[Luminascent] Failed to save page snapshot', err);
+    }
+  }
+
   function buildScrapedData() {
     const fields = state.config?.product?.fields || [];
     const data = {
@@ -440,6 +480,8 @@
       urlSlug,
       data,
     });
+
+    await savePageSnapshot({ scope: 'product', url: cleanUrl, urlSlug });
 
     for (const imageSel of state.config?.images || []) {
       const el = findLocator(imageSel.locator);
