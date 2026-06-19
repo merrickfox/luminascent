@@ -111,6 +111,8 @@ export type CreateBrandInput = {
   website_url?: string
 }
 
+export type UpdateBrandInput = Partial<CreateBrandInput>
+
 export type CreateCategoryInput = {
   name: string
   slug?: string

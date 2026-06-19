@@ -10,6 +10,7 @@ import type {
   CreateCategoryInput,
   CreateNoteInput,
   CreateProductInput,
+  UpdateBrandInput,
   EnsureBrandInput,
   EnsureBrandResult,
   ImportOptions,
@@ -99,10 +100,20 @@ function toQueryString(filters: Record<string, string | number | undefined>) {
 export const api = {
   brands: {
     list: () => apiFetch<{ brands: Brand[] }>('/brands'),
+    get: (slug: string) => apiFetch<{ brand: Brand }>(`/brands/${slug}`),
     create: (input: CreateBrandInput) =>
       apiFetch<{ brand: Brand }>('/brands', {
         method: 'POST',
         body: JSON.stringify(input),
+      }),
+    update: (id: string, input: UpdateBrandInput) =>
+      apiFetch<{ brand: Brand }>(`/brands/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    delete: (id: string) =>
+      apiFetch<{ ok: boolean }>(`/brands/${id}`, {
+        method: 'DELETE',
       }),
   },
   categories: {
