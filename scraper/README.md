@@ -88,6 +88,14 @@ Server listens on `http://127.0.0.1:8777` by default. Override with `PORT=8787 n
 
 ### 2. Install the Tampermonkey loader
 
+> **Use Firefox for the loader.** The loader runs the bundle with a direct
+> `eval`, which strict-CSP sites (e.g. Marks & Spencer) block on Chrome — there
+> the userscript runs in page context, so the page's CSP applies and the eval is
+> refused, even with "Allow user scripts" enabled. Firefox's Tampermonkey runs
+> granted userscripts in a special context that bypasses the page CSP, so the
+> live-reload loop works everywhere. If you must stay on Chrome, use the
+> standalone build (see **Standalone fallback** below).
+
 1. Open Tampermonkey → **Create a new script**
 2. Replace the template with the contents of `userscript/scraper.loader.user.js`
 3. Save and enable the script
@@ -110,9 +118,11 @@ behaviour is byte-identical to the old single file; the files are purely for
 editing convenience. `bundle.mjs` is the shared assembler used by both the
 server endpoint and the build script.
 
-**Standalone fallback:** on sites whose Content-Security-Policy blocks `eval`
-(the loader uses a direct `eval`), or when the server isn't running, install the
-self-contained `userscript/scraper.user.js` instead. Regenerate it from `src/`
+**Standalone fallback:** if you must run the scraper on **Chrome** (whose
+strict-CSP pages block the loader's direct `eval` — Firefox does not; see the
+note above), or when the server isn't running, install the self-contained
+`userscript/scraper.user.js` instead. It bundles the code inline so no `eval` is
+needed, at the cost of a rebuild + re-paste per change. Regenerate it from `src/`
 with:
 
 ```bash

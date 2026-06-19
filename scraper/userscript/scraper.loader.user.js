@@ -27,8 +27,13 @@
 // the bundle with a DIRECT eval so it resolves GM_* up this loader's scope chain
 // (an indirect eval would run in global scope and lose access to GM_*).
 //
-// On sites with a strict Content-Security-Policy that blocks eval, install the
-// standalone build (scraper.user.js, produced by `npm run build:userscript`).
+// USE FIREFOX for this loader. The bundle is run with a direct eval, which a
+// strict Content-Security-Policy (one without 'unsafe-eval') blocks. On Chrome
+// the userscript runs in page context, so the page's CSP applies and the eval
+// is refused — even with "Allow user scripts" enabled. Firefox's Tampermonkey
+// runs granted userscripts in a special context that bypasses the page CSP, so
+// the live-reload loop works there. If you must stay on Chrome, install the
+// standalone build instead (scraper.user.js, produced by `npm run build:userscript`).
 
 (function () {
   'use strict';
@@ -47,7 +52,12 @@
         // eslint-disable-next-line no-eval
         eval(response.responseText); // DIRECT eval — keeps GM_* in scope
       } catch (err) {
-        console.error('[Luminascent] bundle eval failed', err);
+        console.error(
+          '[Luminascent] bundle eval blocked (likely strict CSP / no unsafe-eval). ' +
+            'Use Firefox for the loader, or install the standalone build on Chrome ' +
+            '(npm run build:userscript). Original error:',
+          err,
+        );
       }
     },
     onerror() {
