@@ -405,7 +405,10 @@ export function toProductV2View(detail: ProductDetail): ProductV2View {
     year: product.release_year,
     perfumer: null,
     fromPrice,
-    summary: scent_profile?.summary ?? product.description ?? null,
+    // Prefer the marketing prose; the scent_summary phrase is already surfaced
+    // as accord chips / scent type, so fall back to it only when there's no
+    // description rather than showing accord words in place of the blurb.
+    summary: product.description ?? scent_profile?.summary ?? null,
     rating: ratingView,
     pyramid: groupNotesByStage(detail),
     accords: accordBars,
