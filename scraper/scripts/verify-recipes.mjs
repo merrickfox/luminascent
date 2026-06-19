@@ -149,19 +149,39 @@ function elementItemSignature(el) {
   return `${tag}{${childTags}}`;
 }
 
+const firstFromSrcset = (srcset) => {
+  if (!srcset) return null;
+  const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
+  return first || null;
+};
+
+function lazyImgUrl(img) {
+  if (!img) return null;
+  const live = img.currentSrc || img.src || img.getAttribute('src');
+  if (live) return live;
+  const dataAttrs = ['data-src', 'data-image', 'data-original', 'data-lazy-src', 'data-lazy'];
+  for (const attr of dataAttrs) {
+    const v = img.getAttribute?.(attr);
+    if (v) return v;
+  }
+  return firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+}
+
 function extractImageSrc(el) {
   if (!el) return null;
   const tag = el.tagName?.toLowerCase();
-  if (tag === 'img') return el.currentSrc || el.src || el.getAttribute('src') || null;
-  const firstFromSrcset = (srcset) => {
-    if (!srcset) return null;
-    const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
-    return first || null;
-  };
-  if (tag === 'source') return firstFromSrcset(el.getAttribute('srcset')) || el.getAttribute('src') || null;
+  if (tag === 'img') return lazyImgUrl(el);
+  if (tag === 'source') {
+    return (
+      firstFromSrcset(el.getAttribute('srcset') || el.getAttribute('data-srcset')) ||
+      el.getAttribute('src') ||
+      el.getAttribute('data-src') ||
+      null
+    );
+  }
   const img = el.querySelector?.('img');
   if (img) {
-    const fromImg = img.currentSrc || img.src || img.getAttribute('src');
+    const fromImg = lazyImgUrl(img);
     if (fromImg) return fromImg;
   }
   const source = el.querySelector?.('source[srcset]');
@@ -696,6 +716,8 @@ setDom(
     <picture class="media-image"><source srcset="https://cdn.example.com/p1/alt.webp 1x"><img src="https://cdn.example.com/p1/alt.jpg"></picture>
     <picture class="srcset-only"><source srcset="https://cdn.example.com/p1/only.webp 1x, https://cdn.example.com/p1/only-2x.webp 2x"></picture>
     <source class="bare" srcset="https://cdn.example.com/p1/bare.webp 1x">
+    <img class="lazy" data-load="false" data-src="https://cdn.example.com/p1/lazy.png" data-image="https://cdn.example.com/p1/lazy.png">
+    <img class="lazy-srcset" data-srcset="https://cdn.example.com/p1/lazy-1.png 1x, https://cdn.example.com/p1/lazy-2.png 2x">
   </main>`,
   'shop.example.com',
 );
@@ -707,8 +729,13 @@ const srcsetSrc = extractImageSrc(document.querySelector('picture.srcset-only'))
 if (srcsetSrc !== 'https://cdn.example.com/p1/only.webp') fail('extractImageSrc did not fall back to <source> srcset', srcsetSrc);
 const bareSource = extractImageSrc(document.querySelector('source.bare'));
 if (bareSource !== 'https://cdn.example.com/p1/bare.webp') fail('extractImageSrc did not read <source> srcset', bareSource);
+// Lazy-loaded <img> (Squarespace/lazysizes): real URL only in data-src/data-image until scrolled into view.
+const lazySrc = extractImageSrc(document.querySelector('img.lazy'));
+if (lazySrc !== 'https://cdn.example.com/p1/lazy.png') fail('extractImageSrc did not fall back to lazy data-src', lazySrc);
+const lazySrcset = extractImageSrc(document.querySelector('img.lazy-srcset'));
+if (lazySrcset !== 'https://cdn.example.com/p1/lazy-1.png') fail('extractImageSrc did not fall back to lazy data-srcset', lazySrcset);
 if (extractImageSrc(null) !== null) fail('extractImageSrc(null) should be null');
-console.log('PASS: extractImageSrc resolves a live URL from <img>, <picture>, and <source> carriers');
+console.log('PASS: extractImageSrc resolves a live URL from <img>, <picture>, <source>, and lazy-loaded carriers');
 
 // --- Acqua di Parma accordion: sibling panels share data-parent="#productInfoSection",
 // distinguished only by class (tab-more-information vs tab-tasting-notes). Self-contained

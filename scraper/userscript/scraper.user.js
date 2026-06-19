@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 15:19:05 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 15:44:32 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -1140,28 +1140,51 @@
   // rather than the <img> itself — those carry no `src`, so a plain attribute read
   // returns null and the caller would fall back to the stale config-time URL, stamping
   // the same image onto every product. Handle each carrier explicitly instead.
+  const firstFromSrcset = (srcset) => {
+    if (!srcset) return null;
+    const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
+    return first || null;
+  };
+
+  // Lazy-loading sites (Squarespace, lazysizes, etc.) ship the real URL in a
+  // data-* attribute and only populate `src` once the image scrolls into view.
+  // Product pages captured in background child tabs often never trigger that
+  // load, so `src`/`currentSrc` stay empty. Fall back to the common lazy-load
+  // carriers before giving up. Generic across sites — only used when the live
+  // src is missing, so it never overrides a real loaded src.
+  function lazyImgUrl(img) {
+    if (!img) return null;
+    const live = img.currentSrc || img.src || img.getAttribute('src');
+    if (live) return live;
+    const dataAttrs = ['data-src', 'data-image', 'data-original', 'data-lazy-src', 'data-lazy'];
+    for (const attr of dataAttrs) {
+      const v = img.getAttribute?.(attr);
+      if (v) return v;
+    }
+    return firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+  }
+
   function extractImageSrc(el) {
     if (!el) return null;
     const tag = el.tagName?.toLowerCase();
 
     if (tag === 'img') {
-      return el.currentSrc || el.src || el.getAttribute('src') || null;
+      return lazyImgUrl(el);
     }
 
-    const firstFromSrcset = (srcset) => {
-      if (!srcset) return null;
-      const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
-      return first || null;
-    };
-
     if (tag === 'source') {
-      return firstFromSrcset(el.getAttribute('srcset')) || el.getAttribute('src') || null;
+      return (
+        firstFromSrcset(el.getAttribute('srcset') || el.getAttribute('data-srcset')) ||
+        el.getAttribute('src') ||
+        el.getAttribute('data-src') ||
+        null
+      );
     }
 
     // <picture> or a generic wrapper: prefer a descendant <img>, then a <source> srcset.
     const img = el.querySelector?.('img');
     if (img) {
-      const fromImg = img.currentSrc || img.src || img.getAttribute('src');
+      const fromImg = lazyImgUrl(img);
       if (fromImg) return fromImg;
     }
     const source = el.querySelector?.('source[srcset]');
