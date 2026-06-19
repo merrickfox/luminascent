@@ -5,6 +5,7 @@
   "03-locator.js",
   "04-browse.js",
   "05-ui.js",
+  "065-autodetect.js",
   "06-extract.js",
   "07-init.js"
 ]

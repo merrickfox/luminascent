@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildBundle } from '../userscript/bundle.mjs';
+import { detectFields } from './autodetect.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -454,6 +455,32 @@ async function handleRequest(req, res) {
         path: filePath,
         bytes: Buffer.byteLength(String(html)),
       });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/auto-detect') {
+      const body = await readBody(req);
+      const { outline } = body;
+
+      if (!Array.isArray(outline)) {
+        sendJson(res, 400, { error: 'outline array required' });
+        return;
+      }
+
+      if (!fs.existsSync(SCHEMA_PATH)) {
+        sendJson(res, 404, { error: 'Schema not found' });
+        return;
+      }
+
+      const schema = readJsonFile(SCHEMA_PATH);
+      try {
+        const result = await detectFields({ outline, schema });
+        sendJson(res, 200, { ok: true, ...result });
+      } catch (err) {
+        // Provider/transport failures (Ollama down, bad response) are expected enough
+        // to report as a clean status rather than a 500 the userscript can't explain.
+        sendJson(res, 502, { error: err.message || 'Auto-detect failed' });
+      }
       return;
     }
 

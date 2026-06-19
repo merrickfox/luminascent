@@ -267,6 +267,16 @@
       }
       .brand-row { display: flex; align-items: center; gap: 8px; }
       .brand-row .brand-input { flex: 1; min-width: 0; }
+      .autodetect-row {
+        flex-shrink: 0;
+        display: grid;
+        gap: 6px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #374151;
+      }
+      .btn.danger { color: #fca5a5; border-color: #7f1d1d; }
+      .btn.danger:hover { background: #450a0a; }
+      .auto-pill { background: #6d28d9; color: #ede9fe; }
     `;
     shadowRoot.appendChild(style);
 
@@ -293,6 +303,10 @@
         outline: 2px dotted #34d399 !important;
         outline-offset: 2px !important;
         cursor: crosshair !important;
+      }
+      .lumiscrape-highlight-auto {
+        outline: 2px solid #a855f7 !important;
+        outline-offset: 2px !important;
       }
     `);
   }
@@ -351,6 +365,7 @@
       state.pendingContainmentAdd = null;
       state.pendingRetagFieldKey = null;
       state.lastTaggedMessage = '';
+      state.autoStatus = '';
     }
 
     if (mode === 'images') {
@@ -899,6 +914,7 @@
             <div class="${cardClass}" data-field-card="${field.fieldKey}">
               <div class="field-card-header">
                 <span class="tag">${field.fieldKey}${locators.length > 1 ? ` ·${locators.length}` : ''}</span>
+                ${field.auto ? '<span class="tag auto-pill">auto</span>' : ''}
                 <div class="field-card-actions">
                   <button
                     class="btn"
@@ -933,17 +949,27 @@
         ? `Pick a schema field for <strong>${state.pendingContainmentAdd.fieldKey}</strong> → ${containmentModeLabel(state.pendingContainmentAdd.mode)}.`
         : '1. Click an element to tag a field · 2. Add more tags or link related fields · 3. Save';
 
+      const autoBusy = !!state.autoDetecting;
+      const fieldCount = (state.config?.product?.fields || []).length;
       return `
+        <div class="autodetect-row">
+          <button class="btn primary" id="lumiscrape-autodetect" ${pendingBusy || autoBusy ? 'disabled' : ''}>
+            ${autoBusy ? 'Auto-detecting…' : '✨ Auto-detect fields'}
+          </button>
+          <div class="subtle">Best-effort detection with the local LLM. Fills only untagged fields — review, edit or delete before saving.</div>
+          ${state.autoStatus ? `<div class="status wrap-text">${escapeHtml(state.autoStatus)}</div>` : ''}
+        </div>
         <div class="tagging-zone">
           <div class="subtle">${productInstructions}</div>
           ${renderProductFieldPicker()}
         </div>
         <div class="scroll-region tagged-list-region">
-          <div class="subtle">Tagged fields (${(state.config?.product?.fields || []).length}) · Add tag / Re-tag / Delete on each card, or right-click for options</div>
+          <div class="subtle">Tagged fields (${fieldCount}) · Add tag / Re-tag / Delete on each card, or right-click for options</div>
           <div class="list">${tagged || '<div class="subtle">No fields tagged yet.</div>'}</div>
         </div>
         <div class="panel-actions">
           <button class="btn primary" id="lumiscrape-save-product">Save product blueprint</button>
+          <button class="btn danger" id="lumiscrape-clear-fields" ${fieldCount && !autoBusy ? '' : 'disabled'}>Clear all fields</button>
           <button class="btn" data-mode="start">Back</button>
         </div>
       `;
@@ -1179,6 +1205,14 @@
       ensureProductConfig();
       await saveConfig({ product: state.config.product });
       setMode('start');
+    });
+
+    panelEl.querySelector('#lumiscrape-autodetect')?.addEventListener('click', () => {
+      runAutoDetect();
+    });
+
+    panelEl.querySelector('#lumiscrape-clear-fields')?.addEventListener('click', () => {
+      clearAllProductFields();
     });
 
     panelEl.querySelectorAll('[data-field-key]').forEach((btn) => {

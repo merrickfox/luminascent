@@ -531,6 +531,7 @@
     state.highlightEls.forEach((el) => {
       el.classList.remove('lumiscrape-highlight');
       el.classList.remove('lumiscrape-highlight-strong');
+      el.classList.remove('lumiscrape-highlight-auto');
     });
     state.highlightEls = [];
   }

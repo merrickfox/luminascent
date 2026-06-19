@@ -48,6 +48,8 @@
     extractItems: [],
     adhocStatus: '',
     browseScanStatus: 'idle',
+    autoDetecting: false,
+    autoStatus: '',
   };
 
   let shadowRoot = null;
