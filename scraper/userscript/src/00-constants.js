@@ -41,6 +41,12 @@
     extractMode: 'all',
     extractBatchSize: 5,
     extractGapSeconds: 0,
+    // Sub-selection within a browse grid: URLs the user has unchecked for this
+    // page. Empty/absent = extract everything (preserves default behavior).
+    extractDeselected: null,
+    extractRefineOpen: false,
+    extractItems: [],
+    adhocStatus: '',
     browseScanStatus: 'idle',
   };
 

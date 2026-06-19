@@ -64,6 +64,12 @@
     extractMode: 'all',
     extractBatchSize: 5,
     extractGapSeconds: 0,
+    // Sub-selection within a browse grid: URLs the user has unchecked for this
+    // page. Empty/absent = extract everything (preserves default behavior).
+    extractDeselected: null,
+    extractRefineOpen: false,
+    extractItems: [],
+    adhocStatus: '',
     browseScanStatus: 'idle',
   };
 
@@ -1451,7 +1457,12 @@
     return { type: 'none', url: null, element: null };
   }
 
-  function collectProductUrls() {
+  /**
+   * Enumerate the browse grid as {url, element, label} records. The element is
+   * kept so the UI can highlight a row's tile on hover; the label is a short
+   * snippet of the tile text to help decide which products to keep.
+   */
+  function collectProductItems() {
     const browse = state.config?.browse;
     if (!browse) return [];
 
@@ -1463,18 +1474,22 @@
     };
 
     const items = enumerateBrowseItems(browse);
-    const urls = [];
+    const records = [];
     const seen = new Set();
 
     items.forEach((item) => {
       const link = resolveLinkFromItem(item, linkRule);
-      if (link.url && !seen.has(link.url)) {
-        seen.add(link.url);
-        urls.push(link.url);
-      }
+      if (!link.url || seen.has(link.url)) return;
+      seen.add(link.url);
+      const label = normalizeText(item.textContent || '').slice(0, 60);
+      records.push({ url: link.url, element: link.element || item, label });
     });
 
-    return urls;
+    return records;
+  }
+
+  function collectProductUrls() {
+    return collectProductItems().map((record) => record.url);
   }
 
   function gatherImages() {
@@ -1842,6 +1857,9 @@
       .field-tag-row .btn { font-size: 11px; padding: 0 6px; flex-shrink: 0; }
       .field-tag-row .subtle { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
       .batch-size-row { display: flex; align-items: center; gap: 8px; }
+      .extract-pick { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+      .extract-pick input { flex-shrink: 0; }
+      .adhoc-sep { margin-top: 12px; text-align: center; opacity: 0.8; }
       .batch-size-input {
         width: 64px;
         padding: 4px 6px;
@@ -1944,6 +1962,7 @@
 
     if (mode === 'extract') {
       state.extractRunning = !!getExtractState().active;
+      state.adhocStatus = '';
     }
 
     renderPanel();
@@ -2550,10 +2569,14 @@
     }
 
     if (state.mode === 'extract') {
-      const urls = collectProductUrls();
+      const items = collectProductItems();
+      state.extractItems = items;
+      const deselected = getExtractDeselected();
+      const selectedCount = items.filter((item) => !deselected.has(item.url)).length;
       const extractState = getExtractState();
       const extractionActive = !!extractState.active;
       const modeLocked = extractController && extractionActive;
+      const hasProductBlueprint = !!state.config?.product?.fields?.length;
       const batchControls = state.extractMode === 'batch'
         ? `
           <label class="subtle batch-size-row">
@@ -2582,8 +2605,41 @@
           <div class="subtle">0 = open the whole batch at once.</div>
         `
         : '';
+
+      const refineList = state.extractRefineOpen
+        ? `
+          <div class="row">
+            <button class="btn" id="lumiscrape-select-all" ${modeLocked ? 'disabled' : ''}>Select all</button>
+            <button class="btn" id="lumiscrape-select-none" ${modeLocked ? 'disabled' : ''}>Select none</button>
+          </div>
+          <div class="scroll-region">
+            <div class="list">
+              ${items
+                .map(
+                  (item, index) => `
+                    <label class="item extract-pick" data-extract-index="${index}">
+                      <input
+                        type="checkbox"
+                        data-extract-url="${escapeHtml(item.url)}"
+                        ${deselected.has(item.url) ? '' : 'checked'}
+                        ${modeLocked ? 'disabled' : ''}
+                      />
+                      <span class="wrap-text">${escapeHtml(item.label) || escapeHtml(shortUrl(item.url))}</span>
+                    </label>
+                  `,
+                )
+                .join('') || '<div class="subtle">No products detected.</div>'}
+            </div>
+          </div>
+        `
+        : '';
+
       return `
-        <div class="subtle">${urls.length} product URLs detected from browse blueprint.</div>
+        <div class="subtle" id="lumiscrape-extract-count">${selectedCount} of ${items.length} products selected from browse grid.</div>
+        ${items.length
+          ? `<button class="btn" id="lumiscrape-toggle-refine" ${modeLocked ? 'disabled' : ''}>${state.extractRefineOpen ? 'Hide selection' : 'Refine selection'}</button>`
+          : ''}
+        ${refineList}
         <div class="subtle">Extraction mode</div>
         <div class="row">
           <button
@@ -2603,10 +2659,17 @@
         <div class="status" id="lumiscrape-extract-status">${extractionActive ? 'Running…' : 'Idle'}</div>
         ${renderRunLog(extractState)}
         <div class="panel-actions">
-          <button class="btn primary" id="lumiscrape-run-extract" ${urls.length && !extractionActive ? '' : 'disabled'}>
+          <button class="btn primary" id="lumiscrape-run-extract" ${selectedCount && !extractionActive ? '' : 'disabled'}>
             Start extraction
           </button>
           <button class="btn" id="lumiscrape-stop-extract" ${extractionActive ? '' : 'disabled'}>Stop extraction</button>
+        </div>
+        <div class="subtle adhoc-sep">— or extract just this page (no browse needed) —</div>
+        <button class="btn" id="lumiscrape-extract-this-page" ${hasProductBlueprint && !extractionActive ? '' : 'disabled'}>
+          Extract this page
+        </button>
+        <div class="status" id="lumiscrape-adhoc-status">${escapeHtml(state.adhocStatus || (hasProductBlueprint ? 'Scrapes the current page using the saved product blueprint.' : 'Tag a product blueprint first (Product mode).'))}</div>
+        <div class="panel-actions">
           <button class="btn" data-mode="start">Back</button>
         </div>
       `;
@@ -2912,6 +2975,47 @@
 
     panelEl.querySelector('#lumiscrape-stop-extract')?.addEventListener('click', () => {
       stopExtraction();
+    });
+
+    panelEl.querySelector('#lumiscrape-toggle-refine')?.addEventListener('click', () => {
+      state.extractRefineOpen = !state.extractRefineOpen;
+      renderPanel();
+    });
+
+    panelEl.querySelector('#lumiscrape-select-all')?.addEventListener('click', () => {
+      getExtractDeselected().clear();
+      renderPanel();
+    });
+
+    panelEl.querySelector('#lumiscrape-select-none')?.addEventListener('click', () => {
+      const deselected = getExtractDeselected();
+      (state.extractItems || []).forEach((item) => deselected.add(item.url));
+      renderPanel();
+    });
+
+    panelEl.querySelectorAll('[data-extract-url]').forEach((checkbox) => {
+      checkbox.addEventListener('change', (event) => {
+        const url = event.target.getAttribute('data-extract-url');
+        const deselected = getExtractDeselected();
+        if (event.target.checked) deselected.delete(url);
+        else deselected.add(url);
+        updateExtractSelectionUi();
+      });
+    });
+
+    panelEl.querySelectorAll('.extract-pick[data-extract-index]').forEach((rowEl) => {
+      const index = Number(rowEl.getAttribute('data-extract-index'));
+      rowEl.addEventListener('mouseenter', () => {
+        const item = (state.extractItems || [])[index];
+        if (item?.element) highlightElements([item.element], true);
+      });
+      rowEl.addEventListener('mouseleave', () => {
+        if (state.mode === 'extract') clearHighlights();
+      });
+    });
+
+    panelEl.querySelector('#lumiscrape-extract-this-page')?.addEventListener('click', () => {
+      extractCurrentPage();
     });
   }
 
@@ -3400,8 +3504,34 @@
     }
   }
 
+  function getExtractDeselected() {
+    if (!state.extractDeselected) state.extractDeselected = new Set();
+    return state.extractDeselected;
+  }
+
+  /** URLs to extract: the full grid minus any the user unchecked for this page. */
+  function selectedProductUrls() {
+    const deselected = getExtractDeselected();
+    return collectProductUrls().filter((url) => !deselected.has(url));
+  }
+
+  /** Refresh the selected count + Start button after a checkbox toggle, without
+   *  re-rendering the whole list (keeps scroll position). */
+  function updateExtractSelectionUi() {
+    if (!panelEl) return;
+    const items = state.extractItems || [];
+    const deselected = getExtractDeselected();
+    const selectedCount = items.filter((item) => !deselected.has(item.url)).length;
+
+    const countEl = panelEl.querySelector('#lumiscrape-extract-count');
+    if (countEl) countEl.textContent = `${selectedCount} of ${items.length} products selected from browse grid.`;
+
+    const runBtn = panelEl.querySelector('#lumiscrape-run-extract');
+    if (runBtn) runBtn.disabled = !(selectedCount && !getExtractState().active);
+  }
+
   function startExtraction() {
-    const urls = collectProductUrls();
+    const urls = selectedProductUrls();
     if (!urls.length) return;
 
     // Snapshot the browse page DOM as an offline backup of where these URLs came
@@ -3567,15 +3697,20 @@
     return data;
   }
 
-  async function runAutoScrapeTab() {
-    const tabStartedAt = Date.now();
-    const cleanUrl = stripScrapeFlag(location.href);
-    const requiredLocators = [
+  function getRequiredProductLocators() {
+    return [
       ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
       ...(state.config?.images || []).map((image) => image.locator),
     ].filter(Boolean);
+  }
 
-    await waitForReady(requiredLocators);
+  /**
+   * Extract + persist the product on the current page (data.json, DOM snapshot,
+   * images). Shared by the auto-scrape child tabs and the ad-hoc "extract this
+   * page" action. Does not navigate or close the tab.
+   */
+  async function scrapeCurrentPage() {
+    const cleanUrl = stripScrapeFlag(location.href);
 
     const data = buildScrapedData();
     data.source_url = cleanUrl;
@@ -3591,6 +3726,7 @@
 
     await savePageSnapshot({ scope: 'product', url: cleanUrl, urlSlug });
 
+    let imageCount = 0;
     for (const imageSel of state.config?.images || []) {
       const el = findLocator(imageSel.locator);
       const src = extractImageSrc(el);
@@ -3606,13 +3742,52 @@
           ext: extensionFromUrl(src),
           dataBase64,
         });
+        imageCount += 1;
       } catch (err) {
         console.warn('[Luminascent] Failed to save image', src, err);
       }
     }
 
+    return { urlSlug, imageCount };
+  }
+
+  async function runAutoScrapeTab() {
+    const tabStartedAt = Date.now();
+    const cleanUrl = stripScrapeFlag(location.href);
+
+    await waitForReady(getRequiredProductLocators());
+    await scrapeCurrentPage();
+
     reportResult(cleanUrl, true, null, Date.now() - tabStartedAt);
     window.close();
+  }
+
+  function setAdhocStatus(message) {
+    state.adhocStatus = message || '';
+    const statusEl = panelEl?.querySelector('#lumiscrape-adhoc-status');
+    if (statusEl) statusEl.textContent = state.adhocStatus;
+  }
+
+  /**
+   * Ad-hoc extraction: scrape the page the user is currently viewing, without
+   * the browse blueprint or opening child tabs. Needs only a saved product
+   * blueprint (tagged fields).
+   */
+  async function extractCurrentPage() {
+    if (!state.config?.product?.fields?.length) {
+      setAdhocStatus('No product blueprint yet — tag fields in Product mode first.');
+      return;
+    }
+    setAdhocStatus('Waiting for page to settle…');
+    try {
+      await waitForReady(getRequiredProductLocators());
+      setAdhocStatus('Extracting current page…');
+      const result = await scrapeCurrentPage();
+      setAdhocStatus(`Saved ${result.urlSlug} · ${result.imageCount} image(s)`);
+    } catch (err) {
+      console.error('[Luminascent] Ad-hoc extraction failed', err);
+      setAdhocStatus(`Failed: ${err.message || 'error'}`);
+    }
   }
 
   async function init() {

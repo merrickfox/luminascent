@@ -321,8 +321,34 @@
     }
   }
 
+  function getExtractDeselected() {
+    if (!state.extractDeselected) state.extractDeselected = new Set();
+    return state.extractDeselected;
+  }
+
+  /** URLs to extract: the full grid minus any the user unchecked for this page. */
+  function selectedProductUrls() {
+    const deselected = getExtractDeselected();
+    return collectProductUrls().filter((url) => !deselected.has(url));
+  }
+
+  /** Refresh the selected count + Start button after a checkbox toggle, without
+   *  re-rendering the whole list (keeps scroll position). */
+  function updateExtractSelectionUi() {
+    if (!panelEl) return;
+    const items = state.extractItems || [];
+    const deselected = getExtractDeselected();
+    const selectedCount = items.filter((item) => !deselected.has(item.url)).length;
+
+    const countEl = panelEl.querySelector('#lumiscrape-extract-count');
+    if (countEl) countEl.textContent = `${selectedCount} of ${items.length} products selected from browse grid.`;
+
+    const runBtn = panelEl.querySelector('#lumiscrape-run-extract');
+    if (runBtn) runBtn.disabled = !(selectedCount && !getExtractState().active);
+  }
+
   function startExtraction() {
-    const urls = collectProductUrls();
+    const urls = selectedProductUrls();
     if (!urls.length) return;
 
     // Snapshot the browse page DOM as an offline backup of where these URLs came
@@ -488,15 +514,20 @@
     return data;
   }
 
-  async function runAutoScrapeTab() {
-    const tabStartedAt = Date.now();
-    const cleanUrl = stripScrapeFlag(location.href);
-    const requiredLocators = [
+  function getRequiredProductLocators() {
+    return [
       ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
       ...(state.config?.images || []).map((image) => image.locator),
     ].filter(Boolean);
+  }
 
-    await waitForReady(requiredLocators);
+  /**
+   * Extract + persist the product on the current page (data.json, DOM snapshot,
+   * images). Shared by the auto-scrape child tabs and the ad-hoc "extract this
+   * page" action. Does not navigate or close the tab.
+   */
+  async function scrapeCurrentPage() {
+    const cleanUrl = stripScrapeFlag(location.href);
 
     const data = buildScrapedData();
     data.source_url = cleanUrl;
@@ -512,6 +543,7 @@
 
     await savePageSnapshot({ scope: 'product', url: cleanUrl, urlSlug });
 
+    let imageCount = 0;
     for (const imageSel of state.config?.images || []) {
       const el = findLocator(imageSel.locator);
       const src = extractImageSrc(el);
@@ -527,11 +559,50 @@
           ext: extensionFromUrl(src),
           dataBase64,
         });
+        imageCount += 1;
       } catch (err) {
         console.warn('[Luminascent] Failed to save image', src, err);
       }
     }
 
+    return { urlSlug, imageCount };
+  }
+
+  async function runAutoScrapeTab() {
+    const tabStartedAt = Date.now();
+    const cleanUrl = stripScrapeFlag(location.href);
+
+    await waitForReady(getRequiredProductLocators());
+    await scrapeCurrentPage();
+
     reportResult(cleanUrl, true, null, Date.now() - tabStartedAt);
     window.close();
+  }
+
+  function setAdhocStatus(message) {
+    state.adhocStatus = message || '';
+    const statusEl = panelEl?.querySelector('#lumiscrape-adhoc-status');
+    if (statusEl) statusEl.textContent = state.adhocStatus;
+  }
+
+  /**
+   * Ad-hoc extraction: scrape the page the user is currently viewing, without
+   * the browse blueprint or opening child tabs. Needs only a saved product
+   * blueprint (tagged fields).
+   */
+  async function extractCurrentPage() {
+    if (!state.config?.product?.fields?.length) {
+      setAdhocStatus('No product blueprint yet — tag fields in Product mode first.');
+      return;
+    }
+    setAdhocStatus('Waiting for page to settle…');
+    try {
+      await waitForReady(getRequiredProductLocators());
+      setAdhocStatus('Extracting current page…');
+      const result = await scrapeCurrentPage();
+      setAdhocStatus(`Saved ${result.urlSlug} · ${result.imageCount} image(s)`);
+    } catch (err) {
+      console.error('[Luminascent] Ad-hoc extraction failed', err);
+      setAdhocStatus(`Failed: ${err.message || 'error'}`);
+    }
   }

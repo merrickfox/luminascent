@@ -274,7 +274,12 @@
     return { type: 'none', url: null, element: null };
   }
 
-  function collectProductUrls() {
+  /**
+   * Enumerate the browse grid as {url, element, label} records. The element is
+   * kept so the UI can highlight a row's tile on hover; the label is a short
+   * snippet of the tile text to help decide which products to keep.
+   */
+  function collectProductItems() {
     const browse = state.config?.browse;
     if (!browse) return [];
 
@@ -286,18 +291,22 @@
     };
 
     const items = enumerateBrowseItems(browse);
-    const urls = [];
+    const records = [];
     const seen = new Set();
 
     items.forEach((item) => {
       const link = resolveLinkFromItem(item, linkRule);
-      if (link.url && !seen.has(link.url)) {
-        seen.add(link.url);
-        urls.push(link.url);
-      }
+      if (!link.url || seen.has(link.url)) return;
+      seen.add(link.url);
+      const label = normalizeText(item.textContent || '').slice(0, 60);
+      records.push({ url: link.url, element: link.element || item, label });
     });
 
-    return urls;
+    return records;
+  }
+
+  function collectProductUrls() {
+    return collectProductItems().map((record) => record.url);
   }
 
   function gatherImages() {
