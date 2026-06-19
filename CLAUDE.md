@@ -103,6 +103,25 @@ IMPORTANT!! regarding scraping, remember issues might affect just one site of 10
 
 LLM providers are pluggable (`pipeline/providers/`): `ollama` is the working default (configured in `scraper/pipeline.config.json`); `claude` is a stub pending implementation (`ANTHROPIC_API_KEY`). The import contract is the seam between scraper and backend — when changing scraped fields, update both `scrapedProductSchema` and the pipeline assembler.
 
+### Recovering from a failed scrape / push
+
+The pipeline is a layered cache. Each stage writes an artifact the next stage consumes, so **recover at the lowest layer that is actually broken** — re-running a layer that was already correct just wastes time (and LLM calls). Per product, the artifacts under `sites/<host>/products/<slug>/` are:
+
+| Layer | Artifact | Produced by | Re-run with |
+|-------|----------|-------------|-------------|
+| Capture | `data.json`, `llm_input.json`, `images/` | userscript in the browser | re-run the userscript on the live site |
+| Extract | `llm_output.json` | `pipeline:run` (LLM pass) | `pipeline:run -- --brand <host> --reprocess` |
+| Assemble | `sites/<host>/products.json` | `pipeline:run` (always, even when LLM is cached) | `pipeline:run -- --brand <host>` |
+| Push | rows in backend / R2 | `pipeline:push` | `pipeline:push -- --brand <host>` |
+
+**Diagnose from the error, then climb only as high as needed:**
+
+1. **Backend validation error naming a field** (e.g. `product.images.N.source_url: Invalid url`, sizes/price shape) → the bad value is already in `products.json`. If the cause was a pipeline bug you just fixed (assembler/normalizer/`push.ts`), **re-push** (`pipeline:push`) — push-time transforms may fix it on the fly. To also clean the on-disk `products.json`, **re-assemble** (`pipeline:run -- --brand <host>`, LLM stays cached → no LLM cost), then push. No re-capture needed: the raw value was captured fine, only the transform was wrong.
+2. **A field is wrong/empty across *all* products of a site** but the raw value exists in `llm_input.json` → LLM/prompt/schema problem. **Reprocess** (`pipeline:run -- --brand <host> --reprocess`) to re-run the LLM over the existing captured input, then push.
+3. **The raw value is missing from `llm_input.json`/`data.json`, images didn't download, product URLs are incomplete, or the blueprint/recipes are wrong** → capture problem. **Re-capture from scratch** in the browser (only stage needing Tampermonkey), then `pipeline:run` → `pipeline:push`. Run `node scripts/verify-recipes.mjs` first to catch locator regressions offline.
+
+Remember the genericism rule above: if a failure looks site-specific, fix it at the layer/concept (normalizer, assembler, locator inference), never with a per-host special case.
+
 ## Conventions
 
 - **Backend-first for data work** — settle the D1 schema and API shape before building UI that depends on them.
