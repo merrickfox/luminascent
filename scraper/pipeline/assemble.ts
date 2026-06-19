@@ -104,6 +104,73 @@ function zipMultipleScope(
   });
 }
 
+/**
+ * Title-case a raw scraped name without an LLM: upper-case-only tokens get
+ * title-cased, already-mixed-case tokens are left alone (preserves "Eve's",
+ * "&", "-"). Used only as a fallback, so light-touch normalization is enough.
+ */
+function cleanRawName(raw: string): string {
+  return raw
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((word) => (/[a-z]/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase()))
+    .join(' ');
+}
+
+/**
+ * Guarantee every product has a usable name and a slug unique within the site.
+ *
+ * The per-field LLM pass can collapse distinct product pages onto one slug —
+ * e.g. the `name` instruction strips size suffixes, so "CURTAIN CALL - PETITE"
+ * and "CURTAIN CALL" both become "Curtain Call" → "curtain-call". Two source
+ * URLs sharing a slug means the second silently overwrites the first on push.
+ * It can also drop the name entirely ("Unknown"). Both are recovered from the
+ * raw scraped name, which still carries the distinguishing words; a numeric
+ * suffix is the last resort. Site-agnostic: keyed only on slug collisions.
+ */
+function ensureUniqueProductSlugs(products: ScrapedProductRecord[]): void {
+  // 1. Recover a real name+slug wherever the LLM returned nothing usable.
+  for (const product of products) {
+    const recovered = product._rawName ? cleanRawName(product._rawName) : '';
+    if (recovered && (!product.name || product.name === 'Unknown')) {
+      product.name = recovered;
+      product.slug = slugify(recovered);
+    }
+  }
+
+  // 2. Disambiguate any slug now shared by more than one product.
+  const counts = new Map<string, number>();
+  for (const product of products) {
+    if (product.slug) counts.set(product.slug, (counts.get(product.slug) ?? 0) + 1);
+  }
+
+  const taken = new Set<string>();
+  for (const product of products) {
+    if (product.slug && counts.get(product.slug) === 1) taken.add(product.slug);
+  }
+
+  for (const product of products) {
+    if (!product.slug || counts.get(product.slug) === 1) continue;
+
+    const recovered = product._rawName ? cleanRawName(product._rawName) : '';
+    const recoveredSlug = recovered ? slugify(recovered) : '';
+    if (recoveredSlug && !taken.has(recoveredSlug)) {
+      // Raw name carried the distinction the LLM dropped — surface it.
+      product.name = recovered;
+      product.slug = recoveredSlug;
+      taken.add(recoveredSlug);
+      continue;
+    }
+
+    let suffix = 2;
+    let candidate = `${product.slug}-${suffix}`;
+    while (taken.has(candidate)) candidate = `${product.slug}-${++suffix}`;
+    product.slug = candidate;
+    taken.add(candidate);
+  }
+}
+
 function listLocalImages(productDir: string): string[] {
   const imagesDir = join(productDir, 'images');
   if (!existsSync(imagesDir)) return [];
@@ -188,6 +255,14 @@ function assembleOneProduct(options: {
     product.slug = slugify(product.name);
   }
 
+  const rawNameField = llmInput?.fields?.find((f) => f.fieldKey === 'name');
+  if (rawNameField?.value != null) {
+    const raw = Array.isArray(rawNameField.value)
+      ? rawNameField.value.join(' ')
+      : String(rawNameField.value);
+    if (raw.trim()) product._rawName = raw.trim();
+  }
+
   const sizeFields = options.schema.fields.filter((f) => f.scope === 'size' && f.mapsTo);
   const sizes = zipScopeRows(sizeFields, fields);
   if (sizes.length > 0) {
@@ -250,6 +325,7 @@ export function assembleSiteProducts(options: {
     );
   }
 
+  ensureUniqueProductSlugs(products);
   return products;
 }
 
@@ -302,7 +378,7 @@ export function mergeProducts(
 
 export function writeSiteProductsJson(hostSlug: string, products: ScrapedProductRecord[]): string {
   const outputPath = join(getScraperRoot(), 'sites', hostSlug, 'products.json');
-  const cleaned = products.map(({ _productSlug, ...rest }) => rest);
+  const cleaned = products.map(({ _productSlug, _rawName, ...rest }) => rest);
   writeFileSync(outputPath, JSON.stringify(cleaned, null, 2));
   return outputPath;
 }

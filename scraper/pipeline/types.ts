@@ -165,6 +165,8 @@ export interface ScrapedProductRecord {
   notes?: Array<Record<string, unknown>>;
   accords?: Array<Record<string, unknown>>;
   _productSlug?: string;
+  /** Raw scraped name, kept for collision recovery; stripped before write. */
+  _rawName?: string;
 }
 
 export interface HostConfig {

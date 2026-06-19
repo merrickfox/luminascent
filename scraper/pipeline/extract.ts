@@ -344,6 +344,24 @@ function deriveDeterministic(field: SchemaField, fields: Record<string, unknown>
   }
 }
 
+/**
+ * Deterministically de-noise a short text field where the LLM left a labeled
+ * pipe-delimited list intact instead of summarizing it — e.g.
+ * "Olfactive Families - Green | Aromatic | Earthy" → "Green Aromatic Earthy".
+ * Real prose never uses " | " separators, so this only fires on leaked lists
+ * (the LLM does this non-deterministically); short text fields stay consistent
+ * regardless of which way the model went. Generic, not site-specific.
+ */
+function normalizeLeakedList(value: string): string {
+  if (!value.includes('|')) return value;
+  const delabeled = value.replace(/^[^|:–-]{1,40}\s*[:–-]\s*(?=[^|]*\|)/, '');
+  return delabeled
+    .split('|')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' ');
+}
+
 function getFieldMap(schema: SchemaDefinition): Map<string, SchemaField> {
   return new Map(schema.fields.map((field) => [field.key, field]));
 }
@@ -508,6 +526,16 @@ export async function extractProduct(options: {
         fieldKey: scope.source,
         error: error instanceof Error ? error.message : String(error),
       });
+    }
+  }
+
+  // Short single text fields are summaries/titles, never prose; recover any
+  // that came back as a raw labeled pipe-list the LLM failed to condense.
+  for (const schemaField of options.schema.fields) {
+    if (schemaField.type !== 'text' || schemaField.cardinality !== 'single') continue;
+    const current = fields[schemaField.key];
+    if (typeof current === 'string' && current.length <= 120) {
+      fields[schemaField.key] = normalizeLeakedList(current);
     }
   }
 
