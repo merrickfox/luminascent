@@ -63,6 +63,7 @@
     extractRunning: false,
     extractMode: 'all',
     extractBatchSize: 5,
+    extractGapSeconds: 0,
     browseScanStatus: 'idle',
   };
 
@@ -2566,6 +2567,19 @@
               ${modeLocked ? 'disabled' : ''}
             />
           </label>
+          <label class="subtle batch-size-row">
+            Gap between tabs (s)
+            <input
+              type="number"
+              id="lumiscrape-batch-gap"
+              class="batch-size-input"
+              min="0"
+              step="0.5"
+              value="${state.extractGapSeconds}"
+              ${modeLocked ? 'disabled' : ''}
+            />
+          </label>
+          <div class="subtle">0 = open the whole batch at once.</div>
         `
         : '';
       return `
@@ -2885,6 +2899,13 @@
       renderPanel();
     });
 
+    panelEl.querySelector('#lumiscrape-batch-gap')?.addEventListener('change', (event) => {
+      const value = parseFloat(event.target.value);
+      state.extractGapSeconds = Math.max(0, Number.isNaN(value) ? 0 : value);
+      saveExtractPrefs();
+      renderPanel();
+    });
+
     panelEl.querySelector('#lumiscrape-run-extract')?.addEventListener('click', () => {
       startExtraction();
     });
@@ -3087,12 +3108,14 @@
     if (!prefs) return;
     if (prefs.mode === 'batch' || prefs.mode === 'all') state.extractMode = prefs.mode;
     if (prefs.batchSize) state.extractBatchSize = Math.max(1, Number(prefs.batchSize) || 5);
+    if (prefs.gapSeconds != null) state.extractGapSeconds = Math.max(0, Number(prefs.gapSeconds) || 0);
   }
 
   function saveExtractPrefs() {
     GM_setValue(EXTRACT_PREFS_KEY, {
       mode: state.extractMode,
       batchSize: state.extractBatchSize,
+      gapSeconds: state.extractGapSeconds,
     });
   }
 
@@ -3179,6 +3202,20 @@
     const line = `${nowClock()} ${message}`;
     extractState.log = [...(extractState.log || []), line].slice(-LOG_MAX);
     console.log('[Luminascent]', message);
+  }
+
+  /**
+   * Append a line to the persisted run log from outside the tick loop (e.g. an
+   * async snapshot finishing). Runs only in the controller tab; the get/mutate/set
+   * has no await inside it, so it can't interleave with the tick's own writes.
+   */
+  function appendExtractLog(message) {
+    if (!extractController) return;
+    const extractState = getExtractState();
+    if (!extractState.active) return;
+    logEvent(extractState, message);
+    setExtractState(extractState);
+    if (state.mode === 'extract') renderPanel();
   }
 
   /**
@@ -3308,13 +3345,20 @@
   /** Open the next batch of tabs. Mutates + persists extractState. */
   function launchNextBatch(extractState) {
     const batchSize = Math.max(1, extractState.batchSize || state.extractBatchSize || 5);
+    const gapMs = Math.max(0, Number(extractState.gapSeconds) || 0) * 1000;
     const nextBatch = (extractState.queue || []).splice(0, batchSize);
+    // inFlight holds the whole batch up front so the tick doesn't think the
+    // batch is done while staggered tabs are still waiting to open.
     extractState.inFlight = nextBatch;
     extractState.batchStartedAt = Date.now();
-    logEvent(extractState, `open ×${nextBatch.length} (${extractState.queue.length} queued)`);
+    const gapNote = gapMs ? `, ${extractState.gapSeconds}s gap` : '';
+    logEvent(extractState, `open ×${nextBatch.length} (${extractState.queue.length} queued${gapNote})`);
     setExtractState(extractState);
 
-    nextBatch.forEach((url) => openExtractTab(url));
+    nextBatch.forEach((url, index) => {
+      if (gapMs) setTimeout(() => openExtractTab(url), index * gapMs);
+      else openExtractTab(url);
+    });
     updateExtractStatus();
     if (state.mode === 'extract') renderPanel();
   }
@@ -3362,7 +3406,7 @@
 
     // Snapshot the browse page DOM as an offline backup of where these URLs came
     // from. Best-effort: don't block the run on it.
-    savePageSnapshot({ scope: 'browse', url: stripScrapeFlag(location.href) });
+    savePageSnapshot({ scope: 'browse', url: stripScrapeFlag(location.href), log: appendExtractLog });
 
     // Fresh run: drop any leftover result keys / close markers from a prior run.
     clearResultKeys();
@@ -3386,6 +3430,7 @@
         ...baseState,
         mode: 'batch',
         batchSize,
+        gapSeconds: Math.max(0, Number(state.extractGapSeconds) || 0),
         queue: [...urls],
         inFlight: [],
         batchStartedAt: null,
@@ -3462,16 +3507,21 @@
 
   /** Best-effort POST of the rendered DOM to the local server. Never throws. */
   async function savePageSnapshot(options) {
+    const label = options.scope === 'browse' ? 'browse page' : shortUrl(options.url);
     try {
-      await apiPost('/page', {
+      const result = await apiPost('/page', {
         host: state.host,
         scope: options.scope,
         url: options.url,
         urlSlug: options.urlSlug || null,
         html: captureRenderedHtml(),
       });
+      const kb = result?.bytes ? ` (${Math.round(result.bytes / 1024)}kb)` : '';
+      console.log('[Luminascent]', `saved ${label} snapshot${kb}`);
+      if (options.log) options.log(`snapshot ${label}${kb}`);
     } catch (err) {
       console.warn('[Luminascent] Failed to save page snapshot', err);
+      if (options.log) options.log(`snapshot failed (${label}): ${err.message}`);
     }
   }
 

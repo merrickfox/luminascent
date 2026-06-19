@@ -968,6 +968,19 @@
               ${modeLocked ? 'disabled' : ''}
             />
           </label>
+          <label class="subtle batch-size-row">
+            Gap between tabs (s)
+            <input
+              type="number"
+              id="lumiscrape-batch-gap"
+              class="batch-size-input"
+              min="0"
+              step="0.5"
+              value="${state.extractGapSeconds}"
+              ${modeLocked ? 'disabled' : ''}
+            />
+          </label>
+          <div class="subtle">0 = open the whole batch at once.</div>
         `
         : '';
       return `
@@ -1283,6 +1296,13 @@
     panelEl.querySelector('#lumiscrape-batch-size')?.addEventListener('change', (event) => {
       const value = parseInt(event.target.value, 10);
       state.extractBatchSize = Math.max(1, Number.isNaN(value) ? 5 : value);
+      saveExtractPrefs();
+      renderPanel();
+    });
+
+    panelEl.querySelector('#lumiscrape-batch-gap')?.addEventListener('change', (event) => {
+      const value = parseFloat(event.target.value);
+      state.extractGapSeconds = Math.max(0, Number.isNaN(value) ? 0 : value);
       saveExtractPrefs();
       renderPanel();
     });

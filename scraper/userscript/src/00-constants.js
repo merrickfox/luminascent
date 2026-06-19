@@ -40,6 +40,7 @@
     extractRunning: false,
     extractMode: 'all',
     extractBatchSize: 5,
+    extractGapSeconds: 0,
     browseScanStatus: 'idle',
   };
 
