@@ -21,10 +21,20 @@
 (function () {
   'use strict';
 
-  function __lumiscrapeMain() {
-    if (window.__lumiscrapeStarted) return;
-    window.__lumiscrapeStarted = true;
-    console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 13:33:13 BST');
+  function __lumiscrapeFactory(env) {
+    env = env || {};
+    var GM_addStyle = env.GM_addStyle;
+    var GM_deleteValue = env.GM_deleteValue;
+    var GM_getValue = env.GM_getValue;
+    var GM_listValues = env.GM_listValues;
+    var GM_openInTab = env.GM_openInTab;
+    var GM_setValue = env.GM_setValue;
+    var GM_xmlhttpRequest = env.GM_xmlhttpRequest;
+
+    function __lumiscrapeMain() {
+      if (window.__lumiscrapeStarted) return;
+      window.__lumiscrapeStarted = true;
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 13:43:28 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -3870,7 +3880,10 @@
   init().catch((err) => {
     console.error('[Luminascent] init failed', err);
   });
+    }
+
+    return __lumiscrapeMain;
   }
 
-  __lumiscrapeMain();
+  __lumiscrapeFactory({ GM_addStyle: typeof GM_addStyle !== 'undefined' ? GM_addStyle : undefined, GM_deleteValue: typeof GM_deleteValue !== 'undefined' ? GM_deleteValue : undefined, GM_getValue: typeof GM_getValue !== 'undefined' ? GM_getValue : undefined, GM_listValues: typeof GM_listValues !== 'undefined' ? GM_listValues : undefined, GM_openInTab: typeof GM_openInTab !== 'undefined' ? GM_openInTab : undefined, GM_setValue: typeof GM_setValue !== 'undefined' ? GM_setValue : undefined, GM_xmlhttpRequest: typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : undefined })();
 })();

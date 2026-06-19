@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Luminascent Scraper (loader)
 // @namespace    https://luminascent.local/scraper
-// @version      3.0.0
+// @version      3.1.0
 // @description  Thin loader — live-fetches the scraper bundle from the local server each reload, with a CSP-safe @require fallback
 // @author       Luminascent
 // @match        *://*/*
@@ -41,9 +41,14 @@
 // The freshness stamp the bundle logs ("src last modified …") reflects whichever path
 // ran, so you can always see whether the live fetch reached the page.
 //
-// The server-served bundle is DEFINE-ONLY: it registers window.__lumiscrapeMain and
+// The server-served bundle is DEFINE-ONLY: it registers window.__lumiscrapeFactory and
 // returns it, but does not auto-run. This loader decides which copy (fresh vs cached)
-// actually starts, and __lumiscrapeMain is idempotent so it never double-starts.
+// actually starts, and the entrypoint is idempotent so it never double-starts.
+//
+// WHY A FACTORY: the bundle needs the GM_* sandbox APIs, which are scoped identifiers
+// here (granted above) but are NOT visible to code run via eval in page/global scope.
+// So the loader captures them in this sandbox scope and hands them to the factory —
+// without this, eval'd code throws `GM_getValue is not defined`.
 //
 // SERVER MUST BE RUNNING for the live path: `cd scraper && node server/server.js`.
 // If the server is down on a normal site, the live fetch fails and we fall back to the
@@ -58,13 +63,35 @@
 
   var BUNDLE_URL = 'http://127.0.0.1:8777/userscript/bundle.js';
 
-  function runCached(reason) {
-    if (typeof window.__lumiscrapeMain === 'function') {
-      if (reason) console.warn('[Luminascent] live fetch unavailable, using cached @require bundle:', reason);
-      window.__lumiscrapeMain();
-    } else {
-      console.error('[Luminascent] no scraper bundle available — is the local server running?', reason || '');
+  // Capture the granted GM_* APIs from this sandbox scope to hand to the bundle factory.
+  // typeof guards keep a missing grant from throwing ReferenceError here.
+  function gmEnv() {
+    return {
+      GM_addStyle: typeof GM_addStyle !== 'undefined' ? GM_addStyle : undefined,
+      GM_deleteValue: typeof GM_deleteValue !== 'undefined' ? GM_deleteValue : undefined,
+      GM_getValue: typeof GM_getValue !== 'undefined' ? GM_getValue : undefined,
+      GM_listValues: typeof GM_listValues !== 'undefined' ? GM_listValues : undefined,
+      GM_openInTab: typeof GM_openInTab !== 'undefined' ? GM_openInTab : undefined,
+      GM_setValue: typeof GM_setValue !== 'undefined' ? GM_setValue : undefined,
+      GM_xmlhttpRequest: typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : undefined,
+    };
+  }
+
+  function start(factory, note) {
+    if (typeof factory !== 'function') {
+      console.error('[Luminascent] no scraper bundle available — is the local server running?', note || '');
+      return;
     }
+    if (note) console.warn('[Luminascent] ' + note);
+    try {
+      factory(gmEnv())();
+    } catch (err) {
+      console.error('[Luminascent] scraper failed to start', err);
+    }
+  }
+
+  function runCached(reason) {
+    start(window.__lumiscrapeFactory, reason ? 'using cached @require bundle: ' + reason : null);
   }
 
   try {
@@ -77,19 +104,17 @@
           runCached('server returned ' + res.status);
           return;
         }
+        var factory;
         try {
-          // The bundle is `(function(){ …; return __lumiscrapeMain; })()`. Indirect
-          // eval runs it in global scope and yields the fresh entrypoint, which we
-          // then start. Throws on strict-CSP pages → caught below.
-          var fresh = (0, eval)(res.responseText);
-          if (typeof fresh === 'function') {
-            fresh();
-          } else {
-            runCached('fresh bundle exposed no entrypoint');
-          }
+          // The bundle is `(function(){ …; return __lumiscrapeFactory; })()`. Indirect
+          // eval runs it in global scope and yields the fresh factory. Throws on
+          // strict-CSP pages → fall back to the @require'd cached factory.
+          factory = (0, eval)(res.responseText);
         } catch (err) {
           runCached('eval blocked (likely page CSP): ' + (err && err.message));
+          return;
         }
+        start(factory, null);
       },
       onerror: function () {
         runCached('server unreachable');

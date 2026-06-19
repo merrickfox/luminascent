@@ -36,31 +36,60 @@ export function formatStamp(epochMs) {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} ${parts.timeZoneName}`;
 }
 
-// Wraps the concatenated body in a `(function () { 'use strict'; ... })()` shell.
-//
-// The shell defines a single entrypoint `__lumiscrapeMain` (idempotent — a second
-// call on the same page is a no-op) and then, depending on `autoRun`:
-//   - autoRun: true  (standalone `scraper.user.js`) — calls it immediately.
-//   - autoRun: false (server-served loader bundle) — registers it on `window` and
-//     returns it, WITHOUT calling it. The thin loader then either evals this fresh
-//     text (live reload) or, if page CSP blocks eval, calls the @require'd cached
-//     copy via `window.__lumiscrapeMain`. See userscript/scraper.loader.user.js.
+// The sandbox APIs the bundle uses (kept in sync with the loader's @grant list and the
+// GM_* references in src/*). They are SCOPED identifiers injected by the userscript
+// manager — invisible to code run via eval in page/global scope — so the bundle takes
+// them as an explicit `env` argument instead of referencing them as free globals.
+export const GM_API_NAMES = [
+  'GM_addStyle',
+  'GM_deleteValue',
+  'GM_getValue',
+  'GM_listValues',
+  'GM_openInTab',
+  'GM_setValue',
+  'GM_xmlhttpRequest',
+];
+
+// An object-literal expression that captures the in-scope GM_* APIs by name, each
+// guarded by typeof so a missing grant yields undefined rather than a ReferenceError.
+// Used at call sites that DO have GM_* in scope (the standalone tail, the loader).
+export function gmEnvLiteral() {
+  const entries = GM_API_NAMES.map((n) => `${n}: typeof ${n} !== 'undefined' ? ${n} : undefined`);
+  return `{ ${entries.join(', ')} }`;
+}
+
+// Wraps the concatenated body in a `(function () { 'use strict'; ... })()` shell that
+// defines a `__lumiscrapeFactory(env)` — env supplies the GM_* APIs (see above). The
+// factory returns the idempotent entrypoint `__lumiscrapeMain` (a second call on the
+// same page is a no-op). Depending on `autoRun`:
+//   - autoRun: true  (standalone `scraper.user.js`) — builds env from its in-scope GM_*
+//     and runs immediately.
+//   - autoRun: false (server-served loader bundle) — registers the factory on `window`
+//     and returns it, WITHOUT running. The thin loader evals this fresh text for live
+//     reload, or under strict CSP calls the @require'd cached `window.__lumiscrapeFactory`;
+//     either way it passes GM_* in. See userscript/scraper.loader.user.js.
 //
 // The freshness stamp lives inside the entrypoint so it logs once, on the copy that
 // actually runs — proving whether the reload picked up your edits.
 export function buildBundle(srcDir = SRC_DIR, { autoRun = true } = {}) {
   const stamp = formatStamp(latestSrcMtime(srcDir));
-  const banner = `    console.log('[Luminascent] scraper bundle — src last modified ${stamp}');`;
+  const banner = `      console.log('[Luminascent] scraper bundle — src last modified ${stamp}');`;
   const body = buildBundleBody(srcDir);
+  const binds = GM_API_NAMES.map((n) => `    var ${n} = env.${n};`).join('\n');
   const tail = autoRun
-    ? `  __lumiscrapeMain();`
-    : `  try { window.__lumiscrapeMain = __lumiscrapeMain; } catch (e) {}\n  return __lumiscrapeMain;`;
+    ? `  __lumiscrapeFactory(${gmEnvLiteral()})();`
+    : `  try { window.__lumiscrapeFactory = __lumiscrapeFactory; } catch (e) {}\n  return __lumiscrapeFactory;`;
   return (
     `(function () {\n  'use strict';\n\n` +
-    `  function __lumiscrapeMain() {\n` +
-    `    if (window.__lumiscrapeStarted) return;\n` +
-    `    window.__lumiscrapeStarted = true;\n` +
+    `  function __lumiscrapeFactory(env) {\n` +
+    `    env = env || {};\n` +
+    `${binds}\n\n` +
+    `    function __lumiscrapeMain() {\n` +
+    `      if (window.__lumiscrapeStarted) return;\n` +
+    `      window.__lumiscrapeStarted = true;\n` +
     `${banner}\n\n${body}\n` +
+    `    }\n\n` +
+    `    return __lumiscrapeMain;\n` +
     `  }\n\n${tail}\n})();\n`
   );
 }
