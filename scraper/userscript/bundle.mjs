@@ -36,11 +36,31 @@ export function formatStamp(epochMs) {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} ${parts.timeZoneName}`;
 }
 
-// Wraps the concatenated body in the same `(function () { 'use strict'; ... })()`
-// shell the original file used. A leading console.log records when src/* was
-// last edited, so you can confirm a reload picked up your changes.
-export function buildBundle(srcDir = SRC_DIR) {
+// Wraps the concatenated body in a `(function () { 'use strict'; ... })()` shell.
+//
+// The shell defines a single entrypoint `__lumiscrapeMain` (idempotent — a second
+// call on the same page is a no-op) and then, depending on `autoRun`:
+//   - autoRun: true  (standalone `scraper.user.js`) — calls it immediately.
+//   - autoRun: false (server-served loader bundle) — registers it on `window` and
+//     returns it, WITHOUT calling it. The thin loader then either evals this fresh
+//     text (live reload) or, if page CSP blocks eval, calls the @require'd cached
+//     copy via `window.__lumiscrapeMain`. See userscript/scraper.loader.user.js.
+//
+// The freshness stamp lives inside the entrypoint so it logs once, on the copy that
+// actually runs — proving whether the reload picked up your edits.
+export function buildBundle(srcDir = SRC_DIR, { autoRun = true } = {}) {
   const stamp = formatStamp(latestSrcMtime(srcDir));
-  const banner = `  console.log('[Luminascent] scraper bundle — src last modified ${stamp}');`;
-  return `(function () {\n  'use strict';\n\n${banner}\n\n${buildBundleBody(srcDir)}\n})();\n`;
+  const banner = `    console.log('[Luminascent] scraper bundle — src last modified ${stamp}');`;
+  const body = buildBundleBody(srcDir);
+  const tail = autoRun
+    ? `  __lumiscrapeMain();`
+    : `  try { window.__lumiscrapeMain = __lumiscrapeMain; } catch (e) {}\n  return __lumiscrapeMain;`;
+  return (
+    `(function () {\n  'use strict';\n\n` +
+    `  function __lumiscrapeMain() {\n` +
+    `    if (window.__lumiscrapeStarted) return;\n` +
+    `    window.__lumiscrapeStarted = true;\n` +
+    `${banner}\n\n${body}\n` +
+    `  }\n\n${tail}\n})();\n`
+  );
 }

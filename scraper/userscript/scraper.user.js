@@ -21,7 +21,10 @@
 (function () {
   'use strict';
 
-  console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 13:33:13 BST');
+  function __lumiscrapeMain() {
+    if (window.__lumiscrapeStarted) return;
+    window.__lumiscrapeStarted = true;
+    console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 13:33:13 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -3867,4 +3870,7 @@
   init().catch((err) => {
     console.error('[Luminascent] init failed', err);
   });
+  }
+
+  __lumiscrapeMain();
 })();

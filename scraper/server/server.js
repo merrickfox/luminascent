@@ -285,7 +285,9 @@ async function handleRequest(req, res) {
       // on the next page reload — no Tampermonkey re-paste. The thin loader
       // userscript fetches this and direct-evals it.
       try {
-        sendJs(res, 200, buildBundle());
+        // Define-only: the loader (scraper.loader.user.js) evals this fresh for live
+        // reload, or falls back to its @require'd cached copy under strict CSP.
+        sendJs(res, 200, buildBundle(undefined, { autoRun: false }));
       } catch (err) {
         sendJs(res, 500, `/* Luminascent bundle build failed: ${err.message} */`);
       }
