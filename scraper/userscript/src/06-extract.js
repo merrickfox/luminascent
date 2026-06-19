@@ -417,7 +417,19 @@
       url: imageUrl,
       responseType: 'blob',
     });
-    return response.response;
+    // A bad image URL (e.g. an unresolved lazy-load template) often still resolves with
+    // a non-2xx status whose body is a CDN error page, not an image. Saving that yields a
+    // broken image, so reject anything that isn't a 2xx image response and let the caller
+    // skip it. (The server applies the same magic-byte check as a backstop.)
+    const status = response.status || 0;
+    if (status && (status < 200 || status >= 300)) {
+      throw new Error(`image fetch returned HTTP ${status}`);
+    }
+    const blob = response.response;
+    if (blob && blob.type && !/^image\//i.test(blob.type)) {
+      throw new Error(`image fetch returned non-image content-type: ${blob.type}`);
+    }
+    return blob;
   }
 
   function extensionFromUrl(imageUrl) {

@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildBundle } from '../userscript/bundle.mjs';
 import { detectFields } from './autodetect.js';
+import { sniffImage } from './image-bytes.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -397,20 +398,30 @@ async function handleRequest(req, res) {
 
     if (req.method === 'POST' && pathname === '/image') {
       const body = await readBody(req);
-      const { host, urlSlug: slug, order, ext, dataBase64 } = body;
+      const { host, urlSlug: slug, order, dataBase64 } = body;
 
       if (!host || !slug || !order || !dataBase64) {
         sendJson(res, 400, { error: 'host, urlSlug, order, and dataBase64 required' });
         return;
       }
 
-      const extension = String(ext || 'jpg').replace(/^\./, '').toLowerCase();
+      const buffer = Buffer.from(dataBase64, 'base64');
+
+      // Trust the bytes, not the claimed extension. A lazy-load image URL that resolves
+      // to a CDN 404 still returns a 200/404 with an HTML body; saving that as `.jpg`
+      // poisons the dataset with broken images. Reject any non-image body, and let the
+      // sniffed format pick the extension so the file is always named for what it is.
+      const sniffed = sniffImage(buffer);
+      if (!sniffed) {
+        sendJson(res, 422, { error: 'response is not an image (likely a CDN 404 page); not saved' });
+        return;
+      }
+
       const imagesDir = path.join(productDir(host, slug), 'images');
       ensureDir(imagesDir);
 
-      const filename = `${String(order).padStart(2, '0')}.${extension}`;
+      const filename = `${String(order).padStart(2, '0')}.${sniffed.ext}`;
       const filePath = path.join(imagesDir, filename);
-      const buffer = Buffer.from(dataBase64, 'base64');
       fs.writeFileSync(filePath, buffer);
 
       sendJson(res, 200, {

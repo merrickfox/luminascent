@@ -1,21 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join } from 'node:path';
 import type { PipelineConfig, ScrapedImageRecord, ScrapedProductRecord, SitePipelineConfig } from './types.js';
 import { getScraperRoot, resolveSiteBrand } from './config.js';
 import { formatApiError } from './format-error.js';
 import { normalizeImageSourceUrl } from './image-url.js';
-
-const EXT_TO_MIME: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-};
-
-function contentTypeFromPath(filePath: string): string {
-  const ext = extname(filePath).toLowerCase();
-  return EXT_TO_MIME[ext] ?? 'image/jpeg';
-}
+import { sniffImage } from './image-bytes.js';
 
 function resolveImageFile(hostSlug: string, file: string): string {
   if (file.startsWith('/')) return file;
@@ -25,24 +14,35 @@ function resolveImageFile(hostSlug: string, file: string): string {
 function hydrateImages(hostSlug: string, images: ScrapedImageRecord[] | undefined): ScrapedImageRecord[] {
   if (!images?.length) return [];
 
-  return images.map((image) => {
-    const source_url = normalizeImageSourceUrl(image.source_url);
-    if (!image.file) return { ...image, source_url };
+  return images
+    .map((image): ScrapedImageRecord | null => {
+      const source_url = normalizeImageSourceUrl(image.source_url);
+      if (!image.file) return { ...image, source_url };
 
-    const absolutePath = resolveImageFile(hostSlug, image.file);
-    if (!existsSync(absolutePath)) {
-      throw new Error(`Image file not found: ${absolutePath}`);
-    }
+      const absolutePath = resolveImageFile(hostSlug, image.file);
+      if (!existsSync(absolutePath)) {
+        throw new Error(`Image file not found: ${absolutePath}`);
+      }
 
-    const buffer = readFileSync(absolutePath);
-    return {
-      position: image.position,
-      is_primary: image.is_primary,
-      source_url,
-      data_base64: buffer.toString('base64'),
-      content_type: contentTypeFromPath(absolutePath),
-    };
-  });
+      const buffer = readFileSync(absolutePath);
+      // A local file is occasionally not really an image — a CDN 404 HTML page captured
+      // before the fetch/save guards landed. Trust the bytes, not the extension: skip
+      // non-images so we never upload a broken image, and label the content-type from
+      // the true format (a webp saved as .jpg would otherwise be mislabeled).
+      const sniffed = sniffImage(buffer);
+      if (!sniffed) {
+        console.warn(`  skipping non-image file (run repair-images): ${image.file}`);
+        return null;
+      }
+      return {
+        position: image.position,
+        is_primary: image.is_primary,
+        source_url,
+        data_base64: buffer.toString('base64'),
+        content_type: sniffed.mime,
+      };
+    })
+    .filter((image): image is ScrapedImageRecord => image !== null);
 }
 
 export interface PushOptions {

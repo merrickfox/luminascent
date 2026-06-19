@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 16:51:49 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 17:03:15 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -3977,7 +3977,19 @@
       url: imageUrl,
       responseType: 'blob',
     });
-    return response.response;
+    // A bad image URL (e.g. an unresolved lazy-load template) often still resolves with
+    // a non-2xx status whose body is a CDN error page, not an image. Saving that yields a
+    // broken image, so reject anything that isn't a 2xx image response and let the caller
+    // skip it. (The server applies the same magic-byte check as a backstop.)
+    const status = response.status || 0;
+    if (status && (status < 200 || status >= 300)) {
+      throw new Error(`image fetch returned HTTP ${status}`);
+    }
+    const blob = response.response;
+    if (blob && blob.type && !/^image\//i.test(blob.type)) {
+      throw new Error(`image fetch returned non-image content-type: ${blob.type}`);
+    }
+    return blob;
   }
 
   function extensionFromUrl(imageUrl) {
