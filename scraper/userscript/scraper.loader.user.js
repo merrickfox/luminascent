@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Luminascent Scraper (loader)
 // @namespace    https://luminascent.local/scraper
-// @version      3.1.0
+// @version      3.1.1
 // @description  Thin loader — live-fetches the scraper bundle from the local server each reload, with a CSP-safe @require fallback
 // @author       Luminascent
 // @match        *://*/*
 // @connect      localhost
 // @connect      127.0.0.1
 // @connect      *
-// @require      http://127.0.0.1:8777/userscript/bundle.js
+// @require      http://127.0.0.1:8777/userscript/bundle.js?v=3.1.1
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -33,10 +33,15 @@
 //      'unsafe-eval' block the eval in path 1. We catch that and run the @require'd
 //      bundle instead. @require is injected into the sandbox by Tampermonkey as part
 //      of this script — not eval'd — so it runs under any CSP. The trade-off is that
-//      Tampermonkey caches @require externals on its OWN schedule (it ignores the
-//      server's Cache-Control), so the fallback copy can be stale; that's fine because
-//      you don't iterate scraper code on strict-CSP sites. To force the fallback fresh:
-//      Tampermonkey dashboard → this script → Externals → delete the cached require.
+//      Tampermonkey caches @require externals by URL and ignores the server's
+//      Cache-Control, so the cached copy never refreshes on its own — that's fine
+//      because you don't iterate scraper code on strict-CSP sites.
+//
+//      IMPORTANT: the @require URL carries a `?v=` token that MUST be bumped (together
+//      with @version) whenever the bundle's factory contract changes. Changing the URL
+//      is what makes Tampermonkey refetch the external on the next loader update;
+//      without it, a CSP site keeps running a stale cached bundle forever. (Manual
+//      override: Tampermonkey dashboard → this script → Externals → delete the require.)
 //
 // The freshness stamp the bundle logs ("src last modified …") reflects whichever path
 // ran, so you can always see whether the live fetch reached the page.
@@ -79,7 +84,16 @@
 
   function start(factory, note) {
     if (typeof factory !== 'function') {
-      console.error('[Luminascent] no scraper bundle available — is the local server running?', note || '');
+      // On the CSP fallback path the factory comes from the @require'd cache, so a
+      // missing one almost always means a stale cache from before the bundle contract
+      // changed — bump the @require ?v= / reinstall the loader, or clear the external.
+      console.error(
+        '[Luminascent] no scraper bundle available.',
+        note || '',
+        '\nIf this is a strict-CSP site, the @require cache is stale: reinstall the loader' +
+          ' (its ?v= token forces a refetch) or delete the cached require in Tampermonkey → Externals.' +
+          ' Otherwise, check the local server is running (cd scraper && node server/server.js).',
+      );
       return;
     }
     if (note) console.warn('[Luminascent] ' + note);
