@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Luminascent Scraper (loader)
 // @namespace    https://luminascent.local/scraper
-// @version      1.0.0
-// @description  Thin loader — fetches the scraper bundle from the local server so code changes don't need re-pasting
+// @version      2.0.0
+// @description  Thin loader — @require's the scraper bundle from the local server so code changes don't need re-pasting
 // @author       Luminascent
 // @match        *://*/*
 // @connect      localhost
 // @connect      127.0.0.1
 // @connect      *
+// @require      http://127.0.0.1:8777/userscript/bundle.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -22,46 +23,30 @@
 // and is served by the local server at GET /userscript/bundle.js. Edit a src
 // file, reload the page, and the change is live — no Tampermonkey re-paste.
 //
-// The full @grant list above is required: GM_* APIs are only in scope for a
-// userscript whose header grants them, and the fetched bundle uses them. We run
-// the bundle with a DIRECT eval so it resolves GM_* up this loader's scope chain
-// (an indirect eval would run in global scope and lose access to GM_*).
+// WHY @require (not fetch + eval): the bundle uses GM_* and talks to the local
+// server at 127.0.0.1:8777 via GM_xmlhttpRequest — both only work in the
+// userscript sandbox, so the scraper *must* run there (a page-context blob /
+// <script> would lose GM_* and be blocked by the page's connect-src + mixed
+// content anyway). Sandbox code can only be delivered two ways: an inline body
+// or @require — neither is eval'd, so both run under a strict Content-Security-
+// Policy (e.g. Marks & Spencer, whose CSP omits 'unsafe-eval'). The previous
+// fetch + direct-eval loader was blocked by exactly that CSP, in BOTH Chrome
+// and Firefox. @require hands the bundle to Tampermonkey, which injects it into
+// the sandbox as part of this script — no eval, so CSP can't block it.
 //
-// USE FIREFOX for this loader. The bundle is run with a direct eval, which a
-// strict Content-Security-Policy (one without 'unsafe-eval') blocks. On Chrome
-// the userscript runs in page context, so the page's CSP applies and the eval
-// is refused — even with "Allow user scripts" enabled. Firefox's Tampermonkey
-// runs granted userscripts in a special context that bypasses the page CSP, so
-// the live-reload loop works there. If you must stay on Chrome, install the
-// standalone build instead (scraper.user.js, produced by `npm run build:userscript`).
+// FRESHNESS: Tampermonkey caches @require resources, but its caching is not
+// applied to localhost the way it is to remote URLs, and the server sends
+// `Cache-Control: no-store`, so edits to src/* should appear on the next
+// reload. If a change ever looks stale, force a refetch: Tampermonkey dashboard
+// → this script → Externals tab → delete the cached require (or bump the
+// Externals update interval to "Always" in Settings → Advanced).
+//
+// SERVER MUST BE RUNNING: @require is fetched at script load. If the server is
+// down, Tampermonkey can't load the bundle and the scraper won't start —
+// `cd scraper/server && node server.js`.
+//
+// GUARANTEED FALLBACK: the self-contained build `scraper.user.js`
+// (`npm run build:userscript`) inlines the bundle into the script body, so it
+// needs neither the server nor @require — use it if @require ever misbehaves.
 
-(function () {
-  'use strict';
-
-  const SERVER = 'http://127.0.0.1:8777';
-
-  GM_xmlhttpRequest({
-    method: 'GET',
-    url: SERVER + '/userscript/bundle.js',
-    onload(response) {
-      if (response.status >= 400) {
-        console.error('[Luminascent] bundle fetch failed', response.status, response.responseText);
-        return;
-      }
-      try {
-        // eslint-disable-next-line no-eval
-        eval(response.responseText); // DIRECT eval — keeps GM_* in scope
-      } catch (err) {
-        console.error(
-          '[Luminascent] bundle eval blocked (likely strict CSP / no unsafe-eval). ' +
-            'Use Firefox for the loader, or install the standalone build on Chrome ' +
-            '(npm run build:userscript). Original error:',
-          err,
-        );
-      }
-    },
-    onerror() {
-      console.error('[Luminascent] scraper server not reachable on ' + SERVER + ' — is it running? (node server/server.js)');
-    },
-  });
-})();
+// No body needed: the @require'd bundle is a self-executing IIFE.

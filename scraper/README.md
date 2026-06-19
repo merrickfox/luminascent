@@ -88,23 +88,29 @@ Server listens on `http://127.0.0.1:8777` by default. Override with `PORT=8787 n
 
 ### 2. Install the Tampermonkey loader
 
-> **Use Firefox for the loader.** The loader runs the bundle with a direct
-> `eval`, which strict-CSP sites (e.g. Marks & Spencer) block on Chrome — there
-> the userscript runs in page context, so the page's CSP applies and the eval is
-> refused, even with "Allow user scripts" enabled. Firefox's Tampermonkey runs
-> granted userscripts in a special context that bypasses the page CSP, so the
-> live-reload loop works everywhere. If you must stay on Chrome, use the
-> standalone build (see **Standalone fallback** below).
-
 1. Open Tampermonkey → **Create a new script**
 2. Replace the template with the contents of `userscript/scraper.loader.user.js`
 3. Save and enable the script
 
-The loader is a thin shim: on every page it fetches the real code from the
-server (`GET /userscript/bundle.js`) and runs it. The actual scraper lives in
-`userscript/src/*` — **edit a file there and reload the page; the change is live
-with no Tampermonkey re-paste.** The server assembles the bundle fresh on each
-request, so no build step is needed during development.
+The loader is a thin shim: it **`@require`s** the real code from the server
+(`GET /userscript/bundle.js`), so Tampermonkey injects the bundle into the
+userscript sandbox on every page. The actual scraper lives in `userscript/src/*`
+— **edit a file there and reload the page; the change is live with no
+Tampermonkey re-paste.** The server assembles the bundle fresh on each request,
+so no build step is needed during development.
+
+> **Why `@require` and not `eval`?** The scraper must run in the userscript
+> sandbox — it uses `GM_*` and reaches the local server at `127.0.0.1:8777` via
+> `GM_xmlhttpRequest` (bypassing the page's `connect-src` CSP and https→http
+> mixed-content rules). Earlier the loader fetched the bundle and ran it with a
+> direct `eval`, but strict-CSP sites (e.g. Marks & Spencer, whose CSP omits
+> `'unsafe-eval'`) block runtime `eval` in **both Chrome and Firefox**.
+> `@require` is injected as part of the script — never `eval`'d — so CSP can't
+> block it. Tampermonkey caches `@require` resources, but not for localhost the
+> way it does for remote URLs, and the server sends `Cache-Control: no-store`,
+> so edits stay live on reload. If a change looks stale, delete the cached
+> require (dashboard → script → **Externals**) or set the Externals update
+> interval to "Always".
 
 Required grants: `GM_xmlhttpRequest`, `GM_setValue`, `GM_getValue`, `GM_openInTab`, `GM_addStyle`.  
 Required connect hosts: `localhost`, `127.0.0.1` (bypasses https → http mixed-content restrictions).
@@ -118,12 +124,12 @@ behaviour is byte-identical to the old single file; the files are purely for
 editing convenience. `bundle.mjs` is the shared assembler used by both the
 server endpoint and the build script.
 
-**Standalone fallback:** if you must run the scraper on **Chrome** (whose
-strict-CSP pages block the loader's direct `eval` — Firefox does not; see the
-note above), or when the server isn't running, install the self-contained
-`userscript/scraper.user.js` instead. It bundles the code inline so no `eval` is
-needed, at the cost of a rebuild + re-paste per change. Regenerate it from `src/`
-with:
+**Standalone fallback:** if `@require` ever misbehaves, or when the server isn't
+running, install the self-contained `userscript/scraper.user.js` instead. It
+inlines the bundle into the script body, so it needs neither the server nor
+`@require` (and, like `@require`, runs under strict CSP since nothing is
+`eval`'d) — at the cost of a rebuild + re-paste per change. Regenerate it from
+`src/` with:
 
 ```bash
 cd scraper
