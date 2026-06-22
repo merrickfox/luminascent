@@ -144,7 +144,7 @@
    * mutating the shared extractState, so concurrent finishers never clobber
    * each other. The controller drains these in drainResults().
    */
-  function reportResult(url, ok, error, ms) {
+  function reportResult(url, ok, error, ms, info) {
     if (childReported) return;
     childReported = true;
     const cleanUrl = stripScrapeFlag(url);
@@ -153,9 +153,30 @@
       ok: !!ok,
       error: error || null,
       ms: ms || null,
+      info: info || null,
       ts: Date.now(),
     });
-    console.log('[Luminascent]', ok ? `scraped ${shortUrl(cleanUrl)}` : `failed ${shortUrl(cleanUrl)}: ${error || 'error'}`);
+    if (ok) {
+      console.log('[Luminascent]', `scraped ${shortUrl(cleanUrl)}${captureDetail(info)}`);
+    } else {
+      console.log('[Luminascent]', `failed ${shortUrl(cleanUrl)}: ${error || 'error'}`);
+    }
+  }
+
+  /**
+   * One-line capture coverage for the run log / console. A tab can report `done`
+   * while a positional or stale locator quietly resolved to nothing (or to the
+   * wrong row), so we surface how many configured fields actually came back, name
+   * the empty ones, and flag a capture that found nothing at all. '' when no
+   * summary was reported (older results, missing-config skips, etc).
+   */
+  function captureDetail(info) {
+    if (!info) return '';
+    const parts = [`${info.fields}/${info.total} fields`];
+    if (info.missing && info.missing.length) parts.push(`missing ${info.missing.join(', ')}`);
+    if (info.imagesConfigured) parts.push(`${info.images}/${info.imagesConfigured} img`);
+    const warn = info.fields === 0 ? ' ⚠' : '';
+    return ` ·${warn} ${parts.join(' · ')}`;
   }
 
   function clearResultKeys() {
@@ -217,7 +238,7 @@
         if (payload.ok) {
           extractState.completed.push(url);
           const secs = payload.ms ? ` (${(payload.ms / 1000).toFixed(1)}s)` : '';
-          logEvent(extractState, `done ${shortUrl(url)}${secs}`);
+          logEvent(extractState, `done ${shortUrl(url)}${secs}${captureDetail(payload.info)}`);
         } else {
           extractState.failed.push({ url, error: payload.error || 'error' });
           logEvent(extractState, `fail ${shortUrl(url)}: ${payload.error || 'error'}`);
@@ -526,6 +547,26 @@
     return data;
   }
 
+  /**
+   * Field-level capture summary for the run log. Compares the configured product
+   * fields against what `buildScrapedData` actually resolved so silent
+   * locator failures (empty / wrong-row captures) become visible per product.
+   */
+  function summarizeCapture(data, imageCount) {
+    const configured = (state.config?.product?.fields || []).map((field) => field.fieldKey);
+    const captured = configured.filter((key) => {
+      const value = data.fields?.[key];
+      return value != null && value !== '';
+    });
+    return {
+      fields: captured.length,
+      total: configured.length,
+      missing: configured.filter((key) => !captured.includes(key)),
+      images: imageCount,
+      imagesConfigured: (state.config?.images || []).length,
+    };
+  }
+
   function getRequiredProductLocators() {
     return [
       ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
@@ -577,7 +618,7 @@
       }
     }
 
-    return { urlSlug, imageCount };
+    return { urlSlug, imageCount, summary: summarizeCapture(data, imageCount) };
   }
 
   async function runAutoScrapeTab() {
@@ -585,9 +626,9 @@
     const cleanUrl = stripScrapeFlag(location.href);
 
     await waitForReady(getRequiredProductLocators());
-    await scrapeCurrentPage();
+    const result = await scrapeCurrentPage();
 
-    reportResult(cleanUrl, true, null, Date.now() - tabStartedAt);
+    reportResult(cleanUrl, true, null, Date.now() - tabStartedAt, result.summary);
     window.close();
   }
 
@@ -612,7 +653,9 @@
       await waitForReady(getRequiredProductLocators());
       setAdhocStatus('Extracting current page…');
       const result = await scrapeCurrentPage();
-      setAdhocStatus(`Saved ${result.urlSlug} · ${result.imageCount} image(s)`);
+      const { fields, total, missing } = result.summary;
+      const miss = missing.length ? ` (missing ${missing.join(', ')})` : '';
+      setAdhocStatus(`Saved ${result.urlSlug} · ${fields}/${total} fields${miss} · ${result.imageCount} image(s)`);
     } catch (err) {
       console.error('[Luminascent] Ad-hoc extraction failed', err);
       setAdhocStatus(`Failed: ${err.message || 'error'}`);
