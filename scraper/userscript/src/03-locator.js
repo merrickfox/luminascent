@@ -1,11 +1,47 @@
+  // A relative path made only of `tag:nth-of-type(n)` hops, with no class/id/attr
+  // selector to pin it. These position-dependent paths are the fragile ones: a
+  // site renders the same block with different inner markup across its product
+  // templates, so the index drifts onto the wrong child or vanishes entirely.
+  function isPositionalPath(rel) {
+    return !!rel && /:nth-of-type\(\d+\)/.test(rel) && !/[.#[]/.test(rel);
+  }
+
+  // A recipe locator that reads an element's text and reaches it only by a
+  // positional sub-path from its anchor. The build-time widening below avoids
+  // creating these; this recognises ones already saved in a config.
+  function isPositionalTextLocator(locator) {
+    if (!locator) return false;
+    if ((locator.extraction?.type || 'text') !== 'text') return false;
+    return isPositionalPath(locator.relativePathFromAnchor);
+  }
+
   function buildLocator(el, options = {}) {
     if (!el) return null;
 
     const recipeMode = options.recipeMode !== false;
     const stable = recipeMode ? findRecipeStableAncestor(el) : findStableAncestor(el);
     const attrs = recipeMode ? getRecipeAttributes(el) : getStableAttributes(el);
-    const textSample = normalizeText(el.textContent).slice(0, 120);
     const extraction = inferExtraction(el);
+
+    // Option 2: a text element with no stable identity of its own, reachable from
+    // its stable ancestor only by a positional index (e.g. `p:nth-of-type(2)`), is
+    // brittle for the reason above. Re-anchor on the block itself and capture its
+    // whole text; the LLM pass slices the field back out. Scoped to recipe-mode
+    // text fields with a real (non-body) attributed ancestor — links/images keep
+    // their precise locator since they need the exact element, not a text blob.
+    if (
+      recipeMode
+      && extraction.type === 'text'
+      && Object.keys(attrs).length === 0
+      && stable.element !== el
+      && stable.element !== document.body
+      && Object.keys(stable.attrs || {}).length > 0
+      && isPositionalPath(buildRelativePath(stable.element, el))
+    ) {
+      return buildLocator(stable.element, options);
+    }
+
+    const textSample = normalizeText(el.textContent).slice(0, 120);
 
     return {
       version: 1,
@@ -418,6 +454,18 @@
       const anchorMatches = resolveAllFromAnchorPath(root, locator, locator.tag);
       if (anchorMatches.length === 1) return anchorMatches[0];
       anchorMatches.forEach((el) => candidates.add(el));
+
+      // Option 1 safety net: an existing config whose positional sub-path no
+      // longer resolves (the block's inner markup differs on this product) falls
+      // back to the anchor block itself, so a text field captures the block
+      // instead of null. Only when the anchor is unambiguous and the locator is a
+      // positional text locator — mirrors the build-time widening above. (Where
+      // the sub-path *does* resolve but to the wrong child, anchorMatches is
+      // non-empty and we never reach here; that needs a re-tag, not a fallback.)
+      if (!anchorMatches.length && isPositionalTextLocator(locator)) {
+        const anchorsOnly = queryByAttrs(root, locator.anchorAttrs);
+        if (anchorsOnly.length === 1) return anchorsOnly[0];
+      }
     }
 
     queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
