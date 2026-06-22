@@ -114,6 +114,26 @@
     }
   }
 
+  /**
+   * Canonical key for matching a child tab's reported URL back to the URL the
+   * controller opened. They both come from the browser, but a product page can
+   * re-encode or reorder its own query string on load (`+` vs `%20`, `'` vs
+   * `%27`, param order), which broke exact-string matching and made successful
+   * scrapes look like "closed without result". Normalise encoding, sort params,
+   * drop the hash and any trailing slash so equivalent URLs compare equal.
+   */
+  function normalizeUrlKey(urlString) {
+    try {
+      const u = new URL(stripScrapeFlag(urlString));
+      u.hash = '';
+      u.searchParams.sort();
+      const search = decodeURIComponent(u.search.replace(/\+/g, '%20'));
+      return `${u.origin}${u.pathname.replace(/\/+$/, '')}${search}`;
+    } catch {
+      return stripScrapeFlag(urlString);
+    }
+  }
+
   function nowClock() {
     return new Date().toTimeString().slice(0, 8);
   }
@@ -193,7 +213,7 @@
     });
     // Runs in the controller tab; just record when the tab vanished. The tick
     // decides (after a grace) whether it closed cleanly or died silently.
-    if (tab) tab.onclose = () => closedAtByUrl.set(stripScrapeFlag(url), Date.now());
+    if (tab) tab.onclose = () => closedAtByUrl.set(normalizeUrlKey(url), Date.now());
     return tab;
   }
 
@@ -230,11 +250,27 @@
         if (!payload) return;
 
         const url = stripScrapeFlag(payload.url || key.slice(RESULT_PREFIX.length));
-        const idx = extractState.inFlight.findIndex((item) => stripScrapeFlag(item) === url);
-        if (idx === -1) return; // already resolved or not part of this run
+        const idx = extractState.inFlight.findIndex(
+          (item) => normalizeUrlKey(item) === normalizeUrlKey(url),
+        );
+        if (idx === -1) {
+          // A result came back that matches nothing still open. With normalised
+          // matching this should be rare (a genuine duplicate, or a page that
+          // redirected to a different path). Don't silently drop it — say so, so
+          // a "0 ok / N failed" run can't hide work that actually happened.
+          const already = extractState.completed.some((u) => normalizeUrlKey(u) === normalizeUrlKey(url));
+          if (!already) {
+            logEvent(
+              extractState,
+              `stray ${shortUrl(url)} ${payload.ok ? 'ok' : `fail: ${payload.error || 'error'}`} — reported URL not in the open set`,
+            );
+            changed = true;
+          }
+          return;
+        }
 
         extractState.inFlight.splice(idx, 1);
-        closedAtByUrl.delete(url);
+        closedAtByUrl.delete(normalizeUrlKey(url));
         if (payload.ok) {
           extractState.completed.push(url);
           const secs = payload.ms ? ` (${(payload.ms / 1000).toFixed(1)}s)` : '';
@@ -256,12 +292,16 @@
 
     for (const item of [...extractState.inFlight]) {
       const url = stripScrapeFlag(item);
-      const closedAt = closedAtByUrl.get(url);
+      const key = normalizeUrlKey(item);
+      const closedAt = closedAtByUrl.get(key);
       if (closedAt && now - closedAt > CLOSE_GRACE_MS) {
-        extractState.inFlight = extractState.inFlight.filter((u) => stripScrapeFlag(u) !== url);
-        extractState.failed.push({ url, error: 'closed without result' });
-        closedAtByUrl.delete(url);
-        logEvent(extractState, `fail ${shortUrl(url)}: closed without result`);
+        extractState.inFlight = extractState.inFlight.filter((u) => normalizeUrlKey(u) !== key);
+        extractState.failed.push({ url, error: 'tab closed before reporting a result' });
+        closedAtByUrl.delete(key);
+        // The tab closed but never handed back a result. Either the userscript
+        // didn't run in the child (local bundle server down → loader eval fails)
+        // or the child errored before reporting. Point at the likely causes.
+        logEvent(extractState, `fail ${shortUrl(url)}: tab closed before reporting (is the local scraper server running?)`);
         changed = true;
       }
     }
