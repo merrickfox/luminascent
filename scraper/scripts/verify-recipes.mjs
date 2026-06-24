@@ -54,6 +54,11 @@ function isInstanceSpecificAttr(name, value) {
   return false;
 }
 
+function isChromeRegion(el) {
+  if (!el) return false;
+  return !!el.closest('nav, header, footer, [role="navigation"], [role="banner"], [role="contentinfo"]');
+}
+
 function isMainContentRegion(el) {
   if (!el) return false;
   return !!el.closest('main, [role="main"], #contentarea, #content, .page-main, .main-content');
@@ -410,7 +415,27 @@ function structuralTailOverlap(targetPath, currentPath) {
   return overlap;
 }
 
-function scoreLocatorMatch(candidate, locator) {
+// Mirror of userscript structuralTailOverlapTolerant — contiguous tail align
+// with up to maxSkips wrapper indels (zoom/gallery/lightbox shift), no
+// substitutions, so unrelated branches score ~0.
+function structuralTailOverlapTolerant(targetPath, currentPath, maxSkips) {
+  if (!targetPath || !currentPath) return 0;
+  const a = targetPath.split(' > ');
+  const b = currentPath.split(' > ');
+  let ti = a.length - 1;
+  let ci = b.length - 1;
+  let matched = 0;
+  let skips = 0;
+  while (ti >= 0 && ci >= 0) {
+    if (a[ti] === b[ci]) { matched += 1; ti -= 1; ci -= 1; }
+    else if (skips < maxSkips && ti - 1 >= 0 && a[ti - 1] === b[ci]) { ti -= 1; skips += 1; }
+    else if (skips < maxSkips && ci - 1 >= 0 && a[ti] === b[ci - 1]) { ci -= 1; skips += 1; }
+    else break;
+  }
+  return matched;
+}
+
+function scoreLocatorMatch(candidate, locator, options = {}) {
   let score = 0;
   let evidence = 0;
 
@@ -446,9 +471,18 @@ function scoreLocatorMatch(candidate, locator) {
   }
 
   if (locator.structuralPath) {
-    const overlap = structuralTailOverlap(locator.structuralPath, buildStructuralPath(candidate));
+    const candidatePath = buildStructuralPath(candidate);
+    const overlap = structuralTailOverlap(locator.structuralPath, candidatePath);
     score += overlap * 2;
-    if (overlap >= 2) evidence += Math.min(overlap, 5);
+    if (overlap >= 2) {
+      evidence += Math.min(overlap, 5);
+    } else if (options.allowTolerantPath) {
+      const tolerant = structuralTailOverlapTolerant(locator.structuralPath, candidatePath, 2);
+      if (tolerant >= 4) {
+        score += tolerant * 2;
+        evidence += Math.min(tolerant, 5);
+      }
+    }
   }
 
   if (locator.relativePathFromAnchor && locator.anchorAttrs) {
@@ -463,6 +497,7 @@ function scoreLocatorMatch(candidate, locator) {
   }
 
   if (isMainContentRegion(candidate)) score += 5;
+  if (isChromeRegion(candidate)) score -= 8;
   if (isProductDetailPrice(candidate)) score += 8;
   if (isRecommendationRegion(candidate)) score -= 10;
 
@@ -484,17 +519,31 @@ function findLocator(locator, root = document) {
   queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
   if (locator.tag) root.querySelectorAll(locator.tag).forEach((el) => candidates.add(el));
 
-  let best = null;
-  let bestScore = -Infinity;
-  for (const candidate of candidates) {
-    const { score, evidence } = scoreLocatorMatch(candidate, locator);
-    if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
-    if (score > bestScore) {
-      bestScore = score;
-      best = candidate;
+  const pickBest = (scoreOptions) => {
+    let best = null;
+    let bestScore = -Infinity;
+    for (const candidate of candidates) {
+      const { score, evidence } = scoreLocatorMatch(candidate, locator, scoreOptions);
+      if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
     }
-  }
-  return best;
+    return best;
+  };
+
+  const best = pickBest({});
+  if (best) return best;
+  if (!isMediaLocator(locator)) return null;
+  return pickBest({ allowTolerantPath: true });
+}
+
+function isMediaLocator(locator) {
+  const tag = (locator.tag || '').toLowerCase();
+  if (tag === 'img' || tag === 'source' || tag === 'picture') return true;
+  const ex = locator.extraction;
+  return !!(ex && ex.type === 'attribute' && /^(src|currentsrc|srcset)$/i.test(ex.attribute || ''));
 }
 
 function enumerateBrowseItems(browse) {

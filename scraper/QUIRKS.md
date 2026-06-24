@@ -113,6 +113,41 @@ full diff and reasoning.
 
 ---
 
+### Image locator anchored on a JS-only wrapper (agraria Magic Zoom)
+- **Symptom:** after the placeholder fix above, agraria captured **no** image at
+  all (`images: null`) — re-running extraction didn't help.
+- **Cause:** the image locator was tagged (in the foreground) on
+  `figure.mz-ready`, a wrapper Magic Zoom builds with JavaScript. Background
+  capture tabs don't run that visibility-gated JS, so the wrapper is absent at
+  extraction; the locator's class anchor and exact structural path can't resolve,
+  the matcher falls back to scoring all `<img>`s, none clear the evidence gate
+  (an attr-less img has no identifying signal once the path is shifted), and it
+  returns null. The real main image is present the whole time as a plain
+  `<img alt="Perfume Candle" src="…_600x.jpg">`.
+- **Fix:** `findLocator` now runs a **last-resort second pass** when the normal
+  pass finds nothing: `structuralTailOverlapTolerant` aligns the stored path to a
+  candidate while permitting up to two inserted/removed wrapper segments (the
+  shift a zoom/gallery/lightbox introduces). It still aligns the tail contiguously
+  segment-for-segment with no substitutions, so unrelated branches score ~0.
+  (`userscript/src/03-locator.js`, mirrored in `scripts/verify-recipes.mjs`.)
+- **Invariants — do not loosen any of these, they were each load-bearing in
+  testing:**
+  - The tolerant pass runs **only when the normal pass returns null**
+    (`allowTolerantPath`). Verified across 13 sites / 192 pages: 0 existing
+    matches change, 16 agraria images recovered. Make it always-on and it
+    re-ranks working matches.
+  - It is **media-only** (`isMediaLocator`). For text fields a structurally-
+    approximate match is just the wrong text (recovered "Regular price" for an
+    accord, a reviews list for notes) — there, null beats a confident wrong
+    answer. Images are the opposite: the approximate match is the right image.
+  - **Never** use plain segment-LCS for this — repeated generic segments
+    (`div:nth-of-type(1)…`) let a header logo share a long subsequence with a
+    deep product image, and the logo won. Contiguous-with-bounded-indels is what
+    discriminates.
+  - The header logo losing to the product image also relies on the existing
+    `isChromeRegion` (−8) / region scoring. Keep it.
+- _Commit: (this change)_
+
 ## Locators (field extraction)
 
 ### Block-level text located by a drifting positional child
@@ -159,11 +194,4 @@ full diff and reasoning.
 
 ## Open / watch-list
 
-- **JS-generated locator anchors (agraria Magic Zoom).** agraria's image locator
-  is anchored on `figure.mz-ready`, a wrapper Magic Zoom creates only after its
-  JS runs — absent in background capture tabs, so the locator falls back to
-  scoring all `<img>`s and can land on a placeholder/related-product image. The
-  `data:` URI fix (d402009) mitigates it, but the robust fix is to avoid
-  inferring locators anchored on volatile JS-generated wrappers (prefer the
-  stable underlying `<img>`). Not yet done — re-tagging on the real `<img>` is
-  the current workaround.
+- _(none currently)_

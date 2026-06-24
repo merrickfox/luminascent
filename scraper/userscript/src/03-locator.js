@@ -354,6 +354,43 @@
     return overlap;
   }
 
+  // Like structuralTailOverlap, but tolerant of a bounded number of wrapper
+  // segments inserted or removed mid-path. It still aligns the tail
+  // contiguously segment-for-segment — the only slack is that, on a mismatch, it
+  // may drop ONE segment from the target or the candidate if doing so makes the
+  // very next segment realign (an indel, i.e. a wrapper level). It never
+  // substitutes mismatched segments, so unrelated branches diverge immediately
+  // and score ~0; only the same element shifted by a JS-injected wrapper
+  // (Magic Zoom's figure.mz-ready, a lightbox, etc.) realigns. Plain segment-LCS
+  // is unusable here: repeated generic segments (div:nth-of-type(1)…) let a logo
+  // in the header share a long subsequence with a deep product image. Returns
+  // the number of aligned segments.
+  function structuralTailOverlapTolerant(targetPath, currentPath, maxSkips) {
+    if (!targetPath || !currentPath) return 0;
+    const a = targetPath.split(' > ');
+    const b = currentPath.split(' > ');
+    let ti = a.length - 1;
+    let ci = b.length - 1;
+    let matched = 0;
+    let skips = 0;
+    while (ti >= 0 && ci >= 0) {
+      if (a[ti] === b[ci]) {
+        matched += 1;
+        ti -= 1;
+        ci -= 1;
+      } else if (skips < maxSkips && ti - 1 >= 0 && a[ti - 1] === b[ci]) {
+        ti -= 1; // a wrapper segment present in target, absent in candidate
+        skips += 1;
+      } else if (skips < maxSkips && ci - 1 >= 0 && a[ti] === b[ci - 1]) {
+        ci -= 1; // a wrapper segment present in candidate, absent in target
+        skips += 1;
+      } else {
+        break; // genuine divergence — not the same element
+      }
+    }
+    return matched;
+  }
+
   // Returns { score, evidence }. `score` ranks candidates (region/visibility
   // included as tiebreakers); `evidence` counts only "real" matches (attrs,
   // resolved anchor path, structural tail, exact text) and gates acceptance so a
@@ -414,9 +451,25 @@
     }
 
     if (locator.structuralPath) {
-      const overlap = structuralTailOverlap(locator.structuralPath, buildStructuralPath(candidate));
+      const candidatePath = buildStructuralPath(candidate);
+      const overlap = structuralTailOverlap(locator.structuralPath, candidatePath);
       score += recipeMode ? overlap * 2 : overlap;
-      if (overlap >= 2) evidence += Math.min(overlap, 5);
+      if (overlap >= 2) {
+        evidence += Math.min(overlap, 5);
+      } else if (options.allowTolerantPath) {
+        // Contiguous tail diverged — usually a JS-injected/removed wrapper level
+        // shifting the path (e.g. the locator was tagged inside Magic Zoom's
+        // figure.mz-ready in the foreground, absent in a background capture tab).
+        // Retry allowing up to two wrapper indels. Requires a long aligned tail
+        // (>= 4 segments) so an unrelated element can't clear the gate. Only
+        // enabled in findLocator's last-resort pass (see below), so it can never
+        // change an element that already matched by normal scoring.
+        const tolerant = structuralTailOverlapTolerant(locator.structuralPath, candidatePath, 2);
+        if (tolerant >= 4) {
+          score += recipeMode ? tolerant * 2 : tolerant;
+          evidence += Math.min(tolerant, 5);
+        }
+      }
     }
 
     if (recipeMode && locator.relativePathFromAnchor && locator.anchorAttrs) {
@@ -499,19 +552,42 @@
       }
     }
 
-    let best = null;
-    let bestScore = -Infinity;
-
-    for (const candidate of candidates) {
-      const { score, evidence } = scoreLocatorMatch(candidate, locator, { recipeMode });
-      if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
-      if (score > bestScore) {
-        bestScore = score;
-        best = candidate;
+    const pickBest = (scoreOptions) => {
+      let best = null;
+      let bestScore = -Infinity;
+      for (const candidate of candidates) {
+        const { score, evidence } = scoreLocatorMatch(candidate, locator, scoreOptions);
+        if (evidence < LOCATOR_EVIDENCE_THRESHOLD) continue;
+        if (score > bestScore) {
+          bestScore = score;
+          best = candidate;
+        }
       }
-    }
+      return best;
+    };
 
-    return best;
+    // Normal pass — unchanged scoring. Any locator that already resolved keeps
+    // resolving to exactly the same element.
+    const best = pickBest({ recipeMode });
+    if (best) return best;
+
+    // Last resort, media locators only: nothing cleared the evidence gate. Retry
+    // permitting the wrapper-tolerant structural fallback so an image locator
+    // captured inside a JS-only wrapper (a zoom/gallery/lightbox absent in
+    // background tabs) can still resolve. Scoped to media because a structurally
+    // approximate match is the *right* image but, for a text field, just the
+    // wrong text (a price/review block that happens to sit at a similar depth) —
+    // there, no match beats a confident wrong one. Gated behind "normal pass
+    // found nothing", so it never changes a match the normal pass would make.
+    if (!isMediaLocator(locator)) return null;
+    return pickBest({ recipeMode, allowTolerantPath: true });
+  }
+
+  function isMediaLocator(locator) {
+    const tag = (locator.tag || '').toLowerCase();
+    if (tag === 'img' || tag === 'source' || tag === 'picture') return true;
+    const ex = locator.extraction;
+    return !!(ex && ex.type === 'attribute' && /^(src|currentsrc|srcset)$/i.test(ex.attribute || ''));
   }
 
   function extractValue(el, extraction) {
