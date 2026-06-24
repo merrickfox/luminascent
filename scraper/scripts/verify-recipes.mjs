@@ -155,16 +155,23 @@ const firstFromSrcset = (srcset) => {
   return first || null;
 };
 
+function isPlaceholderSrc(value) {
+  if (!value) return true;
+  return /^data:/i.test(String(value).trim());
+}
+
 function lazyImgUrl(img) {
   if (!img) return null;
   const live = img.currentSrc || img.src || img.getAttribute('src');
-  if (live) return live;
+  if (live && !isPlaceholderSrc(live)) return live;
   const dataAttrs = ['data-src', 'data-image', 'data-original', 'data-lazy-src', 'data-lazy'];
   for (const attr of dataAttrs) {
     const v = img.getAttribute?.(attr);
-    if (v) return v;
+    if (v && !isPlaceholderSrc(v)) return v;
   }
-  return firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+  const fromSrcset = firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+  if (fromSrcset && !isPlaceholderSrc(fromSrcset)) return fromSrcset;
+  return live || null;
 }
 
 function normalizeImageUrl(raw) {

@@ -560,22 +560,36 @@
     }
   }
 
-  // Lazy-loading sites (Squarespace, lazysizes, etc.) ship the real URL in a
-  // data-* attribute and only populate `src` once the image scrolls into view.
-  // Product pages captured in background child tabs often never trigger that
-  // load, so `src`/`currentSrc` stay empty. Fall back to the common lazy-load
-  // carriers before giving up. Generic across sites — only used when the live
-  // src is missing, so it never overrides a real loaded src.
+  // A `src` is only "real" if it points at an actual image file. Lazy-load
+  // libraries seed `src` with an inline placeholder (a 1x1 transparent
+  // `data:image/svg+xml,...` or base64 gif) and keep the true URL in a data-*
+  // attribute until the image scrolls into view. A `data:` URI is therefore
+  // never the image we want — treat it (and empty values) as "not live" so we
+  // fall through to the lazy-load carriers. Generic across CDNs/loaders.
+  function isPlaceholderSrc(value) {
+    if (!value) return true;
+    return /^data:/i.test(String(value).trim());
+  }
+
+  // Lazy-loading sites (Squarespace, lazysizes, Shopify, etc.) ship the real
+  // URL in a data-* attribute and only populate `src` once the image scrolls
+  // into view. Product pages captured in background child tabs often never
+  // trigger that load, so `src`/`currentSrc` stay empty or hold a placeholder.
+  // Prefer a real live src; otherwise fall back to the common lazy-load
+  // carriers, and only as a last resort return the placeholder. Generic across
+  // sites — it never overrides a real loaded src.
   function lazyImgUrl(img) {
     if (!img) return null;
     const live = img.currentSrc || img.src || img.getAttribute('src');
-    if (live) return live;
+    if (live && !isPlaceholderSrc(live)) return live;
     const dataAttrs = ['data-src', 'data-image', 'data-original', 'data-lazy-src', 'data-lazy'];
     for (const attr of dataAttrs) {
       const v = img.getAttribute?.(attr);
-      if (v) return v;
+      if (v && !isPlaceholderSrc(v)) return v;
     }
-    return firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+    const fromSrcset = firstFromSrcset(img.getAttribute?.('data-srcset') || img.getAttribute?.('srcset'));
+    if (fromSrcset && !isPlaceholderSrc(fromSrcset)) return fromSrcset;
+    return live || null;
   }
 
   function extractImageSrc(el) {
