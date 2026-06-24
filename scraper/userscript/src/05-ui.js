@@ -276,7 +276,6 @@
       }
       .btn.danger { color: #fca5a5; border-color: #7f1d1d; }
       .btn.danger:hover { background: #450a0a; }
-      .auto-pill { background: #6d28d9; color: #ede9fe; }
     `;
     shadowRoot.appendChild(style);
 
@@ -914,7 +913,6 @@
             <div class="${cardClass}" data-field-card="${field.fieldKey}">
               <div class="field-card-header">
                 <span class="tag">${field.fieldKey}${locators.length > 1 ? ` ·${locators.length}` : ''}</span>
-                ${field.auto ? '<span class="tag auto-pill">auto</span>' : ''}
                 <div class="field-card-actions">
                   <button
                     class="btn"
@@ -1315,6 +1313,31 @@
     });
 
     panelEl.querySelectorAll('[data-field-card]').forEach((card) => {
+      // Hovering a tagged field card highlights its live element(s) on the page so the
+      // user can see what each tag points at. Skip while a tagging flow is mid-pick so we
+      // don't fight the selectable/pending highlight already on the page.
+      const fieldKeyForHover = card.getAttribute('data-field-card');
+      card.addEventListener('mouseenter', () => {
+        if (state.pendingContainmentAdd
+          || state.pendingTagElement
+          || state.pendingRetagFieldKey
+          || state.pendingAddTagFieldKey) return;
+        const field = (state.config?.product?.fields || [])
+          .find((item) => item.fieldKey === fieldKeyForHover);
+        if (!field) return;
+        const els = getFieldLocators(field)
+          .map((locator) => findLocator(locator, document))
+          .filter(Boolean);
+        if (els.length) highlightElements(els, true);
+      });
+      card.addEventListener('mouseleave', () => {
+        if (state.pendingContainmentAdd
+          || state.pendingTagElement
+          || state.pendingRetagFieldKey
+          || state.pendingAddTagFieldKey) return;
+        clearHighlights();
+      });
+
       card.addEventListener('contextmenu', (event) => {
         event.preventDefault();
         event.stopPropagation();

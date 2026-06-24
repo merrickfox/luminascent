@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-19 17:03:15 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-22 16:49:49 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -652,14 +652,50 @@
     return { type: 'text' };
   }
 
+  // A relative path made only of `tag:nth-of-type(n)` hops, with no class/id/attr
+  // selector to pin it. These position-dependent paths are the fragile ones: a
+  // site renders the same block with different inner markup across its product
+  // templates, so the index drifts onto the wrong child or vanishes entirely.
+  function isPositionalPath(rel) {
+    return !!rel && /:nth-of-type\(\d+\)/.test(rel) && !/[.#[]/.test(rel);
+  }
+
+  // A recipe locator that reads an element's text and reaches it only by a
+  // positional sub-path from its anchor. The build-time widening below avoids
+  // creating these; this recognises ones already saved in a config.
+  function isPositionalTextLocator(locator) {
+    if (!locator) return false;
+    if ((locator.extraction?.type || 'text') !== 'text') return false;
+    return isPositionalPath(locator.relativePathFromAnchor);
+  }
+
   function buildLocator(el, options = {}) {
     if (!el) return null;
 
     const recipeMode = options.recipeMode !== false;
     const stable = recipeMode ? findRecipeStableAncestor(el) : findStableAncestor(el);
     const attrs = recipeMode ? getRecipeAttributes(el) : getStableAttributes(el);
-    const textSample = normalizeText(el.textContent).slice(0, 120);
     const extraction = inferExtraction(el);
+
+    // Option 2: a text element with no stable identity of its own, reachable from
+    // its stable ancestor only by a positional index (e.g. `p:nth-of-type(2)`), is
+    // brittle for the reason above. Re-anchor on the block itself and capture its
+    // whole text; the LLM pass slices the field back out. Scoped to recipe-mode
+    // text fields with a real (non-body) attributed ancestor — links/images keep
+    // their precise locator since they need the exact element, not a text blob.
+    if (
+      recipeMode
+      && extraction.type === 'text'
+      && Object.keys(attrs).length === 0
+      && stable.element !== el
+      && stable.element !== document.body
+      && Object.keys(stable.attrs || {}).length > 0
+      && isPositionalPath(buildRelativePath(stable.element, el))
+    ) {
+      return buildLocator(stable.element, options);
+    }
+
+    const textSample = normalizeText(el.textContent).slice(0, 120);
 
     return {
       version: 1,
@@ -1072,6 +1108,18 @@
       const anchorMatches = resolveAllFromAnchorPath(root, locator, locator.tag);
       if (anchorMatches.length === 1) return anchorMatches[0];
       anchorMatches.forEach((el) => candidates.add(el));
+
+      // Option 1 safety net: an existing config whose positional sub-path no
+      // longer resolves (the block's inner markup differs on this product) falls
+      // back to the anchor block itself, so a text field captures the block
+      // instead of null. Only when the anchor is unambiguous and the locator is a
+      // positional text locator — mirrors the build-time widening above. (Where
+      // the sub-path *does* resolve but to the wrong child, anchorMatches is
+      // non-empty and we never reach here; that needs a re-tag, not a fallback.)
+      if (!anchorMatches.length && isPositionalTextLocator(locator)) {
+        const anchorsOnly = queryByAttrs(root, locator.anchorAttrs);
+        if (anchorsOnly.length === 1) return anchorsOnly[0];
+      }
     }
 
     queryByAttrs(root, locator.attrs).forEach((el) => candidates.add(el));
@@ -3674,6 +3722,26 @@
     }
   }
 
+  /**
+   * Canonical key for matching a child tab's reported URL back to the URL the
+   * controller opened. They both come from the browser, but a product page can
+   * re-encode or reorder its own query string on load (`+` vs `%20`, `'` vs
+   * `%27`, param order), which broke exact-string matching and made successful
+   * scrapes look like "closed without result". Normalise encoding, sort params,
+   * drop the hash and any trailing slash so equivalent URLs compare equal.
+   */
+  function normalizeUrlKey(urlString) {
+    try {
+      const u = new URL(stripScrapeFlag(urlString));
+      u.hash = '';
+      u.searchParams.sort();
+      const search = decodeURIComponent(u.search.replace(/\+/g, '%20'));
+      return `${u.origin}${u.pathname.replace(/\/+$/, '')}${search}`;
+    } catch {
+      return stripScrapeFlag(urlString);
+    }
+  }
+
   function nowClock() {
     return new Date().toTimeString().slice(0, 8);
   }
@@ -3704,7 +3772,7 @@
    * mutating the shared extractState, so concurrent finishers never clobber
    * each other. The controller drains these in drainResults().
    */
-  function reportResult(url, ok, error, ms) {
+  function reportResult(url, ok, error, ms, info) {
     if (childReported) return;
     childReported = true;
     const cleanUrl = stripScrapeFlag(url);
@@ -3713,9 +3781,30 @@
       ok: !!ok,
       error: error || null,
       ms: ms || null,
+      info: info || null,
       ts: Date.now(),
     });
-    console.log('[Luminascent]', ok ? `scraped ${shortUrl(cleanUrl)}` : `failed ${shortUrl(cleanUrl)}: ${error || 'error'}`);
+    if (ok) {
+      console.log('[Luminascent]', `scraped ${shortUrl(cleanUrl)}${captureDetail(info)}`);
+    } else {
+      console.log('[Luminascent]', `failed ${shortUrl(cleanUrl)}: ${error || 'error'}`);
+    }
+  }
+
+  /**
+   * One-line capture coverage for the run log / console. A tab can report `done`
+   * while a positional or stale locator quietly resolved to nothing (or to the
+   * wrong row), so we surface how many configured fields actually came back, name
+   * the empty ones, and flag a capture that found nothing at all. '' when no
+   * summary was reported (older results, missing-config skips, etc).
+   */
+  function captureDetail(info) {
+    if (!info) return '';
+    const parts = [`${info.fields}/${info.total} fields`];
+    if (info.missing && info.missing.length) parts.push(`missing ${info.missing.join(', ')}`);
+    if (info.imagesConfigured) parts.push(`${info.images}/${info.imagesConfigured} img`);
+    const warn = info.fields === 0 ? ' ⚠' : '';
+    return ` ·${warn} ${parts.join(' · ')}`;
   }
 
   function clearResultKeys() {
@@ -3732,7 +3821,7 @@
     });
     // Runs in the controller tab; just record when the tab vanished. The tick
     // decides (after a grace) whether it closed cleanly or died silently.
-    if (tab) tab.onclose = () => closedAtByUrl.set(stripScrapeFlag(url), Date.now());
+    if (tab) tab.onclose = () => closedAtByUrl.set(normalizeUrlKey(url), Date.now());
     return tab;
   }
 
@@ -3769,15 +3858,31 @@
         if (!payload) return;
 
         const url = stripScrapeFlag(payload.url || key.slice(RESULT_PREFIX.length));
-        const idx = extractState.inFlight.findIndex((item) => stripScrapeFlag(item) === url);
-        if (idx === -1) return; // already resolved or not part of this run
+        const idx = extractState.inFlight.findIndex(
+          (item) => normalizeUrlKey(item) === normalizeUrlKey(url),
+        );
+        if (idx === -1) {
+          // A result came back that matches nothing still open. With normalised
+          // matching this should be rare (a genuine duplicate, or a page that
+          // redirected to a different path). Don't silently drop it — say so, so
+          // a "0 ok / N failed" run can't hide work that actually happened.
+          const already = extractState.completed.some((u) => normalizeUrlKey(u) === normalizeUrlKey(url));
+          if (!already) {
+            logEvent(
+              extractState,
+              `stray ${shortUrl(url)} ${payload.ok ? 'ok' : `fail: ${payload.error || 'error'}`} — reported URL not in the open set`,
+            );
+            changed = true;
+          }
+          return;
+        }
 
         extractState.inFlight.splice(idx, 1);
-        closedAtByUrl.delete(url);
+        closedAtByUrl.delete(normalizeUrlKey(url));
         if (payload.ok) {
           extractState.completed.push(url);
           const secs = payload.ms ? ` (${(payload.ms / 1000).toFixed(1)}s)` : '';
-          logEvent(extractState, `done ${shortUrl(url)}${secs}`);
+          logEvent(extractState, `done ${shortUrl(url)}${secs}${captureDetail(payload.info)}`);
         } else {
           extractState.failed.push({ url, error: payload.error || 'error' });
           logEvent(extractState, `fail ${shortUrl(url)}: ${payload.error || 'error'}`);
@@ -3795,12 +3900,16 @@
 
     for (const item of [...extractState.inFlight]) {
       const url = stripScrapeFlag(item);
-      const closedAt = closedAtByUrl.get(url);
+      const key = normalizeUrlKey(item);
+      const closedAt = closedAtByUrl.get(key);
       if (closedAt && now - closedAt > CLOSE_GRACE_MS) {
-        extractState.inFlight = extractState.inFlight.filter((u) => stripScrapeFlag(u) !== url);
-        extractState.failed.push({ url, error: 'closed without result' });
-        closedAtByUrl.delete(url);
-        logEvent(extractState, `fail ${shortUrl(url)}: closed without result`);
+        extractState.inFlight = extractState.inFlight.filter((u) => normalizeUrlKey(u) !== key);
+        extractState.failed.push({ url, error: 'tab closed before reporting a result' });
+        closedAtByUrl.delete(key);
+        // The tab closed but never handed back a result. Either the userscript
+        // didn't run in the child (local bundle server down → loader eval fails)
+        // or the child errored before reporting. Point at the likely causes.
+        logEvent(extractState, `fail ${shortUrl(url)}: tab closed before reporting (is the local scraper server running?)`);
         changed = true;
       }
     }
@@ -4086,6 +4195,26 @@
     return data;
   }
 
+  /**
+   * Field-level capture summary for the run log. Compares the configured product
+   * fields against what `buildScrapedData` actually resolved so silent
+   * locator failures (empty / wrong-row captures) become visible per product.
+   */
+  function summarizeCapture(data, imageCount) {
+    const configured = (state.config?.product?.fields || []).map((field) => field.fieldKey);
+    const captured = configured.filter((key) => {
+      const value = data.fields?.[key];
+      return value != null && value !== '';
+    });
+    return {
+      fields: captured.length,
+      total: configured.length,
+      missing: configured.filter((key) => !captured.includes(key)),
+      images: imageCount,
+      imagesConfigured: (state.config?.images || []).length,
+    };
+  }
+
   function getRequiredProductLocators() {
     return [
       ...(state.config?.product?.fields || []).flatMap((field) => getFieldLocators(field)),
@@ -4137,7 +4266,7 @@
       }
     }
 
-    return { urlSlug, imageCount };
+    return { urlSlug, imageCount, summary: summarizeCapture(data, imageCount) };
   }
 
   async function runAutoScrapeTab() {
@@ -4145,9 +4274,9 @@
     const cleanUrl = stripScrapeFlag(location.href);
 
     await waitForReady(getRequiredProductLocators());
-    await scrapeCurrentPage();
+    const result = await scrapeCurrentPage();
 
-    reportResult(cleanUrl, true, null, Date.now() - tabStartedAt);
+    reportResult(cleanUrl, true, null, Date.now() - tabStartedAt, result.summary);
     window.close();
   }
 
@@ -4172,7 +4301,9 @@
       await waitForReady(getRequiredProductLocators());
       setAdhocStatus('Extracting current page…');
       const result = await scrapeCurrentPage();
-      setAdhocStatus(`Saved ${result.urlSlug} · ${result.imageCount} image(s)`);
+      const { fields, total, missing } = result.summary;
+      const miss = missing.length ? ` (missing ${missing.join(', ')})` : '';
+      setAdhocStatus(`Saved ${result.urlSlug} · ${fields}/${total} fields${miss} · ${result.imageCount} image(s)`);
     } catch (err) {
       console.error('[Luminascent] Ad-hoc extraction failed', err);
       setAdhocStatus(`Failed: ${err.message || 'error'}`);
