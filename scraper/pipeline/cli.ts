@@ -44,6 +44,7 @@ function printUsage() {
 Commands:
   run    LLM pass + assemble products.json
   push   Push products.json + local images to backend
+  sync   run then push for the same target (accepts run + push options)
 
 Run options:
   --all-brands          Process every site under sites/
@@ -243,6 +244,10 @@ async function main() {
         await runCommand(flags);
         break;
       case 'push':
+        await pushCommand(flags);
+        break;
+      case 'sync':
+        await runCommand(flags);
         await pushCommand(flags);
         break;
       default:

@@ -1273,7 +1273,7 @@
       btn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        deleteTaggedField(btn.getAttribute('data-delete-field'));
+        deleteTaggedField(btn.getAttribute('data-delete-field'), { skipConfirm: true });
       });
     });
 

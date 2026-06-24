@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-22 16:49:49 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-24 11:55:47 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -3001,7 +3001,7 @@
       btn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        deleteTaggedField(btn.getAttribute('data-delete-field'));
+        deleteTaggedField(btn.getAttribute('data-delete-field'), { skipConfirm: true });
       });
     });
 
