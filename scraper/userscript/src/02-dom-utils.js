@@ -230,8 +230,14 @@
   // tokens and type-level data/role/itemprop attrs — so repeated members of the same
   // logical grid share a signature regardless of where they sit or minor per-tile DOM
   // differences. Structural shape is used only as a fallback for class-less items.
-  function elementItemSignature(el) {
-    if (!el || el.nodeType !== 1) return '';
+  // Decompose an element into the parts the item signature is built from: its
+  // identity tokens (non-instance class/data/role/itemprop) or, for class-less
+  // items, a structural child-tag shape. Exposed separately from
+  // `elementItemSignature` so the grid detector can reason about *which* tokens an
+  // item carries (to cluster variant tiles that share a common identity but differ
+  // on optional tokens), not just compare opaque signature strings.
+  function elementSignatureParts(el) {
+    if (!el || el.nodeType !== 1) return null;
 
     const tag = el.tagName.toLowerCase();
     const tokens = [];
@@ -265,8 +271,8 @@
     }
 
     if (tokens.length) {
-      tokens.sort();
-      return `${tag}[${tokens.join('|')}]`;
+      const unique = Array.from(new Set(tokens)).sort();
+      return { tag, tokens: unique, structural: false, key: `${tag}[${unique.join('|')}]` };
     }
 
     // Class-less / attr-less items: fall back to structural shape, but drop the child
@@ -275,8 +281,13 @@
       .slice(0, 6)
       .map((child) => child.tagName.toLowerCase())
       .join(',');
-    if (!childTags) return '';
-    return `${tag}{${childTags}}`;
+    if (!childTags) return null;
+    return { tag, tokens: [], structural: true, key: `${tag}{${childTags}}` };
+  }
+
+  function elementItemSignature(el) {
+    const parts = elementSignatureParts(el);
+    return parts ? parts.key : '';
   }
 
   function pairLowestCommonAncestor(a, b) {

@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-24 20:32:50 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-25 09:57:46 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -406,8 +406,14 @@
   // tokens and type-level data/role/itemprop attrs — so repeated members of the same
   // logical grid share a signature regardless of where they sit or minor per-tile DOM
   // differences. Structural shape is used only as a fallback for class-less items.
-  function elementItemSignature(el) {
-    if (!el || el.nodeType !== 1) return '';
+  // Decompose an element into the parts the item signature is built from: its
+  // identity tokens (non-instance class/data/role/itemprop) or, for class-less
+  // items, a structural child-tag shape. Exposed separately from
+  // `elementItemSignature` so the grid detector can reason about *which* tokens an
+  // item carries (to cluster variant tiles that share a common identity but differ
+  // on optional tokens), not just compare opaque signature strings.
+  function elementSignatureParts(el) {
+    if (!el || el.nodeType !== 1) return null;
 
     const tag = el.tagName.toLowerCase();
     const tokens = [];
@@ -441,8 +447,8 @@
     }
 
     if (tokens.length) {
-      tokens.sort();
-      return `${tag}[${tokens.join('|')}]`;
+      const unique = Array.from(new Set(tokens)).sort();
+      return { tag, tokens: unique, structural: false, key: `${tag}[${unique.join('|')}]` };
     }
 
     // Class-less / attr-less items: fall back to structural shape, but drop the child
@@ -451,8 +457,13 @@
       .slice(0, 6)
       .map((child) => child.tagName.toLowerCase())
       .join(',');
-    if (!childTags) return '';
-    return `${tag}{${childTags}}`;
+    if (!childTags) return null;
+    return { tag, tokens: [], structural: true, key: `${tag}{${childTags}}` };
+  }
+
+  function elementItemSignature(el) {
+    const parts = elementSignatureParts(el);
+    return parts ? parts.key : '';
   }
 
   function pairLowestCommonAncestor(a, b) {
@@ -1397,6 +1408,32 @@
     // one per block.
     const bySignature = new Map();
 
+    const addMember = (sig, el) => {
+      let set = bySignature.get(sig);
+      if (!set) {
+        set = new Set();
+        bySignature.set(sig, set);
+      }
+      set.add(el);
+    };
+
+    // Baseline: group a container's children by exact signature, admitting any whose
+    // signature repeats >=3 times. This is the original, conservative behaviour.
+    const groupByExactSignature = (children) => {
+      const counts = new Map();
+      children.forEach((child) => {
+        const sig = elementItemSignature(child);
+        if (!sig) return;
+        counts.set(sig, (counts.get(sig) || 0) + 1);
+      });
+      for (const [sig, count] of counts.entries()) {
+        if (count < 3) continue;
+        children.forEach((child) => {
+          if (elementItemSignature(child) === sig) addMember(sig, child);
+        });
+      }
+    };
+
     document.querySelectorAll('*').forEach((container) => {
       if (skipTags.has(container.tagName)) return;
       if (!isVisible(container)) return;
@@ -1404,24 +1441,86 @@
       const children = Array.from(container.children).filter((child) => isVisible(child));
       if (children.length < 3) return;
 
-      const signatureCounts = new Map();
+      // Chrome (nav/header/footer) is never a product grid; the exact-signature
+      // baseline is plenty there. Widening it only inflates menu groups with their
+      // own variant items (e.g. "All Lighting" vs "All Decor" nav entries).
+      if (isChromeRegion(container)) {
+        groupByExactSignature(children);
+        return;
+      }
+
+      // Product grids are routinely heterogeneous: the same logical tile carries
+      // optional per-item tokens — a personalisation flag, a "quick view" marker, a
+      // missing size label, a "sold out" class — so exact-signature grouping shatters
+      // one grid into several sub-3 buckets and only the largest is detected (the
+      // classic "only the middle rows highlight" symptom). Cluster same-tag siblings
+      // that share the grid's *common identity* instead, keyed by the dominant exact
+      // signature so page-wide merging (Zara) still works.
+      const byTag = new Map();
       children.forEach((child) => {
-        const sig = elementItemSignature(child);
-        if (!sig) return;
-        signatureCounts.set(sig, (signatureCounts.get(sig) || 0) + 1);
+        const parts = elementSignatureParts(child);
+        if (!parts) return;
+        let arr = byTag.get(parts.tag);
+        if (!arr) {
+          arr = [];
+          byTag.set(parts.tag, arr);
+        }
+        arr.push({ el: child, parts });
       });
 
-      for (const [sig, count] of signatureCounts.entries()) {
-        if (count < 3) continue;
-        let set = bySignature.get(sig);
-        if (!set) {
-          set = new Set();
-          bySignature.set(sig, set);
+      let widened = false;
+      for (const items of byTag.values()) {
+        if (items.length < 3) continue;
+
+        // Require a genuine repeat (a signature seen >=3 times) before lumping —
+        // same trigger as the baseline, so coincidental same-tag rows aren't grouped.
+        const counts = new Map();
+        items.forEach((item) => counts.set(item.parts.key, (counts.get(item.parts.key) || 0) + 1));
+        let dominantSig = null;
+        let dominantCount = 0;
+        for (const [sig, count] of counts.entries()) {
+          if (count > dominantCount) {
+            dominantCount = count;
+            dominantSig = sig;
+          }
         }
-        children.forEach((child) => {
-          if (elementItemSignature(child) === sig) set.add(child);
+        if (dominantCount < 3) continue;
+
+        widened = true;
+        // Always admit the exact-signature members (baseline behaviour preserved).
+        items.forEach((item) => {
+          if (item.parts.key === dominantSig) addMember(dominantSig, item.el);
+        });
+
+        // Identity tokens = tokens shared by the majority of same-tag siblings — the
+        // stable core every tile in this grid carries.
+        const nonStructural = items.filter((item) => !item.parts.structural);
+        if (nonStructural.length < 3) continue;
+        const freq = new Map();
+        nonStructural.forEach((item) => item.parts.tokens.forEach((token) => {
+          freq.set(token, (freq.get(token) || 0) + 1);
+        }));
+        const majority = Math.max(2, Math.ceil(nonStructural.length * 0.5));
+        const identity = Array.from(freq.entries())
+          .filter(([, count]) => count >= majority)
+          .map(([token]) => token);
+        if (!identity.length) continue;
+
+        // Widen onto variant tiles: a sibling that shares >=60% of the identity AND
+        // looks like a product. The product-like gate is what keeps a stray non-tile
+        // sibling (a heading, a promo cell) out while pulling every real variant in.
+        const identitySet = new Set(identity);
+        const needed = Math.ceil(identity.length * 0.6);
+        items.forEach((item) => {
+          if (item.parts.key === dominantSig || item.parts.structural) return;
+          const overlap = item.parts.tokens.filter((token) => identitySet.has(token)).length;
+          if (overlap >= needed && looksLikeProductMember(item.el)) addMember(dominantSig, item.el);
         });
       }
+
+      // No qualifying tag bucket (e.g. only class-less structural children) — fall
+      // back to the conservative baseline so nothing that used to group is lost.
+      if (!widened) groupByExactSignature(children);
     });
 
     const groups = [];
@@ -3317,6 +3416,9 @@
   function onProductClick(event) {
     if (state.mode !== 'product') return;
     if (state.pendingContainmentAdd) return;
+    // Fired on pointerdown: only the primary (left) button tags an element, so a
+    // right/middle press still reaches the page's native context menu untouched.
+    if (event.button != null && event.button !== 0) return;
 
     const el = getElementFromEvent(event);
     if (!el) return;
@@ -4432,7 +4534,14 @@
     await loadSchemaAndConfig();
     renderPanel();
 
-    document.addEventListener('click', onProductClick, true);
+    // Pick on pointerdown, not click: page-builder / editable widgets (Shogun,
+    // Squarespace, etc.) routinely swallow the `click` event for their own content
+    // — a capture-phase listener that stops it, or DOM that mutates between
+    // mousedown and mouseup so no `click` is ever synthesised. Those elements still
+    // highlight on hover (mousemove) but couldn't be tagged. pointerdown fires before
+    // any of that and isn't subject to it, so tagging works on every element the user
+    // can see highlighted. (See onProductClick for the primary-button guard.)
+    document.addEventListener('pointerdown', onProductClick, true);
     document.addEventListener('mousemove', onHoverSelectable, true);
     document.addEventListener('click', (event) => {
       if (event.composedPath().includes(contextMenuEl)) return;

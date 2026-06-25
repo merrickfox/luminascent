@@ -192,6 +192,68 @@ full diff and reasoning.
 
 ---
 
+## Browse grid detection
+
+### Heterogeneous tiles fragment one grid (only the middle rows highlight)
+- **Symptom:** on a browse page (aman), group detection highlighted only a subset
+  of the product grid — "the middle two rows" — leaving the top and bottom rows
+  un-highlightable, so those products never made the extract list.
+- **Cause:** `detectRepeatedGroups` grouped a container's children by *exact*
+  `elementItemSignature` and only admitted a signature seen ≥3 times. Real product
+  grids are heterogeneous: the same logical tile carries **optional per-item
+  tokens** — a personalisation flag, a `quick_view` marker, a missing size label, a
+  cross-sell SKU list. One `<ul>` of 16 `li.product` split into 5 signature buckets
+  (7 / 6 / 1 / 1 / 1); only the two ≥3 buckets formed groups and the user could
+  select just one (7 members), so 9 tiles vanished.
+- **Fix:** within each non-chrome container, cluster **same-tag** siblings by their
+  *common identity* — tokens present in ≥50% of siblings — and widen the dominant
+  exact-signature group onto any variant tile that shares ≥60% of that identity
+  **and** passes `looksLikeProductMember`. Members still key on the dominant exact
+  signature, so page-wide merging across layout blocks (Zara) is unchanged.
+  `elementItemSignature` was refactored to expose its parts via
+  `elementSignatureParts` for this. (`userscript/src/04-browse.js`,
+  `userscript/src/02-dom-utils.js`.)
+- **Invariants — each was load-bearing when verified across 11 site snapshots
+  (product-grid URLs unchanged everywhere except the two under-detecting sites,
+  aman 7→16 and aesop 7→10, with zero URLs lost):**
+  - Widening is **skipped in chrome regions** (`isChromeRegion`). Without it, the
+    overlap+product-like gate still admits nav entries ("All Decor", "REGISTRY"),
+    inflating menu groups. Product grids live in main content; never widen chrome.
+  - Widened (non-exact-match) members **must pass `looksLikeProductMember`**. The
+    identity-overlap test alone lets a stray heading/promo sibling in; the
+    product-like gate is what restricts widening to real tiles.
+  - Widening requires a **genuine repeat first** (a signature seen ≥3 times in the
+    bucket) before lumping, same trigger as the baseline — coincidental same-tag
+    rows are not a grid.
+  - Containers with no qualifying tag bucket fall back to the **exact-signature
+    baseline**, so nothing that grouped before can stop grouping.
+- _Commit: (this change)_
+
+---
+
+## Element selection / tagging
+
+### `click`-swallowing widgets couldn't be tagged (hover highlights, click does nothing)
+- **Symptom:** on a product page (aman), one accordion's body content highlighted
+  on hover but clicking it never opened the tag prompt — no console error, the
+  element just wouldn't select. Other elements tagged fine.
+- **Cause:** element picking listened on `click` (capture, document). Page-builder /
+  editable widgets (the section was a Shogun `sd-simple-text` block with
+  `data-edit-mode`) swallow the `click` for their own content — either a capture
+  listener that stops it, or DOM that mutates between mousedown and mouseup so no
+  `click` is ever synthesised. `mousemove` (the hover highlight) is untouched, so
+  the element looked selectable but wasn't.
+- **Fix:** pick on **`pointerdown`** (capture) instead of `click`. pointerdown fires
+  before any click-swallowing and isn't gated on a matching mouseup, so every
+  element the user can hover-highlight can be tagged. A primary-button guard
+  (`event.button === 0`) keeps right/middle presses flowing to the page's native
+  context menu. (`userscript/src/07-init.js`, `userscript/src/05-ui.js`.)
+- **Invariant:** keep the primary-button guard — without it, a right-click both
+  tags an element and (via preventDefault) suppresses the native context menu.
+- _Commit: (this change)_
+
+---
+
 ## Open / watch-list
 
 - _(none currently)_

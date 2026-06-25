@@ -1499,6 +1499,9 @@
   function onProductClick(event) {
     if (state.mode !== 'product') return;
     if (state.pendingContainmentAdd) return;
+    // Fired on pointerdown: only the primary (left) button tags an element, so a
+    // right/middle press still reaches the page's native context menu untouched.
+    if (event.button != null && event.button !== 0) return;
 
     const el = getElementFromEvent(event);
     if (!el) return;

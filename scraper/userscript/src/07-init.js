@@ -31,7 +31,14 @@
     await loadSchemaAndConfig();
     renderPanel();
 
-    document.addEventListener('click', onProductClick, true);
+    // Pick on pointerdown, not click: page-builder / editable widgets (Shogun,
+    // Squarespace, etc.) routinely swallow the `click` event for their own content
+    // — a capture-phase listener that stops it, or DOM that mutates between
+    // mousedown and mouseup so no `click` is ever synthesised. Those elements still
+    // highlight on hover (mousemove) but couldn't be tagged. pointerdown fires before
+    // any of that and isn't subject to it, so tagging works on every element the user
+    // can see highlighted. (See onProductClick for the primary-button guard.)
+    document.addEventListener('pointerdown', onProductClick, true);
     document.addEventListener('mousemove', onHoverSelectable, true);
     document.addEventListener('click', (event) => {
       if (event.composedPath().includes(contextMenuEl)) return;
