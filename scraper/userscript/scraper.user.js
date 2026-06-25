@@ -34,7 +34,7 @@
     function __lumiscrapeMain() {
       if (window.__lumiscrapeStarted) return;
       window.__lumiscrapeStarted = true;
-      console.log('[Luminascent] scraper bundle — src last modified 2026-06-25 09:57:46 BST');
+      console.log('[Luminascent] scraper bundle — src last modified 2026-06-25 10:29:57 BST');
 
   const SERVER = 'http://127.0.0.1:8777';
   const SCRAPE_HASH = '#lumiscrape=1';
@@ -851,14 +851,23 @@
   function enumerateBrowseItems(browse) {
     if (!browse) return [];
 
-    // Signature-based configs match members page-wide, mirroring how detection found
-    // them. We deliberately do NOT scope to the saved container: a listing page can
-    // hold several containers with the same anchor class (Zara renders a hidden
-    // `--is-template` grid alongside the live one), and resolving to the first match
-    // could trap the search inside an empty/hidden subtree and enumerate nothing. The
-    // signature is specific enough to stand alone, and the visibility filter drops any
-    // hidden template tiles that share it.
+    // Signature-based configs re-run the SAME group detection used at lock time and
+    // return the matching group's members. This is the single source of truth: a grid
+    // of heterogeneous tiles is widened (variant tiles that share the grid identity)
+    // into one group keyed by its dominant signature, so a plain page-wide
+    // `signature === itemSignature` match would re-fragment it and enumerate only the
+    // exact-match subset (the "highlighted 16 but extracted 7" bug). Detection already
+    // merges across containers (Zara's split grids) and filters hidden tiles, so we
+    // still don't scope to the saved container.
     if (browse.itemSignature) {
+      const groups = detectRepeatedGroups();
+      const match = groups.find((group) => group.id === browse.itemSignature
+        || group.itemSignature === browse.itemSignature);
+      if (match && match.members.length) {
+        return match.members.filter(isVisible);
+      }
+      // Fallback (detection drift / page changed since lock): exact page-wide match,
+      // the legacy behaviour — never enumerate nothing because a group key moved.
       return Array.from(document.querySelectorAll('*')).filter(
         (el) => isVisible(el) && elementItemSignature(el) === browse.itemSignature,
       );

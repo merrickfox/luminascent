@@ -227,6 +227,15 @@ full diff and reasoning.
     rows are not a grid.
   - Containers with no qualifying tag bucket fall back to the **exact-signature
     baseline**, so nothing that grouped before can stop grouping.
+- **Enumeration must mirror detection.** The lock only persists the dominant exact
+  `itemSignature`; the widened membership lives in the group, not the config. So
+  `enumerateBrowseItems` (extraction) **re-runs `detectRepeatedGroups` and returns
+  the matching group's members** instead of doing a page-wide
+  `signature === itemSignature` match — otherwise it re-fragments the grid and the
+  extract list shows only the exact-match subset (the "highlighted 16, extracted 7"
+  bug). It falls back to the page-wide exact match if the saved key no longer maps to
+  a detected group (page changed since lock), so it never enumerates nothing.
+  (`userscript/src/03-locator.js`.)
 - _Commit: (this change)_
 
 ---
