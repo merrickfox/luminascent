@@ -369,7 +369,7 @@
 
     if (mode === 'images') {
       state.imageCandidates = gatherImages();
-      state.imageSelections = [...(state.config?.images || [])];
+      state.imageSelections = mapSavedImageSelections(state.config?.images, state.imageCandidates);
     }
 
     if (mode === 'extract') {
@@ -378,6 +378,25 @@
     }
 
     renderPanel();
+  }
+
+  // Saved image selections store a locator plus a sample `src` captured on the
+  // product where they were first picked. The grid lights cards by matching src,
+  // so on a *different* product those saved srcs match nothing and no markers
+  // show. Re-resolve each saved locator against the current page (exactly what
+  // extraction does via findLocator) and re-point its src at the matching
+  // candidate here — so the markers land on the equivalent images of whatever
+  // product you're viewing, letting you confirm the locators generalise. A
+  // locator that resolves to nothing keeps its old src and simply doesn't light,
+  // surfacing that it didn't carry over.
+  function mapSavedImageSelections(savedImages, candidates) {
+    return (savedImages || []).map((saved) => {
+      let candidate = null;
+      const el = saved.locator ? findLocator(saved.locator) : null;
+      if (el) candidate = candidates.find((item) => item.element === el);
+      if (!candidate && saved.src) candidate = candidates.find((item) => item.src === saved.src);
+      return candidate ? { ...saved, src: candidate.src } : { ...saved };
+    });
   }
 
   function ensureProductConfig() {
@@ -781,6 +800,16 @@
   function renderPanel() {
     if (!panelEl) return;
 
+    // Preserve the list scroll position across in-place re-renders (e.g. toggling
+    // an image, tagging/deleting a field). renderPanel() rebuilds innerHTML
+    // wholesale, which would otherwise reset .scroll-region to the top and make
+    // the user lose their place. Only restore within the same mode — switching
+    // modes shows fresh content that should start at the top.
+    const sameMode = lastRenderedMode === state.mode;
+    const prevScroll = sameMode
+      ? panelEl.querySelector('.scroll-region')?.scrollTop
+      : null;
+
     const browseDone = !!state.config?.browse;
     const fieldsCount = state.config?.product?.fields?.length || 0;
     const imagesCount = state.config?.images?.length || 0;
@@ -809,6 +838,12 @@
     panelEl.querySelector('#lumiscrape-minimize')?.addEventListener('click', () => {
       panelEl.style.display = panelEl.style.display === 'none' ? 'block' : 'none';
     });
+
+    if (prevScroll != null) {
+      const region = panelEl.querySelector('.scroll-region');
+      if (region) region.scrollTop = prevScroll;
+    }
+    lastRenderedMode = state.mode;
 
     bindPanelEvents();
   }

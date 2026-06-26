@@ -54,6 +54,7 @@
 
   let shadowRoot = null;
   let panelEl = null;
+  let lastRenderedMode = null;
   let highlightLayer = null;
   let contextMenuEl = null;
   let mutationObserver = null;
