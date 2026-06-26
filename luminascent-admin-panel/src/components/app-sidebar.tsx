@@ -20,6 +20,7 @@ import {
   Layers,
   MessageSquareText,
   Music2,
+  Radar,
 } from 'lucide-react'
 
 const catalogItems = [
@@ -27,6 +28,7 @@ const catalogItems = [
 ]
 
 const operationsItems = [
+  { title: 'Scraper', href: '/scraper', icon: Radar },
   { title: 'User reviews', href: '/reviews', icon: MessageSquareText },
   { title: 'Import', href: '/import', icon: DatabaseZap },
 ]

@@ -67,6 +67,7 @@ Typed helpers: `api.brands`, `api.categories`, `api.notes`, `api.accords`, `api.
 | `/products` | List with category/brand/min-rating filters; bulk delete; create dialog |
 | `/products/:slug` | Edit product — all fields, sizes editor, images, notes/accords |
 | `/import` | Upload `products.json` from crawler; ensure brand; import with progress |
+| `/scraper` | Scraper worklist + QA viewer + pipeline runner (see [below](#scraper-section)) |
 | `/brands` | List + create (name, slug, country, website) |
 | `/categories` | List + create (name, slug) |
 | `/notes` | List + create (name, slug, note_family) |
@@ -110,6 +111,26 @@ Upload a `products.json` (or `.jsonl`) file produced by `scrapling/crawler/`:
 4. Options: update existing products, refetch images
 
 See [scrapling/crawler/README.md](../scrapling/crawler/README.md) for how to generate the file.
+
+### Scraper section
+
+A bridge over the local scraping pipeline: observe progress, sanity-check extracted data against captured images and the saved DOM, and run the pipeline — all from the panel. Unlike the rest of the admin panel (which talks to the Worker backend on `:8023`), this section talks to the **local scraper server** (`scraper/server/server.js` on `:8777`) via a separate client (`src/lib/scraper-api.ts`, base `SCRAPER_HOST` in `config.ts`). The Worker can't reach local disk or spawn the pipeline, so the scraper server is the bridge backend. The section is **local-only**: it shows an "offline" card (`ScraperGate`) when `:8777` isn't running.
+
+| Route | Features |
+|-------|----------|
+| `/scraper` | Worklist: every brand in `data/raw-brands.txt`, cross-referenced with captured sites; status (`not-started`/`configured`/`captured`/`assembled`), filter + counts |
+| `/scraper/:folder` | Site detail: blueprint summary, product **QA grid** (thumbnail, extracted name, artifact + flag badges), and the **pipeline runner** |
+| `/scraper/:folder/:slug` | Product QA: image gallery, **recipe-preview vs capture** table, `data.json`/`llm_output.json`/`products.json` compare, captured-DOM iframe |
+
+`:folder` is the site folder name under `scraper/sites/` (what `GET /sites` returns), not a hostname.
+
+**Scraper-server endpoints** (added in `scraper/server/admin-api.mjs`, wired in `server.js`):
+
+- `GET /sites`, `GET /sites/:folder`, `GET /sites/:folder/products/:slug` — site/product artifact summaries
+- `GET /sites/:folder/products/:slug/images/:file`, `.../dom` — serve image bytes / saved DOM html
+- `GET /worklist` — `raw-brands.txt` parsed + cross-referenced
+- `POST /recipe/preview { host, slug }` — re-runs the blueprint locators against the saved DOM (shared resolver `scraper/server/recipe-resolver.mjs`, the same logic `scripts/verify-recipes.mjs` checks) and reports what each field/image extracts now vs. capture — separates a recipe problem (re-tag) from an LLM problem (reprocess)
+- `POST /pipeline/:command { host, flags }` (`run`/`push`/`sync`) — spawns the pipeline CLI; `GET /jobs/:id` polls status + streamed log. One job per folder.
 
 ## Project structure
 

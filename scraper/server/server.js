@@ -6,6 +6,18 @@ import { fileURLToPath } from 'node:url';
 import { buildBundle } from '../userscript/bundle.mjs';
 import { detectFields } from './autodetect.js';
 import { sniffImage } from './image-bytes.mjs';
+import {
+  listSites,
+  getSite,
+  getProductBundle,
+  resolveImage,
+  resolveDom,
+  previewRecipes,
+  parseWorklist,
+  startPipelineJob,
+  getJob,
+  listJobs,
+} from './admin-api.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,6 +59,15 @@ function sendJs(res, status, text) {
     'Cache-Control': 'no-store',
   });
   res.end(text);
+}
+
+function sendBuffer(res, status, buffer, contentType) {
+  res.writeHead(status, {
+    ...corsHeaders(),
+    'Content-Type': contentType,
+    'Content-Length': buffer.length,
+  });
+  res.end(buffer);
 }
 
 function readBody(req) {
@@ -502,6 +523,99 @@ async function handleRequest(req, res) {
         return;
       }
       sendJson(res, 200, { urlSlug: urlSlug(productUrl) });
+      return;
+    }
+
+    // --- Admin / observability API (admin-api.mjs), addressed by site folder ---
+    const segments = pathname.split('/').filter(Boolean);
+
+    if (req.method === 'GET' && pathname === '/sites') {
+      sendJson(res, 200, { sites: listSites() });
+      return;
+    }
+
+    if (req.method === 'GET' && pathname === '/worklist') {
+      sendJson(res, 200, parseWorklist());
+      return;
+    }
+
+    if (req.method === 'GET' && segments[0] === 'sites' && segments.length >= 2) {
+      const folder = segments[1];
+
+      // GET /sites/:folder/products/:slug/images/:file
+      if (segments[2] === 'products' && segments[4] === 'images' && segments[5]) {
+        const image = resolveImage(folder, segments[3], segments[5]);
+        if (!image) { sendJson(res, 404, { error: 'image not found' }); return; }
+        sendBuffer(res, 200, fs.readFileSync(image.filePath), image.mime);
+        return;
+      }
+
+      // GET /sites/:folder/products/:slug/dom
+      if (segments[2] === 'products' && segments[4] === 'dom') {
+        const domPath = resolveDom(folder, segments[3]);
+        if (!domPath) { sendText(res, 404, 'DOM not found'); return; }
+        res.writeHead(200, { ...corsHeaders(), 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(fs.readFileSync(domPath, 'utf8'));
+        return;
+      }
+
+      // GET /sites/:folder/products/:slug
+      if (segments[2] === 'products' && segments[3] && segments.length === 4) {
+        const bundle = getProductBundle(folder, segments[3]);
+        if (!bundle) { sendJson(res, 404, { error: 'product not found' }); return; }
+        sendJson(res, 200, bundle);
+        return;
+      }
+
+      // GET /sites/:folder/dom  (site browse page snapshot)
+      if (segments[2] === 'dom' && segments.length === 3) {
+        const domPath = resolveDom(folder, null);
+        if (!domPath) { sendText(res, 404, 'DOM not found'); return; }
+        res.writeHead(200, { ...corsHeaders(), 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(fs.readFileSync(domPath, 'utf8'));
+        return;
+      }
+
+      // GET /sites/:folder
+      if (segments.length === 2) {
+        const site = getSite(folder);
+        if (!site) { sendJson(res, 404, { error: 'site not found' }); return; }
+        sendJson(res, 200, site);
+        return;
+      }
+    }
+
+    if (req.method === 'POST' && pathname === '/recipe/preview') {
+      const body = await readBody(req);
+      if (!body.host || !body.slug) {
+        sendJson(res, 400, { error: 'host (folder) and slug required' });
+        return;
+      }
+      const result = previewRecipes(body.host, body.slug);
+      if (!result) { sendJson(res, 404, { error: 'site or product not found' }); return; }
+      sendJson(res, 200, result);
+      return;
+    }
+
+    // POST /pipeline/:command  { host, flags }
+    if (req.method === 'POST' && segments[0] === 'pipeline' && segments[1]) {
+      const body = await readBody(req);
+      if (!body.host) { sendJson(res, 400, { error: 'host (folder) required' }); return; }
+      const result = startPipelineJob(segments[1], body.host, body.flags);
+      if (result.error) { sendJson(res, result.status || 400, result); return; }
+      sendJson(res, 200, result);
+      return;
+    }
+
+    if (req.method === 'GET' && pathname === '/jobs') {
+      sendJson(res, 200, { jobs: listJobs() });
+      return;
+    }
+
+    if (req.method === 'GET' && segments[0] === 'jobs' && segments[1]) {
+      const job = getJob(segments[1]);
+      if (!job) { sendJson(res, 404, { error: 'job not found' }); return; }
+      sendJson(res, 200, { job });
       return;
     }
 

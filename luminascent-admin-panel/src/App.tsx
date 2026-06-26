@@ -11,6 +11,9 @@ import { ProductsPage } from '@/features/products/products-page'
 import { ProductDetailPage } from '@/features/products/product-detail-page'
 import { ImportPage } from '@/features/import/import-page'
 import { ReviewsPage } from '@/features/reviews/reviews-page'
+import { ScraperWorklistPage } from '@/features/scraper/scraper-worklist-page'
+import { ScraperSitePage } from '@/features/scraper/scraper-site-page'
+import { ScraperProductPage } from '@/features/scraper/scraper-product-page'
 
 export default function App() {
   return (
@@ -33,6 +36,9 @@ export default function App() {
               <Route path="/accords" element={<AccordsPage />} />
               <Route path="/reviews" element={<ReviewsPage />} />
               <Route path="/import" element={<ImportPage />} />
+              <Route path="/scraper" element={<ScraperWorklistPage />} />
+              <Route path="/scraper/:folder" element={<ScraperSitePage />} />
+              <Route path="/scraper/:folder/:slug" element={<ScraperProductPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
