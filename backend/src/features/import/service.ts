@@ -118,11 +118,42 @@ async function uploadImageBytes(
 	}
 
 	const r2Key = buildImageKey(productId, contentType);
-	await bucket.put(r2Key, buffer, {
-		httpMetadata: { contentType },
-	});
+	await putWithRetry(bucket, r2Key, buffer, { httpMetadata: { contentType } });
 
 	return { r2Key, contentType, bytes: buffer.byteLength };
+}
+
+// During a bulk import (hundreds of products, thousands of image puts in one
+// long-running `wrangler dev`), R2 .put() occasionally throws a generic
+// transient error — "put: Unspecified error (0)" from the local simulator under
+// sustained I/O load (and, rarely, a 5xx from R2 itself). It isn't tied to a
+// specific URL, size, or content — which is why only *some* images of an import
+// fail. The bytes are already fetched and in hand, so a short backoff + retry
+// recovers the image instead of dropping it for the whole run (which otherwise
+// forces a manual re-push with --refetch-images). Same key on each attempt: an
+// overwrite is idempotent.
+async function putWithRetry(
+	bucket: R2Bucket,
+	key: string,
+	body: ArrayBuffer,
+	options: R2PutOptions,
+	attempts = 3,
+): Promise<void> {
+	let lastError: unknown;
+	for (let attempt = 1; attempt <= attempts; attempt++) {
+		try {
+			await bucket.put(key, body, options);
+			return;
+		} catch (error) {
+			lastError = error;
+			const message = error instanceof Error ? error.message : String(error);
+			console.warn(`[import:image] R2 put failed (attempt ${attempt}/${attempts}) ${key}: ${message}`);
+			if (attempt < attempts) {
+				await new Promise((resolve) => setTimeout(resolve, attempt * 150));
+			}
+		}
+	}
+	throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 async function fetchAndUploadImage(
