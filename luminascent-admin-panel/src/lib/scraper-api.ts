@@ -132,6 +132,13 @@ export type WorklistBrand = {
 
 export type Worklist = { available: boolean; brands: WorklistBrand[] }
 
+export type DeleteResult = {
+  folder: string
+  deleted: number
+  removedFromProductsJson: number
+  results: Array<{ slug: string; ok: boolean; reason?: string }>
+}
+
 export type PipelineCommand = 'run' | 'push' | 'sync'
 
 export type Job = {
@@ -156,6 +163,16 @@ export const scraperApi = {
     get: (folder: string, slug: string) =>
       scraperFetch<ProductBundle>(
         `/sites/${encodeURIComponent(folder)}/products/${encodeURIComponent(slug)}`,
+      ),
+    delete: (folder: string, slug: string) =>
+      scraperFetch<DeleteResult>(
+        `/sites/${encodeURIComponent(folder)}/products/${encodeURIComponent(slug)}`,
+        { method: 'DELETE' },
+      ),
+    bulkDelete: (folder: string, slugs: string[]) =>
+      scraperFetch<DeleteResult>(
+        `/sites/${encodeURIComponent(folder)}/products/bulk-delete`,
+        { method: 'POST', body: JSON.stringify({ slugs }) },
       ),
   },
   worklist: () => scraperFetch<Worklist>('/worklist'),

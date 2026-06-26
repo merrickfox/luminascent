@@ -214,6 +214,56 @@ export function getProductBundle(folder, slug) {
   };
 }
 
+// Drop assembled entries for the deleted products from products.json. Matched the same
+// way reads are (image `file` dir slug, else source_url captured before deletion).
+function pruneProductsJson(siteDir, removals) {
+  if (!removals.length) return 0;
+  const file = path.join(siteDir, 'products.json');
+  const entries = tryReadJson(file);
+  if (!Array.isArray(entries)) return 0;
+  const slugSet = new Set(removals.map((r) => r.slug));
+  const urlSet = new Set(removals.map((r) => r.sourceUrl).filter(Boolean));
+  const kept = entries.filter((entry) => {
+    if (entry?.source_url && urlSet.has(entry.source_url)) return false;
+    for (const img of entry?.images || []) {
+      const m = typeof img?.file === 'string' ? img.file.match(/products\/([^/]+)\//) : null;
+      if (m && slugSet.has(m[1])) return false;
+    }
+    return true;
+  });
+  const removed = entries.length - kept.length;
+  if (removed > 0) fs.writeFileSync(file, JSON.stringify(kept, null, 2), 'utf8');
+  return removed;
+}
+
+// Delete captured products: remove each product folder (data/llm/images/DOM) and prune
+// its products.json entry. Local artifacts only — the backend DB is untouched.
+export function deleteProducts(folder, slugs) {
+  const dir = siteFolderDir(folder);
+  if (!dir) return null;
+  const list = (Array.isArray(slugs) ? slugs : []).filter(isSafeSegment);
+  const results = [];
+  const removals = [];
+  for (const slug of list) {
+    const pdir = path.join(dir, 'products', slug);
+    if (!exists(pdir)) {
+      results.push({ slug, ok: false, reason: 'not found' });
+      continue;
+    }
+    // Read source_url before deletion so we can match the products.json entry.
+    const data = tryReadJson(path.join(pdir, 'data.json'));
+    try {
+      fs.rmSync(pdir, { recursive: true, force: true });
+      removals.push({ slug, sourceUrl: data?.source_url || null });
+      results.push({ slug, ok: true });
+    } catch (err) {
+      results.push({ slug, ok: false, reason: err.message });
+    }
+  }
+  const removedFromProductsJson = pruneProductsJson(dir, removals);
+  return { folder, results, deleted: removals.length, removedFromProductsJson };
+}
+
 // Resolve an on-disk image path for serving, guarding against traversal.
 export function resolveImage(folder, slug, file) {
   const dir = siteFolderDir(folder);

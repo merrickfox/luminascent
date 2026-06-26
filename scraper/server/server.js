@@ -14,6 +14,7 @@ import {
   resolveDom,
   previewRecipes,
   parseWorklist,
+  deleteProducts,
   startPipelineJob,
   getJob,
   listJobs,
@@ -29,7 +30,7 @@ const SITES_DIR = path.join(ROOT, 'sites');
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 }
@@ -583,6 +584,23 @@ async function handleRequest(req, res) {
         sendJson(res, 200, site);
         return;
       }
+    }
+
+    // POST /sites/:folder/products/bulk-delete  { slugs }
+    if (req.method === 'POST' && segments[0] === 'sites' && segments[2] === 'products' && segments[3] === 'bulk-delete') {
+      const body = await readBody(req);
+      const result = deleteProducts(segments[1], body.slugs);
+      if (!result) { sendJson(res, 404, { error: 'site not found' }); return; }
+      sendJson(res, 200, result);
+      return;
+    }
+
+    // DELETE /sites/:folder/products/:slug
+    if (req.method === 'DELETE' && segments[0] === 'sites' && segments[2] === 'products' && segments[3] && segments.length === 4) {
+      const result = deleteProducts(segments[1], [segments[3]]);
+      if (!result) { sendJson(res, 404, { error: 'site not found' }); return; }
+      sendJson(res, 200, result);
+      return;
     }
 
     if (req.method === 'POST' && pathname === '/recipe/preview') {
