@@ -31,9 +31,27 @@ const COMMANDS: Array<{ command: PipelineCommand; label: string; hint: string }>
 export function PipelineRunner({ folder }: { folder: string }) {
   const queryClient = useQueryClient()
   const [flags, setFlags] = useState<Set<string>>(new Set())
-  const [jobId, setJobId] = useState<string | null>(null)
   const logRef = useRef<HTMLPreElement>(null)
-  const settledRef = useRef<string | null>(null)
+  // Tracks the job we're observing so the completion toast fires once, and only for a
+  // run we actually watched go from running -> settled (not when re-attaching to an
+  // already-finished job after navigating back).
+  const trackRef = useRef<{ id: string | null; sawRunning: boolean; settled: boolean }>({
+    id: null,
+    sawRunning: false,
+    settled: false,
+  })
+
+  // The active job is derived from the SERVER (latest job for this folder), not local
+  // state, so it survives navigating away and back — the child process keeps running on
+  // the server regardless of the UI, and remounting re-attaches to it.
+  const { data: job } = useQuery({
+    queryKey: ['scraper', 'jobs', folder],
+    queryFn: async () => {
+      const { jobs } = await scraperApi.jobs.list()
+      return jobs.find((j) => j.folder === folder) ?? null
+    },
+    refetchInterval: (query) => (query.state.data?.status === 'running' ? 1000 : false),
+  })
 
   const startMutation = useMutation({
     mutationFn: (command: PipelineCommand) =>
@@ -43,39 +61,36 @@ export function PipelineRunner({ folder }: { folder: string }) {
         toast.error(result.error ?? 'Failed to start pipeline')
         return
       }
-      settledRef.current = null
-      setJobId(result.job.id)
+      // Reflect the new job immediately, then let polling take over.
+      queryClient.setQueryData(['scraper', 'jobs', folder], result.job)
+      queryClient.invalidateQueries({ queryKey: ['scraper', 'jobs', folder] })
     },
     onError: (err: Error) => toast.error(err.message),
   })
-
-  const { data } = useQuery({
-    queryKey: ['scraper', 'job', jobId],
-    queryFn: () => scraperApi.jobs.get(jobId as string),
-    enabled: !!jobId,
-    refetchInterval: (query) =>
-      query.state.data?.job.status === 'running' ? 1000 : false,
-  })
-
-  const job = data?.job
 
   // Auto-scroll the log to the bottom as lines stream in.
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
   }, [job?.log.length])
 
-  // Fire once when a job settles: toast + refresh the site so the QA grid reflects
-  // newly assembled/pushed data.
+  // On settle: toast + refresh the site so the QA grid reflects new data. Only fires for
+  // a job we observed running in this session.
   useEffect(() => {
-    if (!job || job.status === 'running') return
-    if (settledRef.current === job.id) return
-    settledRef.current = job.id
-    if (job.status === 'done') {
-      toast.success(`${job.command} finished for ${folder}`)
-    } else {
-      toast.error(`${job.command} failed (exit ${job.exitCode})`)
+    if (!job) return
+    const track = trackRef.current
+    if (track.id !== job.id) {
+      trackRef.current = { id: job.id, sawRunning: job.status === 'running', settled: false }
+    } else if (job.status === 'running') {
+      track.sawRunning = true
     }
-    queryClient.invalidateQueries({ queryKey: ['scraper', 'site', folder] })
+
+    const current = trackRef.current
+    if (job.status !== 'running' && current.sawRunning && !current.settled) {
+      current.settled = true
+      if (job.status === 'done') toast.success(`${job.command} finished for ${folder}`)
+      else toast.error(`${job.command} failed (exit ${job.exitCode})`)
+      queryClient.invalidateQueries({ queryKey: ['scraper', 'site', folder] })
+    }
   }, [job, folder, queryClient])
 
   const running = job?.status === 'running' || startMutation.isPending
@@ -86,7 +101,7 @@ export function PipelineRunner({ folder }: { folder: string }) {
         <CardTitle className="text-base">Pipeline</CardTitle>
         <CardDescription>
           Runs <code className="rounded bg-muted px-1 py-0.5">pipeline:&lt;command&gt; --brand {folder}</code>{' '}
-          on the local server and streams output here.
+          on the local server and streams output here. Keeps running if you navigate away.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
