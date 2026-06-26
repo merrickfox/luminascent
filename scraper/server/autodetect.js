@@ -148,7 +148,18 @@ function sanitizeFields(raw, fields, outlineLength) {
     });
   }
 
-  return out;
+  // Enforce the containment invariant the prompt asks for: a field declared to live
+  // INSIDE another field's text (currency inside price, a note inside the description)
+  // must not ALSO get its own standalone tag. Local models routinely emit both — the
+  // containment attachment AND a separate index for the same key — which is exactly the
+  // "duplicate" entries we want to avoid. Containment wins; drop the standalone copy so
+  // the value is only ever pulled out of its parent text downstream.
+  const containedElsewhere = new Set();
+  for (const entry of out) {
+    for (const key of entry.also_contains) containedElsewhere.add(key);
+    for (const key of entry.sometimes_contains) containedElsewhere.add(key);
+  }
+  return out.filter((entry) => !containedElsewhere.has(entry.fieldKey));
 }
 
 // Run a best-effort field-location pass over a page outline. Returns
